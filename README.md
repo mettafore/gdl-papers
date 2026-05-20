@@ -33,15 +33,9 @@ Each paper gets a numbered folder. Inside:
 ## Setup
 
 ```bash
-# Create a conda env (recommended)
-conda create -n gdl python=3.10
-conda activate gdl
-pip install torch torch-geometric
-
-# Or with pip
-python -m venv .venv
+uv venv --python 3.10
 source .venv/bin/activate
-pip install torch torch-geometric
+uv pip install torch torch-geometric
 ```
 
 ## Convention
