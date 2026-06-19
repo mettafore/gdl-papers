@@ -1,0 +1,9 @@
+\section{Conclusion}
+\vspace{-1mm}
+We have presented an attention-based neural architecture designed specifically for point cloud data. This architecture is guaranteed to be robust to rotations and translations of the input, obviating the need for training time data augmentation and ensuring stability to arbitrary choices of coordinate frame. The use of self-attention allows for anisotropic, data-adaptive filters, while the use of neighbourhoods enables scalability to large point clouds. We have also introduced the interpretation of the attention mechanism as a data-dependent nonlinearity, adding to the list of equivariant nonlinearties which we can use in equivariant networks. Furthermore, we provide code for a speed up of spherical harmonics computation of up to 3 orders of magnitudes. This speed-up allowed us to train significantly larger versions of both the SE(3)-Transformer and the Tensor Field network \citep{ThomasSKYKR18} and to apply these models to real-world datasets.
+
+Our experiments showed that adding attention to a roto-translation-equivariant model consistently led to higher accuracy and increased training stability. Specifically for large neighbourhoods, attention proved essential for model convergence. On the other hand, compared to convential attention, adding the equivariance constraints also increases performance in all of our experiments while at the same time providing a mathematical guarantee for robustness with respect to rotations of the input data.
+
+%\dan{Neighbourhoods: It also opens up a multitude of opportunities for future research, such as cascaded pooling with increasing perceptive field size.}
+
+% We believe that this network architecture has all the relevant components necessary for point cloud based applications. As a result, we expect that it will find many applications in molecular science applications ...

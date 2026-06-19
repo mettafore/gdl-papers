@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99d (TeX Live 2023)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: EA4PC_remarkable.aux
+The style file: plainnat.bst
+Database file #1: example_paper.bib
+Warning--empty publisher in anderson2019cormorant
+You've used 47 entries,
+            2773 wiz_defined-function locations,
+            802 strings with 13247 characters,
+and the built_in function-call counts, 22906 in all, are:
+= -- 1796
+> -- 1910
+< -- 7
++ -- 639
+- -- 591
+* -- 1951
+:= -- 3687
+add.period$ -- 142
+call.type$ -- 47
+change.case$ -- 338
+chr.to.int$ -- 46
+cite$ -- 95
+duplicate$ -- 1000
+empty$ -- 1631
+format.name$ -- 648
+if$ -- 4655
+int.to.chr$ -- 2
+int.to.str$ -- 1
+missing$ -- 47
+newline$ -- 243
+num.names$ -- 188
+pop$ -- 737
+preamble$ -- 1
+purify$ -- 291
+quote$ -- 0
+skip$ -- 767
+stack$ -- 0
+substring$ -- 144
+swap$ -- 65
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 517
+warning$ -- 1
+while$ -- 145
+width$ -- 0
+write$ -- 574
+(There was 1 warning)

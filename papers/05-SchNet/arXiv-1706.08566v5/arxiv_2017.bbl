@@ -1,0 +1,290 @@
+\begin{thebibliography}{41}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Rupp et~al.(2012)Rupp, Tkatchenko, M{\"u}ller, and
+  Von~Lilienfeld]{rupp2012fast}
+M.~Rupp, A.~Tkatchenko, K.-R. M{\"u}ller, and O.~A. Von~Lilienfeld.
+\newblock Fast and accurate modeling of molecular atomization energies with
+  machine learning.
+\newblock \emph{Phys. Rev. Lett.}, 108\penalty0 (5):\penalty0 058301, 2012.
+
+\bibitem[Montavon et~al.(2013)Montavon, Rupp, Gobre, Vazquez-Mayagoitia,
+  Hansen, Tkatchenko, M{\"u}ller, and von Lilienfeld]{montavon2013machine}
+G.~Montavon, M.~Rupp, V.~Gobre, A.~Vazquez-Mayagoitia, K.~Hansen,
+  A.~Tkatchenko, K.-R. M{\"u}ller, and O.~A. von Lilienfeld.
+\newblock Machine learning of molecular electronic properties in chemical
+  compound space.
+\newblock \emph{New J. Phys.}, 15\penalty0 (9):\penalty0 095003, 2013.
+
+\bibitem[Hansen et~al.(2013)Hansen, Montavon, Biegler, Fazli, Rupp, Scheffler,
+  Von~Lilienfeld, Tkatchenko, and M\"uller]{hansen2013assessment}
+K.~Hansen, G.~Montavon, F.~Biegler, S.~Fazli, M.~Rupp, M.~Scheffler, O.~A.
+  Von~Lilienfeld, A.~Tkatchenko, and K.-R. M\"uller.
+\newblock Assessment and validation of machine learning methods for predicting
+  molecular atomization energies.
+\newblock \emph{J. Chem. Theory Comput.}, 9\penalty0 (8):\penalty0 3404--3419,
+  2013.
+
+\bibitem[Sch{\"u}tt et~al.(2014)Sch{\"u}tt, Glawe, Brockherde, Sanna,
+  M{\"u}ller, and Gross]{schutt2014represent}
+K.~T. Sch{\"u}tt, H.~Glawe, F.~Brockherde, A.~Sanna, K.-R. M{\"u}ller, and EKU
+  Gross.
+\newblock How to represent crystal structures for machine learning: Towards
+  fast prediction of electronic properties.
+\newblock \emph{Phys. Rev. B}, 89\penalty0 (20):\penalty0 205118, 2014.
+
+\bibitem[Hansen et~al.(2015)Hansen, Biegler, Ramakrishnan, Pronobis, {von
+  Lilienfeld}, M{\"u}ller, and Tkatchenko]{Hansen-JCPL}
+K.~Hansen, F.~Biegler, R.~Ramakrishnan, W.~Pronobis, O.~A. {von Lilienfeld},
+  K.-R. M{\"u}ller, and A.~Tkatchenko.
+\newblock Machine learning predictions of molecular properties: Accurate
+  many-body potentials and nonlocality in chemical space.
+\newblock \emph{J. Phys. Chem. Lett.}, 6:\penalty0 2326, 2015.
+
+\bibitem[Faber et~al.(2017)Faber, Hutchison, Huang, Gilmer, Schoenholz, Dahl,
+  Vinyals, Kearnes, Riley, and von Lilienfeld]{faber2017fast}
+F.~A. Faber, L.~Hutchison, B.~Huang, Ju. Gilmer, S.~S. Schoenholz, G.~E. Dahl,
+  O.~Vinyals, S.~Kearnes, P.~F. Riley, and O.~A. von Lilienfeld.
+\newblock Fast machine learning models of electronic and energetic properties
+  consistently reach approximation errors better than dft accuracy.
+\newblock \emph{arXiv preprint arXiv:1702.05532}, 2017.
+
+\bibitem[Brockherde et~al.(2017)Brockherde, Voigt, Li, Tuckerman, Burke, and
+  M{\"u}ller]{brockherde2017bypassing}
+F.~Brockherde, L.~Voigt, L.~Li, M.~E. Tuckerman, K.~Burke, and K.-R.
+  M{\"u}ller.
+\newblock Bypassing the {K}ohn-{S}ham equations with machine learning.
+\newblock \emph{Nature Communications}, 8\penalty0 (872), 2017.
+
+\bibitem[Boomsma and Frellsen(2017)]{boomsma2017spherical}
+W.~Boomsma and J.~Frellsen.
+\newblock Spherical convolutions and their application in molecular modelling.
+\newblock In \emph{Advances in Neural Information Processing Systems 30}, pages
+  3436--3446. 2017.
+
+\bibitem[Eickenberg et~al.(2017)Eickenberg, Exarchakis, Hirn, and
+  Mallat]{eickenberg2017scattering}
+M.~Eickenberg, G.~Exarchakis, M.~Hirn, and S.~Mallat.
+\newblock Solid harmonic wavelet scattering: Predicting quantum molecular
+  energy from invariant descriptors of 3d electronic densities.
+\newblock In \emph{Advances in Neural Information Processing Systems 30}, pages
+  6543--6552. 2017.
+
+\bibitem[Ramakrishnan et~al.(2014)Ramakrishnan, Dral, Rupp, and von
+  Lilienfeld]{ramakrishnan2014quantum}
+R.~Ramakrishnan, P.~O. Dral, M.~Rupp, and O.~A. von Lilienfeld.
+\newblock Quantum chemistry structures and properties of 134 kilo molecules.
+\newblock \emph{Scientific Data}, 1, 2014.
+
+\bibitem[Manzhos and Carrington~Jr(2006)]{manzhos2006random}
+S.~Manzhos and T.~Carrington~Jr.
+\newblock A random-sampling high dimensional model representation neural
+  network for building potential energy surfaces.
+\newblock \emph{J. Chem. Phys.}, 125\penalty0 (8):\penalty0 084109, 2006.
+
+\bibitem[Malshe et~al.(2009)Malshe, Raff, Hagan, Bukkapatnam, Agrawal, and
+  Komanduri]{malshe2009development}
+R.~Malshe, M .and~Narulkar, L.~M. Raff, M.~Hagan, S.~Bukkapatnam, P.~M.
+  Agrawal, and R.~Komanduri.
+\newblock Development of generalized potential-energy surfaces using many-body
+  expansions, neural networks, and moiety energy approximations.
+\newblock \emph{J. Chem. Phys.}, 130\penalty0 (18):\penalty0 184102, 2009.
+
+\bibitem[Behler and Parrinello(2007)]{behler2007generalized}
+J.~Behler and M.~Parrinello.
+\newblock Generalized neural-network representation of high-dimensional
+  potential-energy surfaces.
+\newblock \emph{Phys. Rev. Lett.}, 98\penalty0 (14):\penalty0 146401, 2007.
+
+\bibitem[Bart{\'o}k et~al.(2010)Bart{\'o}k, Payne, Kondor, and
+  Cs{\'a}nyi]{bartok2010gaussian}
+A.~P. Bart{\'o}k, M.~C. Payne, R.~Kondor, and G.~Cs{\'a}nyi.
+\newblock Gaussian approximation potentials: The accuracy of quantum mechanics,
+  without the electrons.
+\newblock \emph{Phys. Rev. Lett.}, 104\penalty0 (13):\penalty0 136403, 2010.
+
+\bibitem[Behler(2011)]{behler2011atom}
+J.~Behler.
+\newblock Atom-centered symmetry functions for constructing high-dimensional
+  neural network potentials.
+\newblock \emph{J. Chem. Phys.}, 134\penalty0 (7):\penalty0 074106, 2011.
+
+\bibitem[Bart{\'o}k et~al.(2013)Bart{\'o}k, Kondor, and
+  Cs{\'a}nyi]{bartok2013representing}
+A.~P. Bart{\'o}k, R.~Kondor, and G.~Cs{\'a}nyi.
+\newblock On representing chemical environments.
+\newblock \emph{Phys. Rev. B}, 87\penalty0 (18):\penalty0 184115, 2013.
+
+\bibitem[Duvenaud et~al.(2015)Duvenaud, Maclaurin, Iparraguirre, Bombarell,
+  Hirzel, Aspuru-Guzik, and Adams]{duvenaud2015convolutional}
+D.~K. Duvenaud, D.~Maclaurin, J.~Iparraguirre, R.~Bombarell, T.~Hirzel,
+  A.~Aspuru-Guzik, and R.~P. Adams.
+\newblock Convolutional networks on graphs for learning molecular fingerprints.
+\newblock In C.~Cortes, N.~D. Lawrence, D.~D. Lee, M.~Sugiyama, and R.~Garnett,
+  editors, \emph{NIPS}, pages 2224--2232, 2015.
+
+\bibitem[Kearnes et~al.(2016)Kearnes, McCloskey, Berndl, Pande, and
+  Riley]{Kearnes2016}
+S.~Kearnes, K.~McCloskey, M.~Berndl, V.~Pande, and P.~F. Riley.
+\newblock Molecular graph convolutions: moving beyond fingerprints.
+\newblock \emph{Journal of Computer-Aided Molecular Design}, 30\penalty0
+  (8):\penalty0 595--608, 2016.
+
+\bibitem[Chmiela et~al.(2017)Chmiela, Tkatchenko, Sauceda, Poltavsky,
+  Sch{\"u}tt, and M{\"u}ller]{chmiela2017machine}
+S.~Chmiela, A.~Tkatchenko, H.~E. Sauceda, I.~Poltavsky, K.~T. Sch{\"u}tt, and
+  K.-R. M{\"u}ller.
+\newblock Machine learning of accurate energy-conserving molecular force
+  fields.
+\newblock \emph{Science Advances}, 3\penalty0 (5):\penalty0 e1603015, 2017.
+
+\bibitem[Sch{\"u}tt et~al.(2017)Sch{\"u}tt, Arbabzadah, Chmiela, M{\"u}ller,
+  and Tkatchenko]{schutt2017quantum}
+K.~T. Sch{\"u}tt, F.~Arbabzadah, S.~Chmiela, K.-R. M{\"u}ller, and
+  A.~Tkatchenko.
+\newblock Quantum-chemical insights from deep tensor neural networks.
+\newblock \emph{Nature Communications}, 8\penalty0 (13890), 2017.
+
+\bibitem[Gilmer et~al.(2017)Gilmer, Schoenholz, Riley, Vinyals, and
+  Dahl]{gilmer2017neural}
+J.~Gilmer, S.~S. Schoenholz, P.~F. Riley, O.~Vinyals, and G.~E. Dahl.
+\newblock Neural message passing for quantum chemistry.
+\newblock In \emph{Proceedings of the 34th International Conference on Machine
+  Learning}, pages 1263--1272, 2017.
+
+\bibitem[LeCun et~al.(1989)LeCun, Boser, Denker, Henderson, Howard, Hubbard,
+  and Jackel]{lecun1989backpropagation}
+Y.~LeCun, B.~Boser, J.~S. Denker, D.~Henderson, R.~E. Howard, W.~Hubbard, and
+  L.~D. Jackel.
+\newblock Backpropagation applied to handwritten zip code recognition.
+\newblock \emph{Neural computation}, 1\penalty0 (4):\penalty0 541--551, 1989.
+
+\bibitem[Krizhevsky et~al.(2012)Krizhevsky, Sutskever, and
+  Hinton]{krizhevsky2012imagenet}
+A.~Krizhevsky, I.~Sutskever, and G.~E. Hinton.
+\newblock Imagenet classification with deep convolutional neural networks.
+\newblock In \emph{Advances in neural information processing systems}, pages
+  1097--1105, 2012.
+
+\bibitem[Karpathy et~al.(2014)Karpathy, Toderici, Shetty, Leung, Sukthankar,
+  and Fei-Fei]{karpathy2014large}
+A.~Karpathy, G.~Toderici, S.~Shetty, T.~Leung, R.~Sukthankar, and L.~Fei-Fei.
+\newblock Large-scale video classification with convolutional neural networks.
+\newblock In \emph{Proceedings of the IEEE conference on Computer Vision and
+  Pattern Recognition}, pages 1725--1732, 2014.
+
+\bibitem[van~den Oord et~al.(2016)van~den Oord, Dieleman, Zen, Simonyan,
+  Vinyals, Graves, Kalchbrenner, Senior, and Kavukcuoglu]{van2016wavenet}
+A.~van~den Oord, S.~Dieleman, H.~Zen, K.~Simonyan, O.~Vinyals, A.~Graves,
+  N.~Kalchbrenner, A.~Senior, and K.~Kavukcuoglu.
+\newblock Wavenet: A generative model for raw audio.
+\newblock In \emph{9th ISCA Speech Synthesis Workshop}, pages 125--125, 2016.
+
+\bibitem[Max-Moerbeck et~al.(2014)Max-Moerbeck, Richards, Hovatta, Pavlidou,
+  Pearson, and Readhead]{max2014method}
+W.~Max-Moerbeck, J.~L. Richards, T.~Hovatta, V.~Pavlidou, T.~J. Pearson, and
+  A.~C.~S. Readhead.
+\newblock A method for the estimation of the significance of cross-correlations
+  in unevenly sampled red-noise time series.
+\newblock \emph{Monthly Notices of the Royal Astronomical Society},
+  445\penalty0 (1):\penalty0 437--459, 2014.
+
+\bibitem[{\'O}lafsd{\'o}ttir et~al.(2016){\'O}lafsd{\'o}ttir, Schulz, and
+  Mudelsee]{olafsdottir2016redfit}
+K.~B. {\'O}lafsd{\'o}ttir, M.~Schulz, and M.~Mudelsee.
+\newblock Redfit-x: Cross-spectral analysis of unevenly spaced paleoclimate
+  time series.
+\newblock \emph{Computers \& Geosciences}, 91:\penalty0 11--18, 2016.
+
+\bibitem[Nieto-Barajas and Sinha(2015)]{nieto2015bayesian}
+L.~E. Nieto-Barajas and T.~Sinha.
+\newblock Bayesian interpolation of unequally spaced time series.
+\newblock \emph{Stochastic environmental research and risk assessment},
+  29\penalty0 (2):\penalty0 577--587, 2015.
+
+\bibitem[Snyder et~al.(2012)Snyder, Rupp, Hansen, M{\"u}ller, and
+  Burke]{snyder2012finding}
+J.~C. Snyder, M.~Rupp, K.~Hansen, K.-R. M{\"u}ller, and K.~Burke.
+\newblock Finding density functionals with machine learning.
+\newblock \emph{Physical review letters}, 108\penalty0 (25):\penalty0 253002,
+  2012.
+
+\bibitem[Hirn et~al.(2017)Hirn, Mallat, and Poilvert]{hirn2017wavelet}
+M.~Hirn, S.~Mallat, and N.~Poilvert.
+\newblock Wavelet scattering regression of quantum chemical energies.
+\newblock \emph{Multiscale Modeling \& Simulation}, 15\penalty0 (2):\penalty0
+  827--863, 2017.
+
+\bibitem[Bruna et~al.(2014)Bruna, Zaremba, Szlam, and Lecun]{BrunaZSL13}
+J.~Bruna, W.~Zaremba, A.~Szlam, and Y.~Lecun.
+\newblock Spectral networks and locally connected networks on graphs.
+\newblock In \emph{ICLR}, 2014.
+
+\bibitem[Henaff et~al.(2015)Henaff, Bruna, and LeCun]{HenaffBL15}
+M.~Henaff, J.~Bruna, and Y.~LeCun.
+\newblock Deep convolutional networks on graph-structured data.
+\newblock \emph{arXiv preprint arXiv:1506.05163}, 2015.
+
+\bibitem[Masci et~al.(2015)Masci, Boscaini, Bronstein, and
+  Vandergheynst]{masci2015geodesic}
+J.~Masci, D.~Boscaini, M.~Bronstein, and P.~Vandergheynst.
+\newblock Geodesic convolutional neural networks on riemannian manifolds.
+\newblock In \emph{Proceedings of the IEEE international conference on computer
+  vision workshops}, pages 37--45, 2015.
+
+\bibitem[Jia et~al.(2016)Jia, De~Brabandere, Tuytelaars, and
+  Gool]{BrabandereJTG16}
+X.~Jia, B.~De~Brabandere, T.~Tuytelaars, and L.~V. Gool.
+\newblock Dynamic filter networks.
+\newblock In D.~D. Lee, M.~Sugiyama, U.~V. Luxburg, I.~Guyon, and R.~Garnett,
+  editors, \emph{Advances in Neural Information Processing Systems 29}, pages
+  667--675. 2016.
+
+\bibitem[Chollet(2016)]{chollet2016xception}
+F.~Chollet.
+\newblock Xception: Deep learning with depthwise separable convolutions.
+\newblock \emph{arXiv preprint arXiv:1610.02357}, 2016.
+
+\bibitem[He et~al.(2016)He, Zhang, Ren, and Sun]{he2016deep}
+K.~He, X.~Zhang, S.~Ren, and J.~Sun.
+\newblock Deep residual learning for image recognition.
+\newblock In \emph{Proceedings of the IEEE Conference on Computer Vision and
+  Pattern Recognition}, pages 770--778, 2016.
+
+\bibitem[Clevert et~al.(2015)Clevert, Unterthiner, and
+  Hochreiter]{clevert2015fast}
+D.-A. Clevert, T.~Unterthiner, and S.~Hochreiter.
+\newblock Fast and accurate deep network learning by exponential linear units
+  (elus).
+\newblock \emph{arXiv preprint arXiv:1511.07289}, 2015.
+
+\bibitem[Pukrittayakamee et~al.(2009)Pukrittayakamee, Malshe, Hagan, Raff,
+  Narulkar, Bukkapatnum, and Komanduri]{pukrittayakamee2009simultaneous}
+A~Pukrittayakamee, M~Malshe, M~Hagan, LM~Raff, R~Narulkar, S~Bukkapatnum, and
+  R~Komanduri.
+\newblock Simultaneous fitting of a potential-energy surface and its
+  corresponding force fields using feedforward neural networks.
+\newblock \emph{The Journal of chemical physics}, 130\penalty0 (13):\penalty0
+  134101, 2009.
+
+\bibitem[Kingma and Ba(2015)]{KingmaB14}
+D.~P. Kingma and J.~Ba.
+\newblock Adam: {A} method for stochastic optimization.
+\newblock In \emph{ICLR}, 2015.
+
+\bibitem[Blum and Reymond(2009)]{blum2009gdb13}
+L.~C. Blum and J.-L. Reymond.
+\newblock 970 million druglike small molecules for virtual screening in the
+  chemical universe database {GDB-13}.
+\newblock \emph{J. Am. Chem. Soc.}, 131:\penalty0 8732, 2009.
+
+\bibitem[Reymond(2015)]{reymond2015chemical}
+J.-L. Reymond.
+\newblock The chemical space project.
+\newblock \emph{Acc. Chem. Res.}, 48\penalty0 (3):\penalty0 722--730, 2015.
+
+\end{thebibliography}
