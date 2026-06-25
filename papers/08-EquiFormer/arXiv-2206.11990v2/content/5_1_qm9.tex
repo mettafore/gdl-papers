@@ -1,0 +1,35 @@
+\vspace{-3mm}
+\subsection{QM9}
+\vspace{-3mm}
+\label{subsec:qm9_exp}
+
+\paragraph{Dataset.}
+%%%The QM9~\citep{qm9_2, qm9_1} dataset (CC BY-NC SA 4.0 license) consisting of 134k small molecules, and the goal is to predict their quantum properties such as energy.
+The QM9 dataset~\citep{qm9_2, qm9_1}  (CC BY-NC SA 4.0 license) consists of 134k small molecules, and the goal is to predict their quantum properties.
+%The average number of atoms per molecule is 18, and each atom in a molecule comes from the set of H, C, N, O, F atoms and has 3D coordinates.
+%%%We follow the data partition used by Cormorant~\cite{cormorant}, which has 100k, 18k and 13k molecules in training, validation and testing sets.
+The data partition we use has 110k, 10k, and 11k molecules in training, validation and testing sets.
+We minimize mean absolute error (MAE) between prediction and normalized ground truth. % and report MAE on the testing set.
+
+
+\vspace{-3.25mm}
+\paragraph{Training Details.}
+Please refer to Sec.~\ref{appendix:subsec:qm9_training_details} in appendix for details on architecture, hyper-parameters and training time.
+
+
+\vspace{-3.25mm}
+\paragraph{Results.}
+%%%We mainly compare with methods trained with the same data partition and summarize the results in Table~\ref{tab:qm9_result}.
+We summarize the comparison to previous models in Table~\ref{tab:qm9_result}.
+Equiformer achieves overall better results across 12 regression tasks compared to each individual model.
+%%%Equiformer achieves the best results on 11 out of 12 tasks among models trained with same data partition.
+The comparison to SEGNN, which uses irreps features as Equiformer, demonstrates the effectiveness of combining non-lienar message passing with MLP attention.
+Additionally, Equiformer achieves better results for most tasks when compared to other equivariant Transformers, which are SE(3)-Transformer, TorchMD-NET and EQGAT.
+This demonstrates a better adaption of Transformers to 3D graphs and the effectiveness of the proposed equivariant graph attention.
+We note that for the tasks of $\mu$ and $R^2$, PaiNN and TorchMD-NET use different architectures, which take into account the property of the task.
+%\revision{This makes the comparison less clear since we use the same architecture for all tasks.}
+In contrast, we use the same architecture for all tasks.
+We compare training time in Sec.~\ref{appendix:subsec:qm9_training_time_comparison}.
+
+%%%Besides, the different data partition as denoted by $\dagger$ in Table~\ref{tab:qm9_result} has $10\%$ more molecules in the training set and less data in the testing set, and this can benefit some tasks that are more dependent on data partitions.
+%\todo{If there is any justification, can write something like which tasks are more important.}

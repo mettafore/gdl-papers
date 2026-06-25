@@ -1,0 +1,501 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{neural_message_passing_quantum_chemistry,deep_potential_molecular_dynamics,push_limit_of_md_100m,dimenet_pp,nequip,deep_potential_molecular_dynamics_simulation,se3_wavefunction,gemnet_xl,quantum_scaling}
+\citation{tfn,3dsteerable,kondor2018clebsch,se3_transformer,nequip,segnn,allergo}
+\citation{schnet,dimenet,dimenet_pp,spherenet,gemnet}
+\@writefile{lof}{\contentsline {xsect}{Introduction}{1}{Doc-Start}\protected@file@percent }
+\@writefile{lot}{\contentsline {xsect}{Introduction}{1}{Doc-Start}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
+\citation{transformer}
+\citation{detr,vit,deit}
+\citation{generalization_transformer_graphs,spectral_attention,graphormer,graphormer_3d}
+\citation{bert,wav2vec2,gpt3}
+\citation{vit}
+\citation{imagenet}
+\citation{qm9_2,md17_1,oc20}
+\citation{se3_transformer,torchmd_net,eqgat}
+\citation{qm9_2,qm9_1}
+\citation{md17_1,md17_2,md17_3}
+\citation{oc20}
+\citation{nequip}
+\citation{torchmd_net}
+\citation{segnn}
+\citation{graphormer_3d}
+\citation{tfn,kondor2018clebsch,3dsteerable,se3_transformer,l1net,geometric_prediction,nequip,gvp,painn,egnn,se3_wavefunction,segnn,torchmd_net,eqgat,allergo}
+\citation{tfn}
+\citation{harmonis_network,group_equivariant_convolution_networks,spherical_cnn}
+\citation{tfn,3dsteerable,kondor2018clebsch}
+\citation{tfn}
+\citation{nequip}
+\citation{3dsteerable}
+\citation{segnn}
+\citation{neural_message_passing_quantum_chemistry,gns}
+\citation{se3_transformer}
+\citation{transformer}
+\citation{torchmd_net,eqgat}
+\citation{torchmd_net,eqgat}
+\citation{tfn,kondor2018clebsch,3dsteerable}
+\citation{e3nn}
+\@writefile{lof}{\contentsline {xsect}{Related Works}{3}{section.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {xsect}{Related Works}{3}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Related Works}{3}{section.2}\protected@file@percent }
+\newlabel{sec:related_work}{{2}{3}{Related Works}{section.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax \textit  {SE(3)/E(3)}-Equivariant GNNs.}{3}{section.2}\protected@file@percent }
+\citation{Dresselhaus2007,zee}
+\@writefile{lof}{\contentsline {xsect}{Background}{4}{section.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {xsect}{Background}{4}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Background}{4}{section.3}\protected@file@percent }
+\newlabel{sec:background}{{3}{4}{Background}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}$E(3)$ Equivariance}{4}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Irreducible Representations}{4}{subsection.3.2}\protected@file@percent }
+\newlabel{subsec:irreducible_representations}{{3.2}{4}{Irreducible Representations}{subsection.3.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax Irreps Features.}{4}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Spherical Harmonics.}{5}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Tensor Product}{5}{subsection.3.3}\protected@file@percent }
+\newlabel{subsec:tensor_product}{{3.3}{5}{Tensor Product}{subsection.3.3}{}}
+\newlabel{eq:tensor_product}{{1}{5}{Tensor Product}{equation.3.1}{}}
+\@writefile{lof}{\contentsline {xsect}{Equiformer}{5}{figure.caption.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {xsect}{Equiformer}{5}{figure.caption.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Equiformer}{5}{section.4}\protected@file@percent }
+\citation{layer_norm}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces \textbf  {Architecture of Equiformer.} We embed input 3D graphs with atom and edge-degree embeddings and process them with Transformer blocks, consisting of equivariant graph attention and feed forward networks. In this figure, ``$\otimes $'' denotes multiplication, ``$\oplus $'' denotes addition, and ``DTP'' stands for depth-wise tensor product. $\DOTSB \sum@ \slimits@ $ within a circle denotes summation over all neighbors. Gray cells indicate intermediate irreps features. \relax }}{6}{figure.caption.1}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:equiformer}{{1}{6}{\textbf {Architecture of Equiformer.} We embed input 3D graphs with atom and edge-degree embeddings and process them with Transformer blocks, consisting of equivariant graph attention and feed forward networks. In this figure, ``$\otimes $'' denotes multiplication, ``$\oplus $'' denotes addition, and ``DTP'' stands for depth-wise tensor product. $\sum $ within a circle denotes summation over all neighbors. Gray cells indicate intermediate irreps features. \relax }{figure.caption.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Equivariant Operations for Irreps Features}{6}{subsection.4.1}\protected@file@percent }
+\newlabel{subsec:equivariant_operations}{{4.1}{6}{Equivariant Operations for Irreps Features}{subsection.4.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax Linear.}{6}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Layer Normalization.}{6}{subsection.4.1}\protected@file@percent }
+\citation{3dsteerable}
+\citation{silu,swish}
+\citation{mobilenet}
+\citation{transformer,gat,se3_transformer,transformer_in_vision,graphormer,gatv2}
+\citation{transformer}
+\citation{neural_message_passing_quantum_chemistry}
+\citation{gat,gatv2}
+\citation{neural_message_passing_quantum_chemistry}
+\@writefile{toc}{\contentsline {paragraph}{\relax Gate.}{7}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Depth-wise Tensor Product.}{7}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Equivariant Graph Attention}{7}{subsection.4.2}\protected@file@percent }
+\newlabel{subsec:equivariant_graph_attention}{{4.2}{7}{Equivariant Graph Attention}{subsection.4.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax Incorporating Content and Geometric Information.}{7}{equation.4.2}\protected@file@percent }
+\citation{gatv2}
+\citation{transformer}
+\citation{mlp_universal_approximator,approximation_mlp,approximation_sigmoid}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces  \textbf  {Equivariant operations used in Equiformer.} \textbf  {(a)} Each gray line between input and output irreps features contains one learnable weight. \textbf  {(b)} ``RMS'' denotes the root mean square value along the channel dimension. For simplicity, we have removed multiplying by $\gamma $ here. \textbf  {(c)} Gate layers are equivariant activation functions where non-linearly transformed scalars are used to gate non-scalar irreps features. \textbf  {(d)} The left two irreps features correspond to two input irreps features, and the rightmost one is the output irreps feature. The two gray lines connecting two vectors in the input irreps features and one vector in the output irreps feature form a path and contain one learnable weight. An alternative visualization of depth-wise tensor products can be found in Fig.\nobreakspace  {}\ref  {fig:depthwise_tensor_product_e3nn} in appendix. We show $SE(3)$-equivariant operations here, which can be generalized to $E(3)$-equivariant features. \relax }}{8}{figure.caption.2}\protected@file@percent }
+\newlabel{fig:equivariant_operation}{{2}{8}{\textbf {Equivariant operations used in Equiformer.} \textbf {(a)} Each gray line between input and output irreps features contains one learnable weight. \textbf {(b)} ``RMS'' denotes the root mean square value along the channel dimension. For simplicity, we have removed multiplying by $\gamma $ here. \textbf {(c)} Gate layers are equivariant activation functions where non-linearly transformed scalars are used to gate non-scalar irreps features. \textbf {(d)} The left two irreps features correspond to two input irreps features, and the rightmost one is the output irreps feature. The two gray lines connecting two vectors in the input irreps features and one vector in the output irreps feature form a path and contain one learnable weight. An alternative visualization of depth-wise tensor products can be found in Fig.~\ref {fig:depthwise_tensor_product_e3nn} in appendix. We show $SE(3)$-equivariant operations here, which can be generalized to $E(3)$-equivariant features. \relax }{figure.caption.2}{}}
+\newlabel{eq:pre_attn}{{3}{8}{Incorporating Content and Geometric Information}{equation.4.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax Multi-Layer Perceptron Attention.}{8}{equation.4.3}\protected@file@percent }
+\citation{transformer}
+\citation{gin,graphormer_3d}
+\citation{schnet}
+\citation{dimenet,dimenet_pp}
+\citation{neural_message_passing_quantum_chemistry}
+\citation{schnet}
+\citation{cormorant}
+\citation{lieconv}
+\citation{dimenet_pp}
+\citation{tfn}
+\citation{se3_transformer}
+\citation{egnn}
+\citation{painn}
+\citation{torchmd_net}
+\citation{spherenet}
+\citation{segnn}
+\citation{eqgat}
+\@writefile{toc}{\contentsline {paragraph}{\relax Non-Linear Message Passing.}{9}{equation.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Multi-Head Attention.}{9}{equation.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Overall Architecture}{9}{subsection.4.3}\protected@file@percent }
+\newlabel{subsec:overall_architecture}{{4.3}{9}{Overall Architecture}{subsection.4.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax Embedding.}{9}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Radial Basis and Radial Function.}{9}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Feed Forward Network.}{9}{subsection.4.3}\protected@file@percent }
+\citation{qm9_2,qm9_1}
+\citation{schnet}
+\citation{dimenet}
+\citation{painn}
+\citation{torchmd_net}
+\citation{nequip}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces \textbf  {MAE results on QM9 testing set.} $\dagger $ denotes using different data partitions. \relax }}{10}{table.caption.3}\protected@file@percent }
+\newlabel{tab:qm9_result}{{1}{10}{\textbf {MAE results on QM9 testing set.} $\dagger $ denotes using different data partitions. \relax }{table.caption.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax Output Head.}{10}{subsection.4.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {xsect}{Experiment}{10}{table.caption.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {xsect}{Experiment}{10}{table.caption.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Experiment}{10}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}QM9}{10}{subsection.5.1}\protected@file@percent }
+\newlabel{subsec:qm9_exp}{{5.1}{10}{QM9}{subsection.5.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax Dataset.}{10}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Training Details.}{10}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Results.}{10}{subsection.5.1}\protected@file@percent }
+\citation{md17_1,md17_2,md17_3}
+\citation{cgcnn}
+\citation{schnet}
+\citation{dimenet_pp}
+\citation{painn}
+\citation{spinconv}
+\citation{spherenet}
+\citation{segnn}
+\citation{noisy_nodes}
+\citation{noisy_nodes}
+\citation{graphormer_3d}
+\citation{noisy_nodes}
+\citation{graphormer_3d}
+\citation{oc20}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces \textbf  {MAE results on MD17 testing set.} Energy and force are in units of meV and meV/$\textup  {\r A}$.\relax }}{11}{table.caption.4}\protected@file@percent }
+\newlabel{tab:md17_result}{{2}{11}{\textbf {MAE results on MD17 testing set.} Energy and force are in units of meV and meV/$\angstrom $.\relax }{table.caption.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces \textbf  {Results on OC20 IS2RE \underline  {testing} set.}\relax }}{11}{table.caption.5}\protected@file@percent }
+\newlabel{tab:is2re_test}{{3}{11}{\textbf {Results on OC20 IS2RE \underline {testing} set.}\relax }{table.caption.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}MD17}{11}{subsection.5.2}\protected@file@percent }
+\newlabel{subsec:md17}{{5.2}{11}{MD17}{subsection.5.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax Dataset.}{11}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Training Details.}{11}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Results.}{11}{subsection.5.2}\protected@file@percent }
+\citation{noisy_nodes}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces \textbf  {Results on OC20 IS2RE \underline  {validation} set when IS2RS is adopted during training.} \relax }}{12}{table.caption.6}\protected@file@percent }
+\newlabel{tab:is2re_is2rs_validation}{{4}{12}{\textbf {Results on OC20 IS2RE \underline {validation} set when IS2RS is adopted during training.} \relax }{table.caption.6}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces  \textbf  {Results on OC20 IS2RE \underline  {testing} set when IS2RS is adopted during training.} $\dagger $ denotes using ensemble of models trained on both IS2RE training and validation sets. In contrast, we use the same single Equiformer model in Table\nobreakspace  {}\ref  {tab:is2re_is2rs_validation}, which is trained only on the training set. Note that Equiformer achieves better results with much less computation. \relax }}{12}{table.caption.7}\protected@file@percent }
+\newlabel{tab:is2re_is2rs_testing}{{5}{12}{\textbf {Results on OC20 IS2RE \underline {testing} set when IS2RS is adopted during training.} $\dagger $ denotes using ensemble of models trained on both IS2RE training and validation sets. In contrast, we use the same single Equiformer model in Table~\ref {tab:is2re_is2rs_validation}, which is trained only on the training set. Note that Equiformer achieves better results with much less computation. \relax }{table.caption.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}OC20}{12}{subsection.5.3}\protected@file@percent }
+\newlabel{subsec:oc20}{{5.3}{12}{OC20}{subsection.5.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax Dataset.}{12}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Setting.}{12}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Training Details.}{12}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax IS2RE Results without Node-Level Auxiliary Task.}{12}{subsection.5.3}\protected@file@percent }
+\citation{noisy_nodes}
+\citation{se3_transformer,torchmd_net,eqgat}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces \textbf  {Ablation study results on QM9.}\relax }}{13}{table.caption.8}\protected@file@percent }
+\newlabel{tab:qm9_ablation}{{6}{13}{\textbf {Ablation study results on QM9.}\relax }{table.caption.8}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces \textbf  {Ablation study results on OC20 IS2RE validation set.} \relax }}{13}{table.caption.9}\protected@file@percent }
+\newlabel{tab:oc20_ablation}{{7}{13}{\textbf {Ablation study results on OC20 IS2RE validation set.} \relax }{table.caption.9}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax IS2RE Results with IS2RS Node-Level Auxiliary Task.}{13}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Ablation Study}{13}{subsection.5.4}\protected@file@percent }
+\newlabel{subsec:ablation_study}{{5.4}{13}{Ablation Study}{subsection.5.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax Result on QM9.}{13}{subsection.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Result on OC20.}{13}{subsection.5.4}\protected@file@percent }
+\citation{e3nn}
+\citation{supercloud}
+\@writefile{lof}{\contentsline {xsect}{Conclusion}{14}{subsection.5.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {xsect}{Conclusion}{14}{subsection.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusion}{14}{section.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {xsect}{Ethics Statement}{14}{section.6}\protected@file@percent }
+\@writefile{lot}{\contentsline {xsect}{Ethics Statement}{14}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Ethics Statement}{14}{section.7}\protected@file@percent }
+\@writefile{lof}{\contentsline {xsect}{Reproducibility Statement }{14}{section.7}\protected@file@percent }
+\@writefile{lot}{\contentsline {xsect}{Reproducibility Statement }{14}{section.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8}Reproducibility Statement }{14}{section.8}\protected@file@percent }
+\bibdata{iclr2023_conference}
+\bibcite{cormorant}{{1}{2019}{{Anderson et~al.}}{{Anderson, Hy, and Kondor}}}
+\bibcite{layer_norm}{{2}{2016}{{Ba et~al.}}{{Ba, Kiros, and Hinton}}}
+\bibcite{wav2vec2}{{3}{2020}{{Baevski et~al.}}{{Baevski, Zhou, Mohamed, and Auli}}}
+\bibcite{nequip}{{4}{2022}{{Batzner et~al.}}{{Batzner, Musaelian, Sun, Geiger, Mailoa, Kornbluth, Molinari, Smidt, and Kozinsky}}}
+\bibcite{segnn}{{5}{2022}{{Brandstetter et~al.}}{{Brandstetter, Hesselink, van~der Pol, Bekkers, and Welling}}}
+\bibcite{gatv2}{{6}{2022}{{Brody et~al.}}{{Brody, Alon, and Yahav}}}
+\bibcite{gpt3}{{7}{2020}{{Brown et~al.}}{{Brown, Mann, Ryder, Subbiah, Kaplan, Dhariwal, Neelakantan, Shyam, Sastry, Askell, Agarwal, Herbert-Voss, Krueger, Henighan, Child, Ramesh, Ziegler, Wu, Winter, Hesse, Chen, Sigler, Litwin, Gray, Chess, Clark, Berner, McCandlish, Radford, Sutskever, and Amodei}}}
+\bibcite{relational_graph_attention_networks}{{8}{2019}{{Busbridge et~al.}}{{Busbridge, Sherburn, Cavallo, and Hammerla}}}
+\bibcite{detr}{{9}{2020}{{Carion et~al.}}{{Carion, Massa, Synnaeve, Usunier, Kirillov, and Zagoruyko}}}
+\bibcite{oc20}{{10}{2021}{{Chanussot* et~al.}}{{Chanussot*, Das*, Goyal*, Lavril*, Shuaibi*, Riviere, Tran, Heras-Domingo, Ho, Hu, Palizhati, Sriram, Wood, Yoon, Parikh, Zitnick, and Ulissi}}}
+\bibcite{line_graph}{{11}{2019}{{Chen et~al.}}{{Chen, Li, and Bruna}}}
+\bibcite{md17_1}{{12}{2017}{{Chmiela et~al.}}{{Chmiela, Tkatchenko, Sauceda, Poltavsky, Schütt, and Müller}}}
+\bibcite{md17_3}{{13}{2018}{{Chmiela et~al.}}{{Chmiela, Sauceda, Müller, and Tkatchenko}}}
+\bibcite{group_equivariant_convolution_networks}{{14}{2016}{{Cohen \& Welling}}{{Cohen and Welling}}}
+\bibcite{spherical_cnn}{{15}{2018}{{Cohen et~al.}}{{Cohen, Geiger, Köhler, and Welling}}}
+\bibcite{approximation_sigmoid}{{16}{1989}{{Cybenko}}{{}}}
+\bibcite{bert}{{17}{2019}{{Devlin et~al.}}{{Devlin, Chang, Lee, and Toutanova}}}
+\bibcite{vit}{{18}{2021}{{Dosovitskiy et~al.}}{{Dosovitskiy, Beyer, Kolesnikov, Weissenborn, Zhai, Unterthiner, Dehghani, Minderer, Heigold, Gelly, Uszkoreit, and Houlsby}}}
+\bibcite{Dresselhaus2007}{{19}{2007}{{Dresselhaus et~al.}}{{Dresselhaus, Dresselhaus, and Jorio}}}
+\bibcite{generalization_transformer_graphs}{{20}{2020}{{Dwivedi \& Bresson}}{{Dwivedi and Bresson}}}
+\bibcite{silu}{{21}{2017}{{Elfwing et~al.}}{{Elfwing, Uchibe, and Doya}}}
+\bibcite{lieconv}{{22}{2020}{{Finzi et~al.}}{{Finzi, Stanton, Izmailov, and Wilson}}}
+\bibcite{neural_scale_of_chemical_models}{{23}{2022}{{Frey et~al.}}{{Frey, Soklaski, Axelrod, Samsi, Gomez-Bombarelli, Coley, and Gadepally}}}
+\bibcite{se3_transformer}{{24}{2020}{{Fuchs et~al.}}{{Fuchs, Worrall, Fischer, and Welling}}}
+\bibcite{hard_graph_attention}{{25}{2019}{{Gao \& Ji}}{{Gao and Ji}}}
+\bibcite{dimenet_pp}{{26}{2020{a}}{{Gasteiger et~al.}}{{Gasteiger, Giri, Margraf, and G{\"u}nnemann}}}
+\bibcite{dimenet}{{27}{2020{b}}{{Gasteiger et~al.}}{{Gasteiger, Gro{\ss }, and G{\"u}nnemann}}}
+\bibcite{gemnet_oc}{{28}{2022}{{Gasteiger et~al.}}{{Gasteiger, Shuaibi, Sriram, Günnemann, Ulissi, Zitnick, and Das}}}
+\bibcite{e3nn}{{29}{2022}{{Geiger et~al.}}{{Geiger, Smidt, M., Miller, Boomsma, Dice, Lapchevskyi, Weiler, Tyszkiewicz, Batzner, Madisetti, Uhrin, Frellsen, Jung, Sanborn, Wen, Rackers, Rød, and Bailey}}}
+\bibcite{neural_message_passing_quantum_chemistry}{{30}{2017}{{Gilmer et~al.}}{{Gilmer, Schoenholz, Riley, Vinyals, and Dahl}}}
+\bibcite{noisy_nodes}{{31}{2022}{{Godwin et~al.}}{{Godwin, Schaarschmidt, Gaunt, Sanchez-Gonzalez, Rubanova, Veli{\v {c}}kovi{\'c}, Kirkpatrick, and Battaglia}}}
+\bibcite{graphsage}{{32}{2017}{{Hamilton et~al.}}{{Hamilton, Ying, and Leskovec}}}
+\bibcite{approximation_mlp}{{33}{1991}{{Hornik}}{{}}}
+\bibcite{mlp_universal_approximator}{{34}{1989}{{Hornik et~al.}}{{Hornik, Stinchcombe, and White}}}
+\bibcite{mobilenet}{{35}{2017}{{Howard et~al.}}{{Howard, Zhu, Chen, Kalenichenko, Wang, Weyand, Andreetto, and Adam}}}
+\bibcite{ogb}{{36}{2020}{{Hu et~al.}}{{Hu, Fey, Zitnik, Dong, Ren, Liu, Catasta, and Leskovec}}}
+\bibcite{ogblsc}{{37}{2021}{{Hu et~al.}}{{Hu, Fey, Ren, Nakata, Dong, and Leskovec}}}
+\bibcite{push_limit_of_md_100m}{{38}{2020}{{Jia et~al.}}{{Jia, Wang, Chen, Lu, Lin, Car, E, and Zhang}}}
+\bibcite{gvp}{{39}{2021}{{Jing et~al.}}{{Jing, Eismann, Suriana, Townshend, and Dror}}}
+\bibcite{transformer_in_vision}{{40}{2021}{{Khan et~al.}}{{Khan, Naseer, Hayat, Zamir, Khan, and Shah}}}
+\bibcite{graph_attention_with_self_supervision}{{41}{2021}{{Kim \& Oh}}{{Kim and Oh}}}
+\bibcite{gcn}{{42}{2017}{{Kipf \& Welling}}{{Kipf and Welling}}}
+\bibcite{gemnet}{{43}{2021}{{Klicpera et~al.}}{{Klicpera, Becker, and G{\"u}nnemann}}}
+\bibcite{kondor2018clebsch}{{44}{2018}{{Kondor et~al.}}{{Kondor, Lin, and Trivedi}}}
+\bibcite{spectral_attention}{{45}{2021}{{Kreuzer et~al.}}{{Kreuzer, Beaini, Hamilton, L{\'e}tourneau, and Tossou}}}
+\bibcite{eqgat}{{46}{2022}{{Le et~al.}}{{Le, Noé, and Clevert}}}
+\bibcite{spherenet}{{47}{2022}{{Liu et~al.}}{{Liu, Wang, Liu, Lin, Zhang, Oztekin, and Ji}}}
+\bibcite{deep_potential_molecular_dynamics_simulation}{{48}{2021}{{Lu et~al.}}{{Lu, Wang, Chen, Lin, Car, E, Jia, and Zhang}}}
+\bibcite{l1net}{{49}{2020}{{Miller et~al.}}{{Miller, Geiger, Smidt, and Noé}}}
+\bibcite{allergo}{{50}{2022}{{Musaelian et~al.}}{{Musaelian, Batzner, Johansson, Sun, Owen, Kornbluth, and Kozinsky}}}
+\bibcite{pytorch}{{51}{2019}{{Paszke et~al.}}{{Paszke, Gross, Massa, Lerer, Bradbury, Chanan, Killeen, Lin, Gimelshein, Antiga, Desmaison, Kopf, Yang, DeVito, Raison, Tejani, Chilamkurthy, Steiner, Fang, Bai, and Chintala}}}
+\bibcite{orbnet}{{52}{2020}{{Qiao et~al.}}{{Qiao, Welborn, Anandkumar, Manby, and Miller}}}
+\bibcite{quantum_scaling}{{53}{2023}{{Rackers et~al.}}{{Rackers, Tecot, Geiger, and Smidt}}}
+\bibcite{swish}{{54}{2017}{{Ramachandran et~al.}}{{Ramachandran, Zoph, and Le}}}
+\bibcite{qm9_1}{{55}{2014}{{Ramakrishnan et~al.}}{{Ramakrishnan, Dral, Rupp, and von Lilienfeld}}}
+\bibcite{deepchem}{{56}{2019}{{Ramsundar et~al.}}{{Ramsundar, Eastman, Walters, Pande, Leswing, and Wu}}}
+\bibcite{supercloud}{{57}{2018}{{Reuther et~al.}}{{Reuther, Kepner, Byun, Samsi, Arcand, Bestor, Bergeron, Gadepally, Houle, Hubbell, Jones, Klein, Milechin, Mullen, Prout, Rosa, Yee, and Michaleas}}}
+\bibcite{grove}{{58}{2020}{{Rong et~al.}}{{Rong, Bian, Xu, Xie, WEI, Huang, and Huang}}}
+\bibcite{qm9_2}{{59}{2012}{{Ruddigkeit et~al.}}{{Ruddigkeit, van Deursen, Blum, and Reymond}}}
+\bibcite{imagenet}{{60}{2015}{{Russakovsky et~al.}}{{Russakovsky, Deng, Su, Krause, Satheesh, Ma, Huang, Karpathy, Khosla, Bernstein, Berg, and Fei-Fei}}}
+\bibcite{gns}{{61}{2020}{{Sanchez-Gonzalez et~al.}}{{Sanchez-Gonzalez, Godwin, Pfaff, Ying, Leskovec, and Battaglia}}}
+\bibcite{egnn}{{62}{2021}{{Satorras et~al.}}{{Satorras, Hoogeboom, and Welling}}}
+\bibcite{schnet}{{63}{2017}{{Sch\"{u}tt et~al.}}{{Sch\"{u}tt, Kindermans, Sauceda, Chmiela, Tkatchenko, and M\"{u}ller}}}
+\bibcite{md17_2}{{64}{2017}{{Schütt et~al.}}{{Schütt, Arbabzadah, Chmiela, Müller, and Tkatchenko}}}
+\bibcite{painn}{{65}{2021}{{Schütt et~al.}}{{Schütt, Unke, and Gastegger}}}
+\bibcite{graphormer_3d}{{66}{2022}{{Shi et~al.}}{{Shi, Zheng, Ke, Shen, You, He, Luo, Liu, He, and Liu}}}
+\bibcite{masked_label_prediction}{{67}{2020}{{Shi et~al.}}{{Shi, Huang, Feng, Zhong, Wang, and Sun}}}
+\bibcite{spinconv}{{68}{2021}{{Shuaibi et~al.}}{{Shuaibi, Kolluru, Das, Grover, Sriram, Ulissi, and Zitnick}}}
+\bibcite{finding_symmetry_breaking_order}{{69}{2021}{{Smidt et~al.}}{{Smidt, Geiger, and Miller}}}
+\bibcite{gemnet_xl}{{70}{2022}{{Sriram et~al.}}{{Sriram, Das, Wood, and Zitnick}}}
+\bibcite{dropout}{{71}{2014}{{Srivastava et~al.}}{{Srivastava, Hinton, Krizhevsky, Sutskever, and Salakhutdinov}}}
+\bibcite{torchmd_net}{{72}{2022}{{Th{\"o}lke \& Fabritiis}}{{Th{\"o}lke and Fabritiis}}}
+\bibcite{tfn}{{73}{2018}{{Thomas et~al.}}{{Thomas, Smidt, Kearnes, Yang, Li, Kohlhoff, and Riley}}}
+\bibcite{deit}{{74}{2020}{{Touvron et~al.}}{{Touvron, Cord, Douze, Massa, Sablayrolles, and J\'egou}}}
+\bibcite{geometric_prediction}{{75}{2020}{{Townshend et~al.}}{{Townshend, Townshend, Eismann, and Dror}}}
+\bibcite{atom3d}{{76}{2021}{{Townshend et~al.}}{{Townshend, V{\"o}gele, Suriana, Derry, Powers, Laloudakis, Balachandar, Jing, Anderson, Eismann, Kondor, Altman, and Dror}}}
+\bibcite{physnet}{{77}{2019}{{Unke \& Meuwly}}{{Unke and Meuwly}}}
+\bibcite{se3_wavefunction}{{78}{2021}{{Unke et~al.}}{{Unke, Bogojeski, Gastegger, Geiger, Smidt, and Muller}}}
+\bibcite{transformer}{{79}{2017}{{Vaswani et~al.}}{{Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez, Kaiser, and Polosukhin}}}
+\bibcite{gat}{{80}{2018}{{Veličković et~al.}}{{Veličković, Cucurull, Casanova, Romero, Liò, and Bengio}}}
+\bibcite{3dsteerable}{{81}{2018}{{Weiler et~al.}}{{Weiler, Geiger, Welling, Boomsma, and Cohen}}}
+\bibcite{harmonis_network}{{82}{2016}{{Worrall et~al.}}{{Worrall, Garbin, Turmukhambetov, and Brostow}}}
+\bibcite{cgcnn}{{83}{2018}{{Xie \& Grossman}}{{Xie and Grossman}}}
+\bibcite{gin}{{84}{2019}{{Xu et~al.}}{{Xu, Hu, Leskovec, and Jegelka}}}
+\bibcite{graphormer}{{85}{2021}{{Ying et~al.}}{{Ying, Cai, Luo, Zheng, Ke, He, Shen, and Liu}}}
+\bibcite{zee}{{86}{2016}{{Zee}}{{}}}
+\bibcite{gaan}{{87}{2018{a}}{{Zhang et~al.}}{{Zhang, Shi, Xie, Ma, King, and Yeung}}}
+\bibcite{deep_potential_molecular_dynamics}{{88}{2018{b}}{{Zhang et~al.}}{{Zhang, Han, Wang, Car, and E}}}
+\bibstyle{iclr2023_conference}
+\citation{tfn,3dsteerable,kondor2018clebsch,cormorant,se3_transformer,segnn}
+\citation{zee,Dresselhaus2007}
+\citation{zee,Dresselhaus2007,e3nn}
+\@writefile{lof}{\contentsline {xsect}{Additional Background}{25}{section*.12}\protected@file@percent }
+\@writefile{lot}{\contentsline {xsect}{Additional Background}{25}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {A}Additional Background}{25}{appendix.A}\protected@file@percent }
+\newlabel{appendix:sec:additional_background}{{A}{25}{Additional Background}{appendix.A}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.1}Group Theory}{25}{subsection.A.1}\protected@file@percent }
+\newlabel{appendix:subsec:group_theory}{{A.1}{25}{Group Theory}{subsection.A.1}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax Definition of Groups.}{25}{subsection.A.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Group Representations.}{25}{Item.8}\protected@file@percent }
+\citation{nequip,quantum_scaling,neural_scale_of_chemical_models}
+\citation{segnn}
+\citation{e3nn}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.2}Equivariance}{26}{subsection.A.2}\protected@file@percent }
+\newlabel{appendix:subsec:equivariance}{{A.2}{26}{Equivariance}{subsection.A.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax Definition of Equivariance and Invariance.}{26}{subsection.A.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Equivariance in Neural Networks.}{26}{subsection.A.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.3}Equivariant Features Based on Vector Spaces of Irreducible Representations}{26}{subsection.A.3}\protected@file@percent }
+\newlabel{appendix:subsec:equivariant_irreps_feature}{{A.3}{26}{Equivariant Features Based on Vector Spaces of Irreducible Representations}{subsection.A.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax Irreducible Representations of Inversion.}{26}{subsection.A.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Irreps Features.}{26}{subsection.A.3}\protected@file@percent }
+\citation{finding_symmetry_breaking_order}
+\@writefile{toc}{\contentsline {paragraph}{\relax Spherical Harmonics.}{27}{subsection.A.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Vectors of Higher $L$ and Other Parities.}{27}{subsection.A.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.4}Tensor Product}{27}{subsection.A.4}\protected@file@percent }
+\newlabel{appendix:subsec:tensor_product}{{A.4}{27}{Tensor Product}{subsection.A.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax Tensor Product for $O(3)$.}{27}{subsection.A.4}\protected@file@percent }
+\newlabel{appendix:eq:tensor_product}{{7}{27}{Tensor Product for $O(3)$}{equation.A.7}{}}
+\newlabel{appendix:eq:parity}{{8}{27}{Tensor Product for $O(3)$}{equation.A.8}{}}
+\citation{atom3d}
+\citation{graphsage,neural_message_passing_quantum_chemistry,gcn,gin,gat,gatv2}
+\citation{qm9_2,qm9_1,deepchem,ogb,ogblsc}
+\@writefile{toc}{\contentsline {paragraph}{\relax Clebsch-Gordan Coefficients.}{28}{equation.A.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Examples of Tensor Products.}{28}{equation.A.9}\protected@file@percent }
+\@writefile{lof}{\contentsline {xsect}{Related Works}{28}{Item.12}\protected@file@percent }
+\@writefile{lot}{\contentsline {xsect}{Related Works}{28}{Item.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {B}Related Works}{28}{appendix.B}\protected@file@percent }
+\newlabel{appendix:sec:related_works}{{B}{28}{Related Works}{appendix.B}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.1}Graph Neural Networks for 3D Atomistic Graphs}{28}{subsection.B.1}\protected@file@percent }
+\newlabel{appendix:subsec:gnn_3d_graphs}{{B.1}{28}{Graph Neural Networks for 3D Atomistic Graphs}{subsection.B.1}{}}
+\citation{se3_transformer,torchmd_net,eqgat}
+\citation{se3_transformer}
+\citation{torchmd_net}
+\citation{nequip}
+\citation{noisy_nodes}
+\citation{graphormer_3d}
+\citation{se3_transformer}
+\citation{se3_transformer}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.2}{Detailed Comparison between equivariant Transformers}}{29}{subsection.B.2}\protected@file@percent }
+\newlabel{appendix:subsec:detailed_comparison_between_equivariant_transformers}{{B.2}{29}{\revision {Detailed Comparison between equivariant Transformers}}{subsection.B.2}{}}
+\citation{se3_transformer}
+\citation{torchmd_net,eqgat}
+\citation{segnn}
+\citation{nequip}
+\citation{se3_transformer}
+\citation{se3_transformer}
+\citation{se3_transformer}
+\citation{schnet,cgcnn,physnet,dimenet,dimenet_pp,orbnet,spherenet,spinconv,gemnet}
+\citation{schnet}
+\citation{dimenet,dimenet_pp}
+\citation{spherenet}
+\citation{gemnet,gemnet_oc}
+\citation{gemnet_xl}
+\citation{line_graph}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.3}Invariant GNNs}{30}{subsection.B.3}\protected@file@percent }
+\newlabel{appendix:subsec:invariant_gnn}{{B.3}{30}{Invariant GNNs}{subsection.B.3}{}}
+\citation{gat,gatv2}
+\citation{relational_graph_attention_networks,graph_attention_with_self_supervision}
+\citation{gaan,hard_graph_attention,masked_label_prediction,generalization_transformer_graphs,graph_attention_with_self_supervision,spectral_attention}
+\citation{graph_attention_with_self_supervision}
+\citation{gatv2}
+\citation{generalization_transformer_graphs,grove,spectral_attention,graphormer,graphormer_3d}
+\citation{transformer}
+\citation{grove}
+\citation{spectral_attention}
+\citation{graphormer}
+\citation{e3nn}
+\citation{e3nn}
+\@writefile{toc}{\contentsline {subsection}{\numberline {B.4}Attention and Transformer}{31}{subsection.B.4}\protected@file@percent }
+\newlabel{appendix:subsec:attention_and_transformers}{{B.4}{31}{Attention and Transformer}{subsection.B.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax Graph Attention.}{31}{subsection.B.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax Graph Transformer.}{31}{subsection.B.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {xsect}{Details of Architecture}{31}{subsection.B.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {xsect}{Details of Architecture}{31}{subsection.B.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {C}Details of Architecture}{31}{appendix.C}\protected@file@percent }
+\newlabel{appendix:sec:details_architecture}{{C}{31}{Details of Architecture}{appendix.C}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.1}Equivariant Operation Used in Equiformer}{31}{subsection.C.1}\protected@file@percent }
+\newlabel{appendix:subsec:equivariant_operations}{{C.1}{31}{Equivariant Operation Used in Equiformer}{subsection.C.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces \textbf  {An alternative visualization of the depth-wise tensor product. } We follow the visualization of tensor products in \texttt  {e3nn}\nobreakspace  {}\citep  {e3nn} and separate paths into three parts based on the types of output vectors. We note that one vector in the output irreps feature depends only on one vector in each input irreps feature. \relax }}{32}{figure.caption.13}\protected@file@percent }
+\newlabel{fig:depthwise_tensor_product_e3nn}{{3}{32}{\textbf {An alternative visualization of the depth-wise tensor product. } We follow the visualization of tensor products in \texttt {e3nn}~\citep {e3nn} and separate paths into three parts based on the types of output vectors. We note that one vector in the output irreps feature depends only on one vector in each input irreps feature. \relax }{figure.caption.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.2}Equiformer Architecture}{32}{subsection.C.2}\protected@file@percent }
+\newlabel{appendix:subsec:equiformer_architecture}{{C.2}{32}{Equiformer Architecture}{subsection.C.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces \textbf  {Architecture of equivariant dot product attention without non-linear message passing.} In this figure, ``$\otimes $'' denotes multiplication, ``$\oplus $'' denotes addition, and ``DTP'' stands for depth-wise tensor product. $\DOTSB \sum@ \slimits@ $ within a circle denotes summation over all neighbors. Gray cells indicate intermediate irreps features. We highlight the difference of dot product attention from multi-layer perceptron attention in \leavevmode {\color  {crimson}red}. Note that key $k_{ij}$ and value $v_{ij}$ are irreps features and therefore $f_{ij}$ in dot product attention typically has more channels than that in multi-layer perceptron attention. \relax }}{33}{figure.caption.14}\protected@file@percent }
+\newlabel{appendix:fig:dot_product_attention}{{4}{33}{\textbf {Architecture of equivariant dot product attention without non-linear message passing.} In this figure, ``$\otimes $'' denotes multiplication, ``$\oplus $'' denotes addition, and ``DTP'' stands for depth-wise tensor product. $\sum $ within a circle denotes summation over all neighbors. Gray cells indicate intermediate irreps features. We highlight the difference of dot product attention from multi-layer perceptron attention in \note {red}. Note that key $k_{ij}$ and value $v_{ij}$ are irreps features and therefore $f_{ij}$ in dot product attention typically has more channels than that in multi-layer perceptron attention. \relax }{figure.caption.14}{}}
+\citation{se3_transformer}
+\citation{transformer}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.3}Dot Product Attention}{34}{subsection.C.3}\protected@file@percent }
+\newlabel{appendix:subsec:dot_product_attention}{{C.3}{34}{Dot Product Attention}{subsection.C.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.4}{Incorporating $E(3)$-Equivariance}}{34}{subsection.C.4}\protected@file@percent }
+\newlabel{appendix:subsec:incorporating_e3_equivariance}{{C.4}{34}{\revision {Incorporating $E(3)$-Equivariance}}{subsection.C.4}{}}
+\citation{torchmd_net}
+\citation{schnet,spinconv,gemnet,graphormer_3d}
+\citation{dimenet,dimenet_pp}
+\citation{dropout}
+\@writefile{toc}{\contentsline {subsection}{\numberline {C.5}Discussion on Computational Complexity}{35}{subsection.C.5}\protected@file@percent }
+\newlabel{appendix:subsec:computational_complexity}{{C.5}{35}{Discussion on Computational Complexity}{subsection.C.5}{}}
+\@writefile{lof}{\contentsline {xsect}{Details of Experiments on QM9}{35}{subsection.C.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {xsect}{Details of Experiments on QM9}{35}{subsection.C.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {D}Details of Experiments on QM9}{35}{appendix.D}\protected@file@percent }
+\newlabel{appendix:sec:qm9}{{D}{35}{Details of Experiments on QM9}{appendix.D}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.1}Training Details}{35}{subsection.D.1}\protected@file@percent }
+\newlabel{appendix:subsec:qm9_training_details}{{D.1}{35}{Training Details}{subsection.D.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces \textbf  {Hyper-parameters for QM9 dataset.} We denote $C_L$ type-$L$ vectors as $(C_L, L)$ and $C_{(L, p)}$ type-$(L, p)$ vectors as $(C_{(L, p)}, L, p)$ and use brackets to represent concatenations of vectors. \relax }}{36}{table.caption.15}\protected@file@percent }
+\newlabel{appendix:tab:qm9}{{8}{36}{\textbf {Hyper-parameters for QM9 dataset.} We denote $C_L$ type-$L$ vectors as $(C_L, L)$ and $C_{(L, p)}$ type-$(L, p)$ vectors as $(C_{(L, p)}, L, p)$ and use brackets to represent concatenations of vectors. \relax }{table.caption.15}{}}
+\citation{segnn}
+\citation{torchmd_net}
+\citation{e3nn}
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.2}Comparison between $SE(3)$ and $E(3)$ Equivariance}{37}{subsection.D.2}\protected@file@percent }
+\newlabel{appendix:subsec:e3_qm9}{{D.2}{37}{Comparison between $SE(3)$ and $E(3)$ Equivariance}{subsection.D.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces \textbf  {Ablation study of $SE(3)$/$E(3)$ equivariance on QM9 testing set.} ``Equiformer'' operates on $SE(3)$-equivariant features while ``$E(3)$-Equiformer'' uses $E(3)$-equivariant features. Including inversion achieves similar performance. \relax }}{37}{table.caption.16}\protected@file@percent }
+\newlabel{appendix:tab:e3_qm9}{{9}{37}{\textbf {Ablation study of $SE(3)$/$E(3)$ equivariance on QM9 testing set.} ``Equiformer'' operates on $SE(3)$-equivariant features while ``$E(3)$-Equiformer'' uses $E(3)$-equivariant features. Including inversion achieves similar performance. \relax }{table.caption.16}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {D.3}Comparison of Training Time and Numbers of Parameters}{37}{subsection.D.3}\protected@file@percent }
+\newlabel{appendix:subsec:qm9_training_time_comparison}{{D.3}{37}{Comparison of Training Time and Numbers of Parameters}{subsection.D.3}{}}
+\citation{segnn}
+\citation{torchmd_net}
+\citation{torchmd_net}
+\citation{physnet}
+\citation{torchmd_net}
+\citation{torchmd_net}
+\citation{torchmd_net}
+\citation{nequip}
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces \textbf  {Comparison of training time and numbers of parameters for QM9 dataset.} \relax }}{38}{table.caption.17}\protected@file@percent }
+\newlabel{appendix:tab:qm9_training_time}{{10}{38}{\textbf {Comparison of training time and numbers of parameters for QM9 dataset.} \relax }{table.caption.17}{}}
+\@writefile{lof}{\contentsline {xsect}{Details of Experiments on MD17}{38}{table.caption.17}\protected@file@percent }
+\@writefile{lot}{\contentsline {xsect}{Details of Experiments on MD17}{38}{table.caption.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {E}Details of Experiments on MD17}{38}{appendix.E}\protected@file@percent }
+\newlabel{appendix:sec:md17}{{E}{38}{Details of Experiments on MD17}{appendix.E}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {E.1}Training Details}{38}{subsection.E.1}\protected@file@percent }
+\newlabel{appendix:subsec:md17_training_details}{{E.1}{38}{Training Details}{subsection.E.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {E.2}Additional Comparison to TorchMD-NET}{38}{subsection.E.2}\protected@file@percent }
+\newlabel{appendix:subsec:md17_torchmdnet}{{E.2}{38}{Additional Comparison to TorchMD-NET}{subsection.E.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces \textbf  {Hyper-parameters for MD17 dataset.} We denote $C_L$ type-$L$ vectors as $(C_L, L)$ and $C_{(L, p)}$ type-$(L, p)$ vectors as $(C_{(L, p)}, L, p)$ and use brackets to represent concatenations of vectors. \relax }}{39}{table.caption.18}\protected@file@percent }
+\newlabel{appendix:tab:md17}{{11}{39}{\textbf {Hyper-parameters for MD17 dataset.} We denote $C_L$ type-$L$ vectors as $(C_L, L)$ and $C_{(L, p)}$ type-$(L, p)$ vectors as $(C_{(L, p)}, L, p)$ and use brackets to represent concatenations of vectors. \relax }{table.caption.18}{}}
+\citation{nequip}
+\@writefile{lot}{\contentsline {table}{\numberline {12}{\ignorespaces \textbf  {Additional comparison to TorchMD-Net\nobreakspace  {}\citep  {torchmd_net} on MD17 dataset.} Energy and force are in units of meV and meV/$\textup  {\r A}$.\relax }}{40}{table.caption.19}\protected@file@percent }
+\newlabel{appendix:tab:md17_torchmdnet}{{12}{40}{\textbf {Additional comparison to TorchMD-Net~\citep {torchmd_net} on MD17 dataset.} Energy and force are in units of meV and meV/$\angstrom $.\relax }{table.caption.19}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {13}{\ignorespaces \textbf  {Comparison of training time and numbers of parameters for MD17 dataset.} \relax }}{40}{table.caption.20}\protected@file@percent }
+\newlabel{appendix:tab:md17_training_time}{{13}{40}{\textbf {Comparison of training time and numbers of parameters for MD17 dataset.} \relax }{table.caption.20}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {E.3}Comparison of Training Time and Numbers of Parameters}{40}{subsection.E.3}\protected@file@percent }
+\newlabel{appendix:subsec:md17_training_time_comparison}{{E.3}{40}{Comparison of Training Time and Numbers of Parameters}{subsection.E.3}{}}
+\@writefile{lof}{\contentsline {xsect}{Details of Experiments on OC20}{40}{table.caption.20}\protected@file@percent }
+\@writefile{lot}{\contentsline {xsect}{Details of Experiments on OC20}{40}{table.caption.20}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {F}Details of Experiments on OC20}{40}{appendix.F}\protected@file@percent }
+\newlabel{appendix:sec:oc20}{{F}{40}{Details of Experiments on OC20}{appendix.F}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {F.1}Detailed Description of OC20 Dataset}{40}{subsection.F.1}\protected@file@percent }
+\newlabel{appendix:subsec:oc20_dataset_details}{{F.1}{40}{Detailed Description of OC20 Dataset}{subsection.F.1}{}}
+\citation{noisy_nodes}
+\citation{graphormer_3d}
+\citation{noisy_nodes}
+\citation{noisy_nodes}
+\citation{noisy_nodes}
+\citation{graphormer_3d}
+\citation{schnet}
+\citation{dimenet_pp}
+\citation{gemnet}
+\citation{spherenet}
+\citation{segnn}
+\citation{segnn}
+\citation{spherenet}
+\citation{spherenet}
+\@writefile{toc}{\contentsline {subsection}{\numberline {F.2}Training Details}{41}{subsection.F.2}\protected@file@percent }
+\newlabel{appendix:subsec:oc20_training_details}{{F.2}{41}{Training Details}{subsection.F.2}{}}
+\@writefile{toc}{\contentsline {paragraph}{\relax IS2RE without Node-Level Auxiliary Task.}{41}{subsection.F.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{\relax IS2RE with IS2RS Node-Level Auxiliary Task.}{41}{subsection.F.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {F.3}Results on IS2RE Validation Set}{41}{subsection.F.3}\protected@file@percent }
+\newlabel{appendix:subsec:is2re_validation}{{F.3}{41}{Results on IS2RE Validation Set}{subsection.F.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {F.4}Comparison between $SE(3)$ and $E(3)$ Equivariance}{41}{subsection.F.4}\protected@file@percent }
+\newlabel{appendix:subsec:e3_oc20}{{F.4}{41}{Comparison between $SE(3)$ and $E(3)$ Equivariance}{subsection.F.4}{}}
+\citation{segnn}
+\@writefile{lot}{\contentsline {table}{\numberline {14}{\ignorespaces \textbf  {Hyper-parameters for OC20 dataset under the setting of training without IS2RS auxiliary task.} We denote $C_L$ type-$L$ vectors as $(C_L, L)$ and $C_{(L, p)}$ type-$(L, p)$ vectors as $(C_{(L, p)}, L, p)$ and use brackets to represent concatenations of vectors. \relax }}{42}{table.caption.21}\protected@file@percent }
+\newlabel{appendix:tab:oc20}{{14}{42}{\textbf {Hyper-parameters for OC20 dataset under the setting of training without IS2RS auxiliary task.} We denote $C_L$ type-$L$ vectors as $(C_L, L)$ and $C_{(L, p)}$ type-$(L, p)$ vectors as $(C_{(L, p)}, L, p)$ and use brackets to represent concatenations of vectors. \relax }{table.caption.21}{}}
+\citation{segnn}
+\@writefile{lot}{\contentsline {table}{\numberline {15}{\ignorespaces \textbf  {Results on OC20 IS2RE \underline  {validation} set.} $\dagger $ denotes results reported by\nobreakspace  {}\cite  {spherenet}.\relax }}{43}{table.caption.22}\protected@file@percent }
+\newlabel{tab:is2re_validation}{{15}{43}{\textbf {Results on OC20 IS2RE \underline {validation} set.} $\dagger $ denotes results reported by~\cite {spherenet}.\relax }{table.caption.22}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {16}{\ignorespaces \textbf  {Ablation study of $SE(3)$/$E(3)$ equivariance on OC20 IS2RE \underline  {validation} set.} ``Equiformer'' operates on $SE(3)$-equivariant features while ``$E(3)$-Equiformer'' uses $E(3)$-equivariant features. \relax }}{43}{table.caption.23}\protected@file@percent }
+\newlabel{appendix:tab:e3_oc20}{{16}{43}{\textbf {Ablation study of $SE(3)$/$E(3)$ equivariance on OC20 IS2RE \underline {validation} set.} ``Equiformer'' operates on $SE(3)$-equivariant features while ``$E(3)$-Equiformer'' uses $E(3)$-equivariant features. \relax }{table.caption.23}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {F.5}Comparison of Training Time and Numbers of Parameters}{43}{subsection.F.5}\protected@file@percent }
+\newlabel{appendix:subsec:oc20_training_time_comparison}{{F.5}{43}{Comparison of Training Time and Numbers of Parameters}{subsection.F.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {F.6}Error Distributions}{43}{subsection.F.6}\protected@file@percent }
+\newlabel{appendix:subsec:error_distributions}{{F.6}{43}{Error Distributions}{subsection.F.6}{}}
+\citation{e3nn}
+\citation{pytorch}
+\@writefile{lot}{\contentsline {table}{\numberline {17}{\ignorespaces \textbf  {Comparison of training time and numbers of parameters for OC20 dataset.} \relax }}{44}{table.caption.24}\protected@file@percent }
+\newlabel{appendix:tab:oc20_training_time}{{17}{44}{\textbf {Comparison of training time and numbers of parameters for OC20 dataset.} \relax }{table.caption.24}{}}
+\@writefile{lof}{\contentsline {xsect}{Limitations}{44}{figure.caption.25}\protected@file@percent }
+\@writefile{lot}{\contentsline {xsect}{Limitations}{44}{figure.caption.25}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {G}Limitations}{44}{appendix.G}\protected@file@percent }
+\newlabel{appendix:sec:limitations}{{G}{44}{Limitations}{appendix.G}{}}
+\newlabel{appendix:fig:oc20_val_id}{{5a}{45}{\textbf {ID sub-split.}\relax }{figure.caption.25}{}}
+\newlabel{sub@appendix:fig:oc20_val_id}{{a}{45}{\textbf {ID sub-split.}\relax }{figure.caption.25}{}}
+\newlabel{appendix:fig:oc20_val_ood_ads}{{5b}{45}{\textbf {OOD Ads sub-split.}\relax }{figure.caption.25}{}}
+\newlabel{sub@appendix:fig:oc20_val_ood_ads}{{b}{45}{\textbf {OOD Ads sub-split.}\relax }{figure.caption.25}{}}
+\newlabel{appendix:fig:oc20_val_ood_ads}{{5c}{45}{\textbf {OOD Cat sub-split.}\relax }{figure.caption.25}{}}
+\newlabel{sub@appendix:fig:oc20_val_ood_ads}{{c}{45}{\textbf {OOD Cat sub-split.}\relax }{figure.caption.25}{}}
+\newlabel{appendix:fig:oc20_val_ood_ads}{{5d}{45}{\textbf {OOD Both sub-split.}\relax }{figure.caption.25}{}}
+\newlabel{sub@appendix:fig:oc20_val_ood_ads}{{d}{45}{\textbf {OOD Both sub-split.}\relax }{figure.caption.25}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces \textbf  {Error distributions of different Equiformer models on different sub-splits of OC20 IS2RE validation set.} \relax }}{45}{figure.caption.25}\protected@file@percent }
+\newlabel{appendix:fig:oc20_error_distribution}{{5}{45}{\textbf {Error distributions of different Equiformer models on different sub-splits of OC20 IS2RE validation set.} \relax }{figure.caption.25}{}}
+\global\mtcsecondpartfalse
+\gdef \@abspage@last{46}

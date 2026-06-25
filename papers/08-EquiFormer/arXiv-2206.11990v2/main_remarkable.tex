@@ -1,0 +1,162 @@
+
+\documentclass{article} % For LaTeX2e
+\usepackage{iclr2023_conference,times}
+
+% Optional math commands from https://github.com/goodfeli/dlbook_notation.
+\input{math_commands.tex}
+
+\usepackage{hyperref}
+\usepackage{url}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+
+% added packages below
+\usepackage{graphicx} 
+\usepackage{wrapfig}
+\usepackage{lipsum}
+\usepackage{multirow}
+\usepackage{caption}
+\usepackage{tabularx}
+%\usepackage{algorithm,algorithmicx,algpseudocode}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{pifont}
+\usepackage{xparse}
+\usepackage{tikz}
+\usepackage[normalem]{ulem}
+\usepackage{subcaption}
+\usepackage{comment}
+\usepackage{changepage}
+\usepackage[toc,page,header]{appendix}
+\usepackage{minitoc}
+
+
+\newcommand{\todo}[1]{\textcolor{orange}{#1}}
+\definecolor{crimson}{RGB}{163, 31, 52}
+\newcommand{\note}[1]{\textcolor{crimson}{#1}}
+%\newcommand{\revision}[1]{\textcolor{blue}{#1}}
+\newcommand{\revision}[1]{{#1}}
+\newcommand{\tess}[1]{\textcolor{violet}{#1}}
+
+\newcommand{\angstrom}{\textup{\AA}}
+
+%\NewDocumentCommand{\tens}{e{_^}}{
+%  \mathbin{\mathop{\otimes}\displaylimits
+%    \IfValueT{#1}{_{#1}}
+%    \IfValueT{#2}{^{#2}}
+%  }}
+
+% #1 is a multiplier of fontsize for the minimum diameter of the circle
+% #2 is the symbol to be circled.
+\newcommand*\circled[2][1.6]{\tikz[baseline=(char.base)]{
+    \node[shape=circle, draw, inner sep=1pt, 
+        minimum height={\f@size*#1},] (char) {\vphantom{WAH1g}#2};}}
+
+\doparttoc % Tell to minitoc to generate a toc for the parts
+\faketableofcontents % Run a fake tableofcontents command for the partocs
+
+%\part{} % Start the document part
+%\parttoc % Insert the document TOC
+
+
+% citation color scheme for the NeurIPS template
+\hypersetup{
+    colorlinks,
+    linkcolor={crimson},
+    citecolor={blue!50!black},
+    urlcolor={blue!80!black}
+}
+
+\title{Equiformer: Equivariant Graph Attention Transformer for 3D Atomistic Graphs}
+
+% Authors must not appear in the submitted version. They should be hidden
+% as long as the \iclrfinalcopy macro remains commented out below.
+% Non-anonymous submissions will be rejected without review.
+
+\vspace{-2mm}
+\author{%
+  Yi-Lun Liao,
+  Tess Smidt \\
+  {Massachusetts Institute of Technology} \\
+  \small{\texttt{\{ylliao, tsmidt\}@mit.edu}} \\
+  %\texttt{\{ylliao, tsmidt\}@mit.edu} \\
+  \texttt{\href{https://github.com/atomicarchitects/equiformer}{\color{crimson}{https://github.com/atomicarchitects/equiformer}}}
+}
+
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to \LaTeX{} to determine where to break
+% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
+% puts 3 of 4 authors names on the first line, and the last on the second
+% line, try using \AND instead of \And before the third author name.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\iclrfinalcopy % Uncomment for camera-ready version, but NOT for submission.
+
+%% ===================== reMarkable 2 friendly layout =====================
+%% reMarkable 2 screen: 1404x1872 px, 3:4 portrait (ratio 1.3333).
+%% Page matches that aspect ratio with slim margins so it fills the screen
+%% with no panning; \AtBeginDocument runs after any class hook so it wins.
+\usepackage{geometry}
+\geometry{paperwidth=146.000mm,paperheight=194.667mm}
+\AtBeginDocument{\newgeometry{top=10mm,bottom=12mm,left=11mm,right=11mm,headsep=5pt,footskip=14pt}}
+
+%% --- wide-table margin-bleed neutralizer (build-scoped, no content edits) ---
+%% Many papers wrap wide tables in \begin{adjustwidth}{-Xcm}{-Xcm} to push
+%% them into the (wide-page) margins. On the narrow reMarkable page that bleed
+%% runs the table off BOTH edges. Redefine the environment to a no-op shift so
+%% the content is still typeset, just not pushed out. Guarded so it is a no-op
+%% if the paper never loads adjustwidth/changepage.
+\makeatletter
+\AtBeginDocument{%
+  \@ifundefined{adjustwidth}{}{\renewenvironment{adjustwidth}[2]{}{}}%
+}
+\makeatother
+%% ========================================================================
+
+\begin{document}
+
+
+\maketitle
+
+\input{content/0_abstract}
+\input{content/1_introduction}
+
+\input{content/4_related_works}
+
+\input{content/2_background}
+\input{content/3_equiformer}
+
+\input{content/5_experiment}
+\input{content/6_conclusion}
+
+
+\bibliography{iclr2023_conference}
+\bibliographystyle{iclr2023_conference}
+
+
+%\newpage
+%{\small
+%\bibliographystyle{plain}
+%\bibliography{ref}}
+
+%\input{content/7_checklist}
+
+\newpage
+\input{content/8_appendix}
+
+
+
+\end{document}

@@ -1,0 +1,20 @@
+\vspace{-1mm}
+\subsection{Graph Neural Networks}
+\vspace{-1mm}
+
+Formally, a graph $\mathcal{G} = (\mathcal{V}, \mathcal{E})$ consists of nodes $i \in \mathcal{V}$ and edges $(i, j) \in \mathcal{E}$ representing relationships between nodes $i$ and $j$. 
+%We can use graphs to represent atomistic systems like molecules, where nodes are atoms and edges can represent bonds or geometric relationships between two atoms \tess{; we refer to these as atomistic graphs}.
+Graphs can represent atomistic systems like molecules, where nodes are atoms and edges can represent bonds or atom pairs within a certain distance; we refer to these as atomistic graphs. % \tess{; we refer to these as atomistic graphs}.
+%Each node has associated features $f_i$, and each edge has features $e_{ij}$.
+Graph neural networks (GNNs) \revision{generally} extract meaningful representations from graphs through message-passing layers.
+Given feature $f_i^{l}$ on node $i$ and edge feature $e_{ij} ^ l$ at the $l$-th layer, it first aggregates messages $m_{ij}^l$ from neighbors and then update features on each node as follows:
+\begin{equation}
+%\begin{split}
+m_{ij}^l = \phi_{m}(f_i^{l}, f_j^{l}, e_{ij}^{l}) 
+\quad\text{and}\quad
+f_{i}^{l+1} = \phi_{u}(f_{i}^{l}, \sum_{j \in \mathcal{N}(i)} m_{ij}^{l} )
+%\end{split}
+\end{equation}
+where $\mathcal{N}(i)$ denotes the set of neighbors of node $i$ and $\phi_m$ and $\phi_u$ are learnable functions.
+For atomistic systems in 3D spaces, each node $i$ is additionally associated with its position $\vec{r_i}$ and typically edge features become functions of relative position $\vec{r}_{ij} = \vec{r}_j - \vec{r}_i$.
+%; we refer to these as \revision{3D} atomistic graphs.

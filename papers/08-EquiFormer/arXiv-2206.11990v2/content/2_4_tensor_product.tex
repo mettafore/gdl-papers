@@ -1,0 +1,63 @@
+\vspace{-2.5mm}
+\subsection{Tensor Product}
+\label{subsec:tensor_product}
+\vspace{-2.5mm}
+%We use the tensor product to interact vectors of different irreps features. 
+%%%We use tensor products to interact different type-$L$ vectors and first discuss the tensor product for $SO(3)$.
+Tensor products can interact different type-$L$ vectors.
+We discuss tensor products for $SO(3)$ below and those for $O(3)$ in Sec.~\ref{appendix:subsec:tensor_product}.
+%We first discuss the tensor product for $SO(3)$.
+The tensor product denoted as $\otimes$ uses Clebsch-Gordan coefficients to combine type-$L_1$ vector $f^{(L_1)}$ and type-$L_2$ vector $g^{(L_2)}$ and produces type-$L_3$ vector $h^{(L_3)}$:
+\begin{equation}
+h^{(L_3)}_{m_3} = (f^{(L_1)} \otimes g^{(L_2)})_{m_3} = \sum_{m_1 = -L_1}^{L_1} \sum_{m_2 = -L_2}^{L_2} C^{(L_3, m_3)}_{(L_1, m_1)(L_2, m_2)} f^{(L_1)}_{m_1} g^{(L_2)}_{m_2} 
+\label{eq:tensor_product}
+\end{equation}
+where $m_1$ denotes order and refers to the $m_1$-th element of $f^{(L_1)}$.
+Clebsch-Gordan coefficients $C^{(L_3, m_3)}_{(L_1, m_1)(L_2, m_2)}$ are non-zero only when $| L_1 - L_2 | \leq L_3 \leq | L_1 + L_2 |$ and thus restrict output vectors to be of certain types.
+For efficiency, we discard vectors with $L > L_{max}$, where $L_{max}$ is a hyper-parameter, to prevent vectors of increasingly higher dimensions.
+%%%The tensor product is an equivariant operation, with $ ( D_{L_1}(g') f^{(L_1)} ) \otimes ( D_{L_2}(g') g^{(L_2)} ) = D_{L_3}(g') h^{(L_3)} $ for $g' \in SO(3)$.
+
+%To make our tensor product additionally preserve inversion symmetry, we simply keep track of the output parity using the following multiplication rules: \tess{$e \times e = e$, $o \times o = e$, and $e \times o = o \times e = o$}.
+
+
+%\paragraph{Incorporating Learnable Weights.}
+%\tess{We call each distinct nontrivial combination of $L_1 p_1 \otimes L_2 p_2 \rightarrow L_3 p_3$ a path.}
+%\tess{For example, a type-$1o$ vector tensor producted with another type-$1o$ vector gives rise to vectors of type $0e$, $1e$ and $2e$ and therefore $3$ paths.}
+We call each distinct non-trivial combination of $L_1 \otimes L_2 \rightarrow L_3$ a path.
+%\tess{For example, a type-$1o$ vector tensor producted with another type-$1o$ vector gives rise to vectors of type $0e$, $1e$ and $2e$ and therefore $3$ paths.}
+Each path is independently equivariant, and we can assign one learnable weight to each path in tensor products, which is similar to typical linear layers.
+We can generalize Eq.~\ref{eq:tensor_product} to irreps features and include multiple channels of vectors of different types through iterating over all paths associated with channels of vectors.
+In this way, weights are indexed by $(c_1, l_1, c_2, l_2, c_3, l_3)$, where $c_1$ is the $c_1$-th channel of type-$l_1$ vector in input irreps feature.
+We use $\otimes_{w}$ to represent tensor product with weights $w$. % and denote tensor product of two irreps features $f_1$ and $f_2$ as $f_1 \otimes _w f_2$.
+Weights can be conditioned on quantities like relative distances.
+%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%
+%For example, in GNNs, we use tensor products of irreps features $f_j$ and SH embedding of relative position $\vec{r}_{ij}$ to transform features into messages and use some learnable functions transforming $|| \vec{r}_{ij} ||$ into weights of tensor products~\cite{schnet, nequip}. %:
+%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%
+%\vspace{-3mm}
+%\begin{equation}
+%m_{ij} = f_j \otimes_{w(|| \vec{r}_{ij} ||)} \text{SH} \left( \frac{\vec{r}_{ij}}{|| \vec{r}_{ij} ||} \right)
+%\label{eq:tensor_product_sh}
+%\end{equation}
+%where we use $w(|| \vec{r}_{ij} ||)$ to denote weights dependent on relative distance $||\vec{r}_{ij}||$~\cite{schnet}.
+%%%Please refer to Sec.~\ref{appendix:subsec:tensor_product} in appendix for discussion on inversion in tensor products and Sec.~\ref{appendix:subsec:e3_qm9} and~\ref{appendix:subsec:e3_oc20} for additional results of including inversion.
+
+
+% In order to interact different irrep features, we use the $O(3)$ tensor product.
+
+% $SO(3)$ tensor products use Clebsch-Gordan coefficients, which are the expansion coefficients that project two irreps from different vector spaces onto the irrep basis in a single vector space. Intuitively, given two irreps of angular frequency $L_1$ and $L_2$ the $SO(3)$ tensor product expresses what are the possible total angular frequencies of the combined signal.
+
+% The Clebsch-Gordan coefficients for $SO(3)$ are computed from integrals over the basis functions of a given irreducible representation, e.g. the real spherical harmonics, and are tabulated to avoid unnecessary computation.
+
+% \begin{equation}
+%     C_{(L_1, m_1) (L_2, m_2)}^{(L_3, m_3)} = \left|L_1 m_1; L_2 m_2 \right> \left<L_3 m_3 \right| = \int d{\Omega} Y^*_{L_1, m_1}(\Omega) Y^*_{L_2, m_2}(\Omega) Y_{L_3, m_3}(\Omega)
+% \end{equation}
+
+% For many combinations of $L_1$, $L_2$, and $L_3$ the Clebsch-Gordan coefficients are zero. The gives rise to the following selection rule for non-trivial coefficients: $-|L_1 + L_2| \lte L_3 \lte |L_1 + L_2|$.
+
+
+
+% We call each distinct nontrivial combination of $L_1 \otimes L_2 \rightarrow L_3$ a path. For example, a vector ($L=1$, $p=-1$) tensor producted with a vector ($L=1$, $p=-1$) gives rise to three paths: a scalar ($L=0$, $p=1$), a pseudovector ($L=1$, $p=1$), and ($L=2$, $p=1$). Each path is independently equivariant, therefore we can further parameterize our tensor product with weights for each path \cite{e3nn}.

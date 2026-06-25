@@ -1,0 +1,173 @@
+\section{Additional Background}
+\label{appendix:sec:additional_background}
+
+%We provide more details on background here, and we note that they are introduced in a way that facilitates discussing the proposed method and that other works~\cite{tfn, 3dsteerable, kondor2018clebsch, cormorant, se3_transformer, segnn} also provide relevant mathematical background, which helps the presentation of this work.   
+
+%%%In this section, we provide additional mathematical background on group equivariance helpful for the discussion of the proposed method.
+In this section, we provide additional mathematical background helpful for the discussion of the proposed method.
+Other works~\citep{tfn, 3dsteerable, kondor2018clebsch, cormorant, se3_transformer, segnn} also provide similar background.
+We encourage interested readers to see these works~\citep{zee, Dresselhaus2007} for more in-depth and pedagogical presentations.
+
+\subsection{Group Theory}
+\label{appendix:subsec:group_theory}
+
+\paragraph{Definition of Groups.}
+A group is an algebraic structure that consists of a set $G$ and a binary operator $\circ: G \times G \rightarrow G$ and is typically denoted as $G$.
+Groups satisfy the following four axioms:
+\begin{enumerate}
+    \item Closure: $g \circ h \in G$ for all $g, h \in G$.
+    \item Identity: There exists an identity element $e \in G$ such that $g \circ e = e \circ g = g$ for all $g \in G$.
+    \item Inverse: For each $g \in G$, there exists an inverse element $g^{-1} \in G$ such that $g \circ g^{-1} = g^{-1} \circ g = e$.
+    \item Associativity: $f \circ g \circ h = (f \circ g) \circ h = f \circ (g \circ h )$ for all $f, g, h \in G$.
+\end{enumerate}
+
+In this work, we focus on 3D rotation, translation and inversion.
+Relevant groups include:
+\begin{enumerate}
+    \item The Euclidean group in three dimensions $E(3)$: 3D rotation, translation and inversion.
+    \item The special Euclidean group in three dimensions $SE(3)$: 3D rotation and translation.
+    \item The orthogonal group in three dimensions  $O(3)$: 3D rotation and inversion.
+    \item The special orthogonal group in three dimensions  $SO(3)$: 3D rotation.
+    %\item The translational group $T(3)$: 3D translation.
+\end{enumerate}
+
+
+\paragraph{Group Representations.}
+%Groups can be used to define transformations.
+The actions of groups define transformations.
+Formally, a transformation acting on vector space $X$ parametrized by group element $g \in G$ is an injective function $T_{g}: X \rightarrow X$.
+A powerful result of group representation theory is that these transformations can be expressed as matrices which act on vector spaces via matrix multiplication. 
+These matrices are called the group representations.
+Formally, a group representation $D: G \rightarrow GL(N)$ is a mapping between a group $G$ and a set of $N \times N$ invertible matrices.
+The group representation $D(g): X \rightarrow X$ maps an $N$-dimensional vector space $X$ onto itself and satisfies  $D(g)D(h) = D(g \circ h)$ for all $g, h \in G$.
+
+%There are many ways to represent a group. 
+%If there exists a change of basis $P$ in the form of an $N \times N$ matrix for a given representation $D(g)$ such that $P^{-1} D(g) P = D'(g)$
+How a group is represented depends on the vector space it acts on.
+If there exists a change of basis $P$ in the form of an $N \times N$ matrix such that $P^{-1} D(g) P = D'(g)$ for all $g \in G$, then we say the two group representations are equivalent.
+If $D'(g)$ is block diagonal, which means that $g$ acts on independent subspaces of the vector space, the representation $D(g)$ is reducible.
+%that makes $D'(g)$ block diagonal for all $g \in G$, meaning $g$ acts on independent subspaces of the vector space, the representation $D(g)$ is deemed reducible. 
+%A particular class of representations that are convenient for generalizable and composable functions are irreducible representations or ``irreps'', which cannot be further reduced. 
+A particular class of representations that are convenient for composable functions are irreducible representations or ``irreps'', which cannot be further reduced. 
+We can express any group representation of $SO(3)$ as a direct sum (concatentation) of irreps \citep{zee,Dresselhaus2007,e3nn}:
+\begin{equation}
+D(g) = P ^{-1} \left ( \bigoplus_{i} D_{l_i}(g) \right)  P = 
+P^{-1}
+\begin{pmatrix}
+D_{l_0}(g) & & \\
+& D_{l_1}(g) & & \\
+& & ...... \\
+\end{pmatrix}
+P
+\end{equation}
+where $D_{l_i}(g)$ are Wigner-D matrices with degree $l_i$ as metnioned in Sec.~\ref{subsec:irreducible_representations}.
+
+% already mention in background
+%\paragraph{Irreducible Representations of $SO(3)$.}
+
+
+
+\subsection{Equivariance}
+\label{appendix:subsec:equivariance}
+
+
+\paragraph{Definition of Equivariance and Invariance.}
+Equivariance is a property of a function $f: X \rightarrow Y$ mapping between vector spaces $X$ and $Y$.
+Given a group $G$ and group representations $D_{X}(g)$ and $D_{Y}(g)$ in input and output spaces $X$ and $Y$, $f$ is equivariant to G if $D_Y(g) f(x) = f(D_X(g)x)$ for all $x \in X$ and $g \in G$.
+%Invariance corresponds to the case that $f(x) = D_Y(g) f(x) = f(D_X(g) x)$.
+Invariance corresponds to the case where $D_Y(g)$ is the identity $I$ for all $g \in G$.
+
+
+\paragraph{Equivariance in Neural Networks.}
+%Including equivariance in neural networks can enable generalizaing to unseen data in a predictable manner.
+%For instance, an equivariant neural network $f: X \rightarrow Y$ predicts output $y$ given input $x$.
+%When the input becomes $D_X(g) x$, which might not exist in training sets, $f$ can generalize to the input and predict $D_Y(g) f(x)$.
+Group equivariant neural networks are guaranteed to to make equivariant predictions on data transformed by a group.
+Additionally, they are found to be data-efficient and generalize better than non-symmetry-aware and invariant methods~\citep{nequip, quantum_scaling, neural_scale_of_chemical_models}.
+For 3D atomistic graphs, we consider equivariance to the Euclidean group $E(3)$, which consists of 3D rotation, translation and inversion.
+For translation, we operate on relative positions and therefore our networks are invariant to 3D translation.
+%As for rotation and inversion, we incorporate vector spaces of $O(3)$ irreps into networks so that intermediate features and outputs are equivariant to 3D rotation and inversion.
+We achieve equivariance to rotation and inversion by representing our input data, intermediate features and outputs in vector spaces of $O(3)$ irreps and acting on them with only equivariant operations. 
+
+
+\subsection{Equivariant Features Based on Vector Spaces of Irreducible Representations}
+\label{appendix:subsec:equivariant_irreps_feature}
+
+
+\paragraph{Irreducible Representations of Inversion.}
+The group of inversion $\mathbb{Z}_2$ only has two elements, identity and inversion, and two irreps, even $e$ and odd $o$.
+Vectors transformed by irrep $e$ do not change sign under inversion while those by irrep $o$ do.
+We create irreps of $O(3)$ by simply multiplying those of $SO(3)$ and $\mathbb{Z}_2$ and introduce parity $p$ to type-$L$ vectors to denote how they transform under inversion.
+%Therefore for $O(3)$, type-$L$ vectors in $SO(3)$ are extended to type-$(L, p)$ vectors, where $p$ is $e$ or $o$.
+Thus, type-$L$ vectors in $SO(3)$ become type-$(L, p)$ vectors in $O(3)$, where $p$ is $e$ or $o$.
+%In the following, we use type-$L$ vectors for the ease of discussion, but we can generalize to type-$(L, p)$ vectors, unless otherwise stated.}
+
+\paragraph{Irreps Features.}
+As discussed in Sec.~\ref{subsec:irreducible_representations} in the main text, we use type-$L$ vectors for $SE(3)$-equivariant irreps features\footnote{In SEGNN~\citep{segnn}, they are also referred to as steerable features. We use the term ``irreps features'' to remain consistent with \texttt{e3nn}~\citep{e3nn} library.} and type-$(L, p)$ vectors for $E(3)$-equivariant irreps features.
+Parity $p$ denotes whether vectors change sign under inversion and can be either $e$ (even) or $o$ (odd).
+Vectors with $p = o$ change sign under inversion while those with $p = e$ do not.
+Scalar features correspond to type-$0$ vectors in the case of $SE(3)$-equivariance and correspond to type-$(0, e)$ in the case of $E(3)$-equivariance whereas type-$(0, o)$ vectors correspond to pseudo-scalars.
+Euclidean vectors in $\mathbb{R}^3$ correspond to type-$1$ vectors and type-$(1, o)$ vectors whereas type-$(1, e)$ vectors correspond to pseudo-vectors.
+Note that type-$(L, e)$ vectors and type-$(L, o)$ vectors are considered vectors of different types in equivariant linear layers and layer normalizations.
+
+\paragraph{Spherical Harmonics.}
+Euclidean vectors $\vec{r}$ in $\mathbb{R}^3$ can be projected into type-$L$ vectors $f^{(L)}$ by using spherical harmonics $Y^{(L)}$: $f^{(L)} = Y^{(L)}(\frac{\vec{r}}{|| \vec{r} ||})$~\citep{finding_symmetry_breaking_order}.
+This is equivalent to the Fourier transform of the angular degree of freedom $\frac{\vec{r}}{|| \vec{r}||}$, which can be optionally weighted by $|| \vec{r} ||$. 
+In the case of $SE(3)$-equivariance, $f^{(L)}$ transforms in the same manner as type-$L$ vectors.
+For $E(3)$-equivariance, $f^{(L)}$ behaves as type-$(L, p)$ vectors, where $p = e$ if $L$ is even and $p = o$ if $L$ is odd.
+\revision{
+Visualization of spherical harmonics can be found in this \href{https://docs.e3nn.org/en/latest/api/o3/o3_sh.html}{website}.}
+
+%\paragraph{\todo{Spherical Harmonics are Wigner-D matrices.}}
+
+\paragraph{Vectors of Higher $L$ and Other Parities.}
+%So far we have restricted concrete examples of $O(3)$ irreps to commonly encountered scalars ($L=0$, $p=1$) and vectors ($L=1$, $p=-1$); irreps of higher $L$'s and other parities are equally physical. 
+Although previously we have restricted concrete examples of vector spaces of $O(3)$ irreps to commonly encountered scalars (type-$(0, e)$ vectors) and Euclidean vectors (type-$(1, o)$ vectors), vector of higher $L$ and other parities are equally physical. 
+%Many physical properties are described using Cartesian tensors
+For example, the moment of inertia (how an object rotates under torque) transforms as a $3\times3$ symmetric matrix, which has symmetric-traceless components behaving as type-$(2, e)$ vectors.
+Elasticity (how an object deforms under loading) transforms as a rank-4 or $3\times3\times3\times3$ symmetric tensor, which includes components acting as type-$(4, e)$ vectors.
+%As an example, many physical properties are described using Cartesian tensors, e.g. the moment of inertia (how an object rotates under torque) transforms as a $3\times3$ symmetric matrix and elasticity (how an object deforms under loading) transforms as a rank-4 or $3\times3\times3\times3$ symmetric tensor, which have components that transform as ($L=2$, $p=1$) and ($L=4$, $p=1$), respectively. 
+%\todo{More generally speaking, if one considers polynomials of distinguishable 3D vectors $\vec{x}^{(i)}$, specific linear combinations of monomials will transform as specific irreps of $O(3)$. In fact, the spherical harmonics are a specific subset of these polynomials where the inputs are identical $\vec{x}^(i) \rightarrow \vec{x}$ and the degree of the polynomial matches the $L$ of the irrep (e.g. $xy$ is of degree 2 and transforms as a component of ($L=2$, $p=1$)) \cite{e3nn}.}
+
+
+\subsection{Tensor Product}
+\label{appendix:subsec:tensor_product}
+
+\paragraph{Tensor Product for $O(3)$.}
+We use tensor products to interact different type-$(L, p)$ vectors.
+We extend our discussion in Sec.~\ref{subsec:tensor_product} in the main text to include inversion and type-$(L, p)$ vectors.
+The tensor product denoted as $\otimes$ uses Clebsch-Gordan coefficients to combine type-$(L_1, p_1)$ vector $f^{(L_1, p_1)}$ and type-$(L_2, p_2)$ vector $g^{(L_2, p_2)}$ and produces type-$(L_3, p_3)$ vector $h^{(L_3, p_3)}$ as follows:
+\begin{equation}
+%\begin{aligned}
+h^{(L_3, p_3)}_{m_3} = (f^{(L_1, p_1)} \otimes g^{(L_2, p_2)})_{m_3} = \sum_{m_1 = -L_1}^{L_1} \sum_{m_2 = -L_2}^{L_2} C^{(L_3, m_3)}_{(L_1, m_1)(L_2, m_2)} f^{(L_1, p_1)}_{m_1} g^{(L_2, p_2)}_{m_2} 
+\label{appendix:eq:tensor_product}
+\end{equation}
+
+\begin{equation}
+p_3 = p_1 \times p_2
+\label{appendix:eq:parity}
+\end{equation}
+
+The only difference of tensor products for $O(3)$ as described in Eq.~\ref{appendix:eq:tensor_product} from those for $SO(3)$ described in Eq.~\ref{eq:tensor_product} is that we additionally keep track of the output parity $p_3$ as in Eq.~\ref{appendix:eq:parity} and use the following multiplication rules: $e \times e = e$, $o \times o = e$, and $e \times o = o \times e = o$.
+For example, the tensor product of a type-$(1, o)$ vector and a type-$(1, e)$ vector can result in one type-$(0, o)$ vector, one type-$(1, o)$ vector, and one type-$(2, o)$ vector.
+
+
+\paragraph{Clebsch-Gordan Coefficients.}
+The Clebsch-Gordan coefficients for $SO(3)$ are computed from integrals over the basis functions of a given irreducible representation, e.g., the real spherical harmonics, as shown below and are tabulated to avoid unnecessary computation.
+\begin{equation}
+     C_{(L_1, m_1) (L_2, m_2)}^{(L_3, m_3)} = \left|L_1 m_1; L_2 m_2 \right> \left<L_3 m_3 \right| = \int d{\Omega} Y^{(L_1)*}_{m_1}(\Omega) Y^{(L_2)*}_{m_2}(\Omega) Y^{(L_3)}_{m_3}(\Omega)
+\end{equation}
+For many combinations of $L_1$, $L_2$, and $L_3$, the Clebsch-Gordan coefficients are zero. The gives rise to the following selection rule for non-trivial coefficients: $-|L_1 + L_2| \leq L_3 \leq |L_1 + L_2|$.
+
+
+\paragraph{Examples of Tensor Products.}
+Tensor products generally define the interaction between different type-$(L, p)$ vectors in a symmetry-preserving manner and consist of common operations as follows:
+\begin{enumerate}
+    \item Scalar-scalar multiplication: scalar $(L=0, p = e)$ $\otimes$ scalar $(L=0, p=e)$ $\rightarrow$ scalar $(L=0, p=e)$.
+    \item Scalar-vector multiplication: scalar $(L=0, p = e)$ $\otimes$ vector $(L=1, p=o)$ $\rightarrow$ vector $(L=1, p=o)$.
+    \item Vector dot product: vector $(L=1, p = o)$ $\otimes$ vector $(L=1, p=o)$ $\rightarrow$ scalar $(L=0, p=e)$.
+    \item Vector cross product: vector $(L=1, p = o)$ $\otimes$ vector $(L=1, p=o)$ $\rightarrow$ pseudo-vector $(L=1, p=e)$.
+\end{enumerate}
+
+%\subsection{$E(3)$-Equivariant Neural Networks}
+%Euclidean neural networks are built such that ever operation is equivariant to Euclidean symmetry, satisfying the condition for $g \in E(3)$, $f:X \times W \rightarrow Y$, inputs $x$ and scalar weights $w$, $f(D_X(g)x, w) = D_Y(g)f(x, w)$ \cite{tfn,kondor2018clebsch,3dsteerable}. While these networks have primarily been used within the framework of 3D convolutional neural networks \cite{3dsteerable} and message-passing graph neural networks \cite{tfn,kondor2018clebsch,nequip} the mathematical framework is more general and can be used for other modalities \cite{allergo,se3_transformer}. We use the $E(3)$ equivariant, parameterizable components in Ref. \cite{e3nn} for building our networks.

@@ -1,0 +1,197 @@
+\section{Details of Experiments on MD17}
+\label{appendix:sec:md17}
+
+
+\subsection{Training Details}
+\label{appendix:subsec:md17_training_details}
+%%%We normalize ground truth by subtracting mean and dividing by standard deviation.
+%%%For the task of $U$, $U_0$, $G$, and $H$, where single-atom reference values are available, we subtract those reference values from ground truth before normalizing. 
+%We use the same data partition as TorchMD-NET~\citep{torchmd_net}.
+%For the task of $U$, $U_0$, $G$, and $H$, where single-atom reference values are available, we subtract those reference values from ground truth. 
+%For other tasks, we normalize ground truth by subtracting mean and dividing by standard deviation.
+
+We use the same data partition as TorchMD-NET~\citep{torchmd_net}.
+For energy prediction, we normalize ground truth by subtracting mean and dividing by standard deviation.
+For force prediction, we normalize ground truth by dividing by standard deviation of ground truth energy.
+
+We train Equiformer with 6 blocks with $L_{max} = 2 \text{ and } 3$.
+%We choose Gaussian radial basis~\cite{schnet, spinconv, gemnet, graphormer_3d} for the first six tasks in Table~\ref{tab:qm9_result} and radial Bessel basis for the others.
+We choose the radial basis function used by PhysNet~\citep{physnet}.
+We do not apply dropout to attention weights $a_{ij}$.
+For Equiformer with $L_{max} = 2$, the learning rate is $1 \times 10 ^{-4}$ for benzene and is $5 \times 10^{-4}$ for others. 
+The batch size is $8$, and the number of epochs is $1500$.
+The model has about $3.50$M parameters.
+For Equiformer with $L_{max} = 3$, the learning rate is $1 \times 10 ^{-4}$ for benzene and is $2 \times 10^{-4}$ for others. 
+The batch size is $5$, and the number of epochs is $2000$.
+The model has about $5.50$M parameters.
+%The dropout rate is $0.0$ for the tasks of $G$, $H$, $U$ and $U_0$, is $0.1$ for the task of $R^2$ and is $0.2$ for others.
+%Since the tasks of $G$, $H$, $U$, and $U_0$ require longer training, we use slightly different hyper-parameters.
+%The number of epochs is $600$ for the tasks of $G$, $H$, $U$, and $U_0$ and is $300$ for others.
+%The learning rate is $1.5 \times 10 ^{-4}$ for the tasks of $G$, $H$, $U$, and $U_0$ and is $5 \times 10^{-4}$ for others.
+%The batch size is $64$ for the tasks of $G$, $H$, $U$, and $U_0$ and is $128$ for others.
+%The weight decay is $0$ for the tasks of $G$, $H$, $U$, and $U_0$ and is $5 \times 10^{-3}$ for others.
+Table~\ref{appendix:tab:md17} summarizes the hyper-parameters for the MD17 dataset.
+The detailed description of architectural hyper-parameters can be found in Sec.~\ref{appendix:subsec:equiformer_architecture}. 
+
+We use one A5000 GPU with 24GB to train different models for each molecule.
+%Each model takes about $26.5$ hours.
+Training Equiformer with $L_{max} = 2$ takes about $15.4$ hours, and training Equiformer with $L_{max} = 3$ takes about $54.4$ hours.
+
+\begin{table}[]
+\centering
+\resizebox{\ifdim\width>\textwidth\textwidth\else\width\fi}{!}{
+\begin{tabular}{ll}
+%\cline{7-11}
+\toprule[1.2pt]
+Hyper-parameters & Value or description
+ \\
+\midrule[1.2pt]
+Optimizer & AdamW \\
+Learning rate scheduling & Cosine learning rate with linear warmup \\
+Warmup epochs & $10$ \\
+%Maximum learning rate & $1.5 \times 10 ^{-4}$ for $G$, $H$, $U$ and $U_0$, and $5 \times 10 ^{-4}$ for others \\
+Maximum learning rate & $1 \times 10 ^{-4}$, $2 \times 10^{-4}$, $5 \times 10 ^{-4}$ \\
+%Batch size & $64$ for $G$, $H$, $U$ and $U_0$, and $128$ for others \\
+Batch size & $5$, $8$ \\
+%Number of epochs & $600$ for $G$, $H$, $U$ and $U_0$, and $300$ for others \\
+Number of epochs & $1500$, $2000$ \\
+%Weight decay & $0$ for $G$, $H$, $U$ and $U_0$, and $5 \times 10^{-3}$ for others \\
+Weight decay & $1 \times 10^{-6}$ \\
+%Dropout rate & $0.0$ for $G$, $H$, $U$ and $U_0$, $0.1$ for $R^{2}$, and $0.2$ for others \\
+Dropout rate & $0.0$ \\
+\midrule[0.6pt]
+Weight for energy loss & $1$ \\
+Weight for force loss & $80$ \\
+% ===============================
+%   Add this back in the futrure
+% ===============================
+%Dropout rate & $0.1$, $0.2$ \\
+\midrule[0.6pt]
+Cutoff radius ($\angstrom$) & $5$ \\
+Number of radial bases & $32$ \\
+Hidden sizes of radial functions & $64$ \\
+Number of hidden layers in radial functions & $2$ \\
+
+\midrule[0.6pt]
+
+\multicolumn{2}{c}{Equiformer ($L_{max} = 2$)} \\
+\\
+Number of Transformer blocks & $6$ \\
+Embedding dimension $d_{embed}$ & $[(128, 0), (64, 1), (32, 2)]$ \\
+Spherical harmonics embedding dimension $d_{sh}$ & $[(1, 0), (1, 1), (1, 2)]$ \\
+Number of attention heads $h$ & $4$ \\
+Attention head dimension $d_{head}$ & $[(32, 0), (16, 1), (8, 2)]$\\
+Hidden dimension in feed forward networks $d_{ffn}$ & $[(384, 0), (192, 1) , (96, 2)]$ \\
+Output feature dimension $d_{feature}$ & $[(512, 0)]$\\
+
+\midrule[0.6pt]
+
+\multicolumn{2}{c}{Equiformer ($L_{max} = 3$)} \\
+\\
+Number of Transformer blocks & $6$ \\
+Embedding dimension $d_{embed}$ & $[(128, 0), (64, 1), (64, 2), (32, 3)]$ \\
+Spherical harmonics embedding dimension $d_{sh}$ & $[(1, 0), (1, 1), (1, 2), (1, 3)]$ \\
+Number of attention heads $h$ & $4$ \\
+Attention head dimension $d_{head}$ & $[(32, 0), (16, 1), (16, 2), (8, 3)]$\\
+Hidden dimension in feed forward networks $d_{ffn}$ & $[(384, 0), (192, 1), (192, 2), (96, 3)]$ \\
+Output feature dimension $d_{feature}$ & $[(512, 0)]$\\
+
+%\midrule[0.6pt]
+
+%\multicolumn{2}{c}{$E(3)$-Equiformer} \\
+%\\
+%Number of Transformer blocks & $6$ \\
+%Embedding dimension $d_{embed}$ & $[(128, 0, e), (32, 0, o), (32, 1, e), (32, 1, o), (16, 2, e), (16, 2, o)]$ \\
+%Spherical harmonics embedding dimension $d_{sh}$ & $[(1, 0, e), (1, 1, o), (1, 2, e)]$ \\
+%Number of attention heads $h$ & $4$ \\
+%Attention head dimension $d_{head}$ & $[(32, 0, e), (8, 0, o), (8, 1, e), (8, 1, o), (4, 2, e), (4, 2, o)]$ \\
+%Hidden dimension in feed forward networks $d_{ffn}$ & $[(384, 0, e), (96, 0, o), (96, 1, e), (96, 1, o), (48, 2, e), (48, 2, o)]$ \\
+%Output feature dimension $d_{feature}$ & $[(512, 0, e)]$\\
+\bottomrule[1.2pt]
+\end{tabular}
+}
+\vspace{-2mm}
+\caption{\textbf{Hyper-parameters for MD17 dataset.}
+We denote $C_L$ type-$L$ vectors as $(C_L, L)$ and $C_{(L, p)}$ type-$(L, p)$ vectors as $(C_{(L, p)}, L, p)$ and use brackets to represent concatenations of vectors.
+}
+\label{appendix:tab:md17}
+\end{table}
+
+
+\subsection{Additional Comparison to TorchMD-NET}
+\label{appendix:subsec:md17_torchmdnet}
+Since TorchMD-NET~\citep{torchmd_net} is also an equivariant Transformer but  uses dot product attention instead of the proposed equivariant graph attention, we provide additional comparisons in Table~\ref{appendix:tab:md17_torchmdnet}.
+For each molecule, we adjust the ratio of the weight for force loss to the weight for energy loss so that Equiformer with $L_{max} = 2$ can achieve lower MAE for both energy and forces.
+
+
+
+\begin{table}[t]
+\begin{adjustwidth}{0cm}{0cm}
+\centering
+\resizebox{\ifdim\width>\textwidth\textwidth\else\width\fi}{!}{
+\begin{tabular}{lcccccccccccccccc}
+\toprule[1.2pt]
+                        & \multicolumn{2}{c}{Aspirin} & \multicolumn{2}{c}{Benzene} & \multicolumn{2}{c}{Ethanol} & \multicolumn{2}{c}{Malonaldehyde} & \multicolumn{2}{c}{Naphthalene} & \multicolumn{2}{c}{Salicylic acid} & \multicolumn{2}{c}{Toluene} & \multicolumn{2}{c}{Uracil} \\
+\cmidrule[0.6pt]{2-17}
+Methods                                               & energy       & forces       & energy       & forces       & energy       & forces       & energy          & forces          & energy         & forces         & energy           & forces          & energy       & forces       & energy       & forces      \\
+\midrule[1.2pt]
+%SchNet~\citep{schnet}                          & 16.0         & 58.5         & 3.5          & 13.4         & 3.5          & 16.9         & 5.6             & 28.6            & 6.9            & 25.2           & 8.7              & 36.9            & 5.2          & 24.7         & 6.1          & 24.3        \\
+%DimeNet~\citep{dimenet}                          & 8.8          & 21.6         & 3.4          & 8.1          & 2.8          & 10.0         & 4.5             & 16.6            & 5.3            & 9.3            & 5.8              & 16.2            & 4.4          & 9.4          & 5.0          & 13.1        \\
+%PaiNN~\citep{painn}                                                 & 6.9          & 14.7         & -            & -            & 2.7          & 9.7          & 3.9             & 13.8            & 5.0            & 3.3            & 4.9              & 8.5             & 4.1          & 4.1          & 4.5          & 6.0         \\
+TorchMD-NET                                           & \textbf{5.3}          & 11.0         & 2.5          & 8.5          & 2.3          & 4.7          & 3.3             & 7.3             & \textbf{3.7}            & 2.6            & \textbf{4.0}              & 5.6             & \textbf{3.2}          & 2.9          & \textbf{4.1}          & 4.1         \\
+%NequIP ($L_{max} = 3$)~\citep{nequip}                              & 5.7          & 8.0          & -            & -            & \textbf{2.2}          & \textbf{3.1}          & \textbf{3.3}             & \textbf{5.6}             & 4.9            & \textbf{1.7}            & 4.6              & \textbf{3.9}             & 4.0          & \textbf{2.0}          & 4.5          & \textbf{3.3}         \\
+
+\midrule[0.6pt]
+
+Equiformer ($L_{max} = 2$)                                           & \textbf{5.3}          & \textbf{7.2}          & \textbf{2.2}          & \textbf{6.6}          & \textbf{2.2}          & \textbf{3.1}          & \textbf{3.3}             & \textbf{5.8}             & \textbf{3.7}            & \textbf{2.1}           & \textbf{4.0}              & \textbf{5.3}             & \textbf{3.2}         & \textbf{2.4}          & 4.2          & \textbf{3.7}        \\
+\bottomrule[1.2pt]
+\end{tabular}
+}
+\end{adjustwidth}
+\vspace{-2mm}
+\caption{\textbf{Additional comparison to TorchMD-Net~\citep{torchmd_net} on MD17 dataset.} Energy and force are in units of meV and meV/$\angstrom$.}
+\label{appendix:tab:md17_torchmdnet}
+\end{table}
+
+
+\subsection{Comparison of Training Time and Numbers of Parameters}
+\label{appendix:subsec:md17_training_time_comparison}
+We compare training time and number of parameters between NequIP~\citep{nequip} and Equiformer and summarize the results in Table~\ref{appendix:tab:md17_training_time}.
+Since NequIP does not report the number of epochs, we compare the time spent for each epoch and note that NequIP is trained for more than $1000$ epochs.
+%Equiformer with $L_{max} = 2$ is faster and achieves better MAE results.
+Equiformer with $L_{max} = 2$ is faster than NequIP with $L_{max} = 3$ since smaller $L_{max}$ is used.
+Moreover, Equiformer with $L_{max} = 2$ achieves overall better results as we use equivariant graph attention instead of linear convolution used by NequIP.
+When increasing $L_{max}$ from $2$ to $3$, Equiformer achieves better results than NequIP for most molecules.
+However, the training time is longer than NequIP since we use $2$ tensor product operations in each equivariant graph attention instead of $1$ tensor product in each linear convolution.
+
+
+\begin{table}[t]
+\begin{adjustwidth}{0cm}{0cm}
+\centering
+\resizebox{\ifdim\width>\textwidth\textwidth\else\width\fi}{!}{
+\begin{tabular}{lccc}
+%\cline{7-11}
+\toprule[1.2pt]
+Methods & Number of parameters & Training time (secs/epoch) \\
+\midrule[1.2pt]
+
+NequIP ($L_{max} = 3$)~\citep{nequip} & 2.97M & 48.7 \\
+%TorchMD-NET~\citep{torchmd_net} & 6.9M & 92 \\
+\midrule[0.6pt]
+Equiformer ($L_{max} = 2$) & 3.50M & 36.9 \\
+Equiformer ($L_{max} = 3$) & 5.50M & 98.0 \\
+
+\bottomrule[1.2pt]
+
+\end{tabular}
+}
+\vspace{-2mm}
+\end{adjustwidth}
+\caption{\textbf{Comparison of training time and numbers of parameters for MD17 dataset.}  
+%\note{Dropout rate = 0.1.}
+%%%$\dagger$ denotes using different training, validation, testing data partitions. % as mentioned in SEGNN~\cite{segnn}.
+%$\dagger$ denotes using different data partitions.
+%$\ddagger$ denotes results from SE(3)-Transformer~\cite{se3_transformer}.
+}
+\label{appendix:tab:md17_training_time}
+\end{table}

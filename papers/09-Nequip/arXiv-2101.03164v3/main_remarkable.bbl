@@ -1,0 +1,502 @@
+\begin{thebibliography}{10}
+\expandafter\ifx\csname url\endcsname\relax
+  \def\url#1{\texttt{#1}}\fi
+\expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL }\fi
+\providecommand{\bibinfo}[2]{#2}
+\providecommand{\eprint}[2][]{\url{#2}}
+
+\bibitem{richards2016design}
+\bibinfo{author}{Richards, W.~D.} \emph{et~al.}
+\newblock \bibinfo{title}{Design and synthesis of the superionic conductor na
+  10 snp 2 s 12}.
+\newblock \emph{\bibinfo{journal}{Nature communications}}
+  \textbf{\bibinfo{volume}{7}}, \bibinfo{pages}{1--8} (\bibinfo{year}{2016}).
+
+\bibitem{boero1998first}
+\bibinfo{author}{Boero, M.}, \bibinfo{author}{Parrinello, M.} \&
+  \bibinfo{author}{Terakura, K.}
+\newblock \bibinfo{title}{First principles molecular dynamics study of ziegler-
+  natta heterogeneous catalysis}.
+\newblock \emph{\bibinfo{journal}{Journal of the American Chemical Society}}
+  \textbf{\bibinfo{volume}{120}}, \bibinfo{pages}{2746--2752}
+  (\bibinfo{year}{1998}).
+
+\bibitem{lindorff2011fast}
+\bibinfo{author}{Lindorff-Larsen, K.}, \bibinfo{author}{Piana, S.},
+  \bibinfo{author}{Dror, R.~O.} \& \bibinfo{author}{Shaw, D.~E.}
+\newblock \bibinfo{title}{How fast-folding proteins fold}.
+\newblock \emph{\bibinfo{journal}{Science}} \textbf{\bibinfo{volume}{334}},
+  \bibinfo{pages}{517--520} (\bibinfo{year}{2011}).
+
+\bibitem{behler2007generalized}
+\bibinfo{author}{Behler, J.} \& \bibinfo{author}{Parrinello, M.}
+\newblock \bibinfo{title}{Generalized neural-network representation of
+  high-dimensional potential-energy surfaces}.
+\newblock \emph{\bibinfo{journal}{Physical review letters}}
+  \textbf{\bibinfo{volume}{98}}, \bibinfo{pages}{146401}
+  (\bibinfo{year}{2007}).
+
+\bibitem{gaporiginalpaper}
+\bibinfo{author}{Bart{\'o}k, A.~P.}, \bibinfo{author}{Payne, M.~C.},
+  \bibinfo{author}{Kondor, R.} \& \bibinfo{author}{Cs{\'a}nyi, G.}
+\newblock \bibinfo{title}{Gaussian approximation potentials: The accuracy of
+  quantum mechanics, without the electrons}.
+\newblock \emph{\bibinfo{journal}{Physical review letters}}
+  \textbf{\bibinfo{volume}{104}}, \bibinfo{pages}{136403}
+  (\bibinfo{year}{2010}).
+
+\bibitem{shapeev2016moment}
+\bibinfo{author}{Shapeev, A.~V.}
+\newblock \bibinfo{title}{Moment tensor potentials: A class of systematically
+  improvable interatomic potentials}.
+\newblock \emph{\bibinfo{journal}{Multiscale Modeling \& Simulation}}
+  \textbf{\bibinfo{volume}{14}}, \bibinfo{pages}{1153--1173}
+  (\bibinfo{year}{2016}).
+
+\bibitem{thompson2015spectral}
+\bibinfo{author}{Thompson, A.~P.}, \bibinfo{author}{Swiler, L.~P.},
+  \bibinfo{author}{Trott, C.~R.}, \bibinfo{author}{Foiles, S.~M.} \&
+  \bibinfo{author}{Tucker, G.~J.}
+\newblock \bibinfo{title}{Spectral neighbor analysis method for automated
+  generation of quantum-accurate interatomic potentials}.
+\newblock \emph{\bibinfo{journal}{Journal of Computational Physics}}
+  \textbf{\bibinfo{volume}{285}}, \bibinfo{pages}{316--330}
+  (\bibinfo{year}{2015}).
+
+\bibitem{vandermause2020fly}
+\bibinfo{author}{Vandermause, J.} \emph{et~al.}
+\newblock \bibinfo{title}{On-the-fly active learning of interpretable bayesian
+  force fields for atomistic rare events}.
+\newblock \emph{\bibinfo{journal}{npj Computational Materials}}
+  \textbf{\bibinfo{volume}{6}}, \bibinfo{pages}{1--11} (\bibinfo{year}{2020}).
+
+\bibitem{schnet_neurips}
+\bibinfo{author}{Sch{\"u}tt, K.} \emph{et~al.}
+\newblock \bibinfo{title}{Schnet: A continuous-filter convolutional neural
+  network for modeling quantum interactions}.
+\newblock In \emph{\bibinfo{booktitle}{Advances in neural information
+  processing systems}}, \bibinfo{pages}{991--1001} (\bibinfo{year}{2017}).
+
+\bibitem{physnet_jctc}
+\bibinfo{author}{Unke, O.~T.} \& \bibinfo{author}{Meuwly, M.}
+\newblock \bibinfo{title}{Physnet: A neural network for predicting energies,
+  forces, dipole moments, and partial charges}.
+\newblock \emph{\bibinfo{journal}{Journal of chemical theory and computation}}
+  \textbf{\bibinfo{volume}{15}}, \bibinfo{pages}{3678--3693}
+  (\bibinfo{year}{2019}).
+
+\bibitem{klicpera2020directional}
+\bibinfo{author}{Klicpera, J.}, \bibinfo{author}{Gro{\ss}, J.} \&
+  \bibinfo{author}{G{\"u}nnemann, S.}
+\newblock \bibinfo{title}{Directional message passing for molecular graphs}.
+\newblock \emph{\bibinfo{journal}{arXiv preprint arXiv:2003.03123}}
+  (\bibinfo{year}{2020}).
+
+\bibitem{dcf}
+\bibinfo{author}{Mailoa, J.~P.} \emph{et~al.}
+\newblock \bibinfo{title}{A fast neural network approach for direct covariant
+  forces prediction in complex multi-element extended systems}.
+\newblock \emph{\bibinfo{journal}{Nature machine intelligence}}
+  \textbf{\bibinfo{volume}{1}}, \bibinfo{pages}{471--479}
+  (\bibinfo{year}{2019}).
+
+\bibitem{gnnff}
+\bibinfo{author}{Park, C.~W.} \emph{et~al.}
+\newblock \bibinfo{title}{Accurate and scalable multi-element graph neural
+  network force field and molecular dynamics with direct force architecture}.
+\newblock \emph{\bibinfo{journal}{arXiv preprint arXiv:2007.14444}}
+  (\bibinfo{year}{2020}).
+
+\bibitem{artrith2014understanding}
+\bibinfo{author}{Artrith, N.} \& \bibinfo{author}{Kolpak, A.~M.}
+\newblock \bibinfo{title}{Understanding the composition and activity of
+  electrocatalytic nanoalloys in aqueous solvents: A combination of dft and
+  accurate neural network potentials}.
+\newblock \emph{\bibinfo{journal}{Nano letters}} \textbf{\bibinfo{volume}{14}},
+  \bibinfo{pages}{2670--2676} (\bibinfo{year}{2014}).
+
+\bibitem{deepmd}
+\bibinfo{author}{Zhang, L.}, \bibinfo{author}{Han, J.}, \bibinfo{author}{Wang,
+  H.}, \bibinfo{author}{Car, R.} \& \bibinfo{author}{Weinan, E.}
+\newblock \bibinfo{title}{Deep potential molecular dynamics: a scalable model
+  with the accuracy of quantum mechanics}.
+\newblock \emph{\bibinfo{journal}{Physical review letters}}
+  \textbf{\bibinfo{volume}{120}}, \bibinfo{pages}{143001}
+  (\bibinfo{year}{2018}).
+
+\bibitem{smith2017ani}
+\bibinfo{author}{Smith, J.~S.}, \bibinfo{author}{Isayev, O.} \&
+  \bibinfo{author}{Roitberg, A.~E.}
+\newblock \bibinfo{title}{Ani-1: an extensible neural network potential with
+  dft accuracy at force field computational cost}.
+\newblock \emph{\bibinfo{journal}{Chemical science}}
+  \textbf{\bibinfo{volume}{8}}, \bibinfo{pages}{3192--3203}
+  (\bibinfo{year}{2017}).
+
+\bibitem{gilmer2017neural}
+\bibinfo{author}{Gilmer, J.}, \bibinfo{author}{Schoenholz, S.~S.},
+  \bibinfo{author}{Riley, P.~F.}, \bibinfo{author}{Vinyals, O.} \&
+  \bibinfo{author}{Dahl, G.~E.}
+\newblock \bibinfo{title}{Neural message passing for quantum chemistry}.
+\newblock \emph{\bibinfo{journal}{arXiv preprint arXiv:1704.01212}}
+  (\bibinfo{year}{2017}).
+
+\bibitem{anderson2019cormorant}
+\bibinfo{author}{Anderson, B.}, \bibinfo{author}{Hy, T.~S.} \&
+  \bibinfo{author}{Kondor, R.}
+\newblock \bibinfo{title}{Cormorant: Covariant molecular neural networks}.
+\newblock In \emph{\bibinfo{booktitle}{Advances in Neural Information
+  Processing Systems}}, \bibinfo{pages}{14537--14546} (\bibinfo{year}{2019}).
+
+\bibitem{townshend2020geometric}
+\bibinfo{author}{Townshend, R.~J.}, \bibinfo{author}{Townshend, B.},
+  \bibinfo{author}{Eismann, S.} \& \bibinfo{author}{Dror, R.~O.}
+\newblock \bibinfo{title}{Geometric prediction: Moving beyond scalars}.
+\newblock \emph{\bibinfo{journal}{arXiv preprint arXiv:2006.14163}}
+  (\bibinfo{year}{2020}).
+
+\bibitem{thomas2018tensor}
+\bibinfo{author}{Thomas, N.} \emph{et~al.}
+\newblock \bibinfo{title}{Tensor field networks: Rotation-and
+  translation-equivariant neural networks for 3d point clouds}.
+\newblock \emph{\bibinfo{journal}{arXiv preprint arXiv:1802.08219}}
+  (\bibinfo{year}{2018}).
+
+\bibitem{nequip-arxiv-v1}
+\bibinfo{author}{Batzner, S.} \emph{et~al.}
+\newblock \bibinfo{title}{Se(3)-equivariant graph neural networks for
+  data-efficient and accurate interatomic potentials}.
+\newblock \emph{\bibinfo{journal}{arXiv preprint arXiv:2101.03164v1}}
+  (\bibinfo{year}{2021}).
+
+\bibitem{schutt2021equivariant}
+\bibinfo{author}{Sch{\"u}tt, K.~T.}, \bibinfo{author}{Unke, O.~T.} \&
+  \bibinfo{author}{Gastegger, M.}
+\newblock \bibinfo{title}{Equivariant message passing for the prediction of
+  tensorial properties and molecular spectra}.
+\newblock \emph{\bibinfo{journal}{arXiv preprint arXiv:2102.03150}}
+  (\bibinfo{year}{2021}).
+
+\bibitem{haghighatlari2021newtonnet}
+\bibinfo{author}{Haghighatlari, M.} \emph{et~al.}
+\newblock \bibinfo{title}{Newtonnet: A newtonian message passing network for
+  deep learning of interatomic potentials and forces}.
+\newblock \emph{\bibinfo{journal}{arXiv preprint arXiv:2108.02913}}
+  (\bibinfo{year}{2021}).
+
+\bibitem{klicpera2021gemnet}
+\bibinfo{author}{Klicpera, J.}, \bibinfo{author}{Becker, F.} \&
+  \bibinfo{author}{G{\"u}nnemann, S.}
+\newblock \bibinfo{title}{Gemnet: Universal directional graph neural networks
+  for molecules}.
+\newblock \emph{\bibinfo{journal}{arXiv preprint arXiv:2106.08903}}
+  (\bibinfo{year}{2021}).
+
+\bibitem{unke2021}
+\bibinfo{author}{Unke, O.~T.} \emph{et~al.}
+\newblock \bibinfo{title}{Spookynet: Learning force fields with electronic
+  degrees of freedom and nonlocal effects}.
+\newblock \emph{\bibinfo{journal}{Nature Communications}}
+  \textbf{\bibinfo{volume}{12}}, \bibinfo{pages}{7273} (\bibinfo{year}{2021}).
+\newblock \urlprefix\url{https://doi.org/10.1038/s41467-021-27504-0}.
+
+\bibitem{qiao2021unite}
+\bibinfo{author}{Qiao, Z.} \emph{et~al.}
+\newblock \bibinfo{title}{Unite: Unitary n-body tensor equivariant network with
+  applications to quantum chemistry}.
+\newblock \emph{\bibinfo{journal}{arXiv preprint arXiv:2105.14655}}
+  (\bibinfo{year}{2021}).
+
+\bibitem{grisafi2019atomic}
+\bibinfo{author}{Grisafi, A.}, \bibinfo{author}{Wilkins, D.~M.},
+  \bibinfo{author}{Willatt, M.~J.} \& \bibinfo{author}{Ceriotti, M.}
+\newblock \bibinfo{title}{Atomic-scale representation and statistical learning
+  of tensorial properties}.
+\newblock In \emph{\bibinfo{booktitle}{Machine Learning in Chemistry:
+  Data-Driven Algorithms, Learning Systems, and Predictions}},
+  \bibinfo{pages}{1--21} (\bibinfo{publisher}{ACS Publications},
+  \bibinfo{year}{2019}).
+
+\bibitem{weiler20183d}
+\bibinfo{author}{Weiler, M.}, \bibinfo{author}{Geiger, M.},
+  \bibinfo{author}{Welling, M.}, \bibinfo{author}{Boomsma, W.} \&
+  \bibinfo{author}{Cohen, T.~S.}
+\newblock \bibinfo{title}{3d steerable cnns: Learning rotationally equivariant
+  features in volumetric data}.
+\newblock In \emph{\bibinfo{booktitle}{Advances in Neural Information
+  Processing Systems}}, \bibinfo{pages}{10381--10392} (\bibinfo{year}{2018}).
+
+\bibitem{kondor2018n}
+\bibinfo{author}{Kondor, R.}
+\newblock \bibinfo{title}{N-body networks: a covariant hierarchical neural
+  network architecture for learning atomic potentials}.
+\newblock \emph{\bibinfo{journal}{arXiv preprint arXiv:1803.01588}}
+  (\bibinfo{year}{2018}).
+
+\bibitem{kondor2018clebsch}
+\bibinfo{author}{Kondor, R.}, \bibinfo{author}{Lin, Z.} \&
+  \bibinfo{author}{Trivedi, S.}
+\newblock \bibinfo{title}{Clebsch--gordan nets: a fully fourier space spherical
+  convolutional neural network}.
+\newblock In \emph{\bibinfo{booktitle}{Advances in Neural Information
+  Processing Systems}}, \bibinfo{pages}{10117--10126} (\bibinfo{year}{2018}).
+
+\bibitem{mario_geiger_2021_4735637}
+\bibinfo{author}{Geiger, M.} \emph{et~al.}
+\newblock \bibinfo{title}{e3nn/e3nn: 2021-05-04} (\bibinfo{year}{2021}).
+\newblock \urlprefix\url{https://doi.org/10.5281/zenodo.4735637}.
+
+\bibitem{hendrycks2016gaussian}
+\bibinfo{author}{Hendrycks, D.} \& \bibinfo{author}{Gimpel, K.}
+\newblock \bibinfo{title}{Gaussian error linear units (gelus)}.
+\newblock \emph{\bibinfo{journal}{arXiv preprint arXiv:1606.08415}}
+  (\bibinfo{year}{2016}).
+
+\bibitem{Hjorth_Larsen_2017}
+\bibinfo{author}{Larsen, A.~H.} \emph{et~al.}
+\newblock \bibinfo{title}{The atomic simulation environment{\textemdash}a
+  python library for working with atoms}.
+\newblock \emph{\bibinfo{journal}{Journal of Physics: Condensed Matter}}
+  \textbf{\bibinfo{volume}{29}}, \bibinfo{pages}{273002}
+  (\bibinfo{year}{2017}).
+\newblock \urlprefix\url{https://doi.org/10.1088%2F1361-648x%2Faa680e}.
+
+\bibitem{he2016deep}
+\bibinfo{author}{He, K.}, \bibinfo{author}{Zhang, X.}, \bibinfo{author}{Ren,
+  S.} \& \bibinfo{author}{Sun, J.}
+\newblock \bibinfo{title}{Deep residual learning for image recognition}.
+\newblock In \emph{\bibinfo{booktitle}{Proceedings of the IEEE conference on
+  computer vision and pattern recognition}}, \bibinfo{pages}{770--778}
+  (\bibinfo{year}{2016}).
+
+\bibitem{chmiela2017machine}
+\bibinfo{author}{Chmiela, S.} \emph{et~al.}
+\newblock \bibinfo{title}{Machine learning of accurate energy-conserving
+  molecular force fields}.
+\newblock \emph{\bibinfo{journal}{Science advances}}
+  \textbf{\bibinfo{volume}{3}}, \bibinfo{pages}{e1603015}
+  (\bibinfo{year}{2017}).
+
+\bibitem{schutt2017quantum}
+\bibinfo{author}{Sch{\"u}tt, K.~T.}, \bibinfo{author}{Arbabzadah, F.},
+  \bibinfo{author}{Chmiela, S.}, \bibinfo{author}{M{\"u}ller, K.~R.} \&
+  \bibinfo{author}{Tkatchenko, A.}
+\newblock \bibinfo{title}{Quantum-chemical insights from deep tensor neural
+  networks}.
+\newblock \emph{\bibinfo{journal}{Nature Communications}}
+  \textbf{\bibinfo{volume}{8}}, \bibinfo{pages}{13890} (\bibinfo{year}{2017}).
+\newblock \urlprefix\url{https://doi.org/10.1038/ncomms13890}.
+
+\bibitem{sgdml}
+\bibinfo{author}{Chmiela, S.}, \bibinfo{author}{Sauceda, H.~E.},
+  \bibinfo{author}{Müller, K.-R.} \& \bibinfo{author}{Tkatchenko, A.}
+\newblock \bibinfo{title}{Towards exact molecular dynamics simulations with
+  machine-learned force fields}.
+\newblock \emph{\bibinfo{journal}{Nature Communications}}
+  \textbf{\bibinfo{volume}{9}}, \bibinfo{pages}{3887} (\bibinfo{year}{2018}).
+
+\bibitem{deepmd_water_paper}
+\bibinfo{author}{Ko, H.-Y.} \emph{et~al.}
+\newblock \bibinfo{title}{Isotope effects in liquid water via deep potential
+  molecular dynamics}.
+\newblock \emph{\bibinfo{journal}{Molecular Physics}}
+  \textbf{\bibinfo{volume}{117}}, \bibinfo{pages}{3269--3281}
+  (\bibinfo{year}{2019}).
+
+\bibitem{christensen2020role}
+\bibinfo{author}{Christensen, A.~S.} \& \bibinfo{author}{von Lilienfeld, O.~A.}
+\newblock \bibinfo{title}{On the role of gradients for machine learning of
+  molecular energies and forces}.
+\newblock \emph{\bibinfo{journal}{Machine Learning: Science and Technology}}
+  \textbf{\bibinfo{volume}{1}}, \bibinfo{pages}{045018} (\bibinfo{year}{2020}).
+
+\bibitem{devereux2020extending}
+\bibinfo{author}{Devereux, C.} \emph{et~al.}
+\newblock \bibinfo{title}{Extending the applicability of the ani deep learning
+  molecular potential to sulfur and halogens}.
+\newblock \emph{\bibinfo{journal}{Journal of Chemical Theory and Computation}}
+  \textbf{\bibinfo{volume}{16}}, \bibinfo{pages}{4192--4202}
+  (\bibinfo{year}{2020}).
+
+\bibitem{christensen2020fchl}
+\bibinfo{author}{Christensen, A.~S.}, \bibinfo{author}{Bratholm, L.~A.},
+  \bibinfo{author}{Faber, F.~A.} \& \bibinfo{author}{Anatole~von Lilienfeld,
+  O.}
+\newblock \bibinfo{title}{Fchl revisited: Faster and more accurate quantum
+  machine learning}.
+\newblock \emph{\bibinfo{journal}{The Journal of Chemical Physics}}
+  \textbf{\bibinfo{volume}{152}}, \bibinfo{pages}{044107}
+  (\bibinfo{year}{2020}).
+
+\bibitem{drautz2019atomic}
+\bibinfo{author}{Drautz, R.}
+\newblock \bibinfo{title}{Atomic cluster expansion for accurate and
+  transferable interatomic potentials}.
+\newblock \emph{\bibinfo{journal}{Physical Review B}}
+  \textbf{\bibinfo{volume}{99}}, \bibinfo{pages}{014104}
+  (\bibinfo{year}{2019}).
+
+\bibitem{kovacs2021linear}
+\bibinfo{author}{Kov{\'a}cs, D.~P.} \emph{et~al.}
+\newblock \bibinfo{title}{Linear atomic cluster expansion force fields for
+  organic molecules: beyond rmse}.
+\newblock \emph{\bibinfo{journal}{Journal of Chemical Theory and Computation}}
+  (\bibinfo{year}{2021}).
+
+\bibitem{zhang2018end}
+\bibinfo{author}{Zhang, L.} \emph{et~al.}
+\newblock \bibinfo{title}{End-to-end symmetry preserving inter-atomic potential
+  energy model for finite and extended systems}.
+\newblock \emph{\bibinfo{journal}{Advances in Neural Information Processing
+  Systems}} \textbf{\bibinfo{volume}{31}} (\bibinfo{year}{2018}).
+
+\bibitem{Sim_Gardner_King_1996}
+\bibinfo{author}{Sim, W.~S.}, \bibinfo{author}{Gardner, P.} \&
+  \bibinfo{author}{King, D.~A.}
+\newblock \bibinfo{title}{Multiple bonding configurations of adsorbed formate
+  on ag{111}}.
+\newblock \emph{\bibinfo{journal}{The Journal of Physical Chemistry}}
+  \textbf{\bibinfo{volume}{100}}, \bibinfo{pages}{12509–12516}
+  (\bibinfo{year}{1996}).
+\newblock \bibinfo{note}{00000}.
+
+\bibitem{Wang_Morikawa_Matsumoto_Nakamura_2006}
+\bibinfo{author}{Wang, G.}, \bibinfo{author}{Morikawa, Y.},
+  \bibinfo{author}{Matsumoto, T.} \& \bibinfo{author}{Nakamura, J.}
+\newblock \bibinfo{title}{Why is formate synthesis insensitive to copper
+  surface structures?}
+\newblock \emph{\bibinfo{journal}{The Journal of Physical Chemistry B}}
+  \textbf{\bibinfo{volume}{110}}, \bibinfo{pages}{9–11}
+  (\bibinfo{year}{2006}).
+\newblock \bibinfo{note}{00050}.
+
+\bibitem{LiPON}
+\bibinfo{author}{Yu, X.}, \bibinfo{author}{Bates, J.~B.},
+  \bibinfo{author}{Jellison, G.~E.} \& \bibinfo{author}{Hart, F.~X.}
+\newblock \bibinfo{title}{A stable thin-film lithium electrolyte: Lithium
+  phosphorus oxynitride}.
+\newblock \emph{\bibinfo{journal}{Journal of The Electrochemical Society}}
+  \textbf{\bibinfo{volume}{144}}, \bibinfo{pages}{524--532}
+  (\bibinfo{year}{1997}).
+\newblock \urlprefix\url{https://doi.org/10.1149/1.1837443}.
+
+\bibitem{LiSiPON}
+\bibinfo{author}{Westover, A.~S.} \emph{et~al.}
+\newblock \bibinfo{title}{Plasma synthesis of spherical crystalline and
+  amorphous electrolyte nanopowders for solid-state batteries}.
+\newblock \emph{\bibinfo{journal}{{ACS} Applied Materials {\&} Interfaces}}
+  \textbf{\bibinfo{volume}{12}}, \bibinfo{pages}{11570--11578}
+  (\bibinfo{year}{2020}).
+\newblock \urlprefix\url{https://doi.org/10.1021/acsami.9b20812}.
+
+\bibitem{li2017study}
+\bibinfo{author}{Li, W.}, \bibinfo{author}{Ando, Y.},
+  \bibinfo{author}{Minamitani, E.} \& \bibinfo{author}{Watanabe, S.}
+\newblock \bibinfo{title}{Study of li atom diffusion in amorphous li3po4 with
+  neural network potential}.
+\newblock \emph{\bibinfo{journal}{The Journal of chemical physics}}
+  \textbf{\bibinfo{volume}{147}}, \bibinfo{pages}{214106}
+  (\bibinfo{year}{2017}).
+
+\bibitem{cheng2019ab}
+\bibinfo{author}{Cheng, B.}, \bibinfo{author}{Engel, E.~A.},
+  \bibinfo{author}{Behler, J.}, \bibinfo{author}{Dellago, C.} \&
+  \bibinfo{author}{Ceriotti, M.}
+\newblock \bibinfo{title}{Ab initio thermodynamics of liquid and solid water}.
+\newblock \emph{\bibinfo{journal}{Proceedings of the National Academy of
+  Sciences}} \textbf{\bibinfo{volume}{116}}, \bibinfo{pages}{1110--1115}
+  (\bibinfo{year}{2019}).
+
+\bibitem{hestness2017deep}
+\bibinfo{author}{Hestness, J.} \emph{et~al.}
+\newblock \bibinfo{title}{Deep learning scaling is predictable, empirically}.
+\newblock \emph{\bibinfo{journal}{arXiv preprint arXiv:1712.00409}}
+  (\bibinfo{year}{2017}).
+
+\bibitem{paszke2019pytorch}
+\bibinfo{author}{Paszke, A.} \emph{et~al.}
+\newblock \bibinfo{title}{Pytorch: An imperative style, high-performance deep
+  learning library}.
+\newblock In \emph{\bibinfo{booktitle}{Advances in neural information
+  processing systems}}, \bibinfo{pages}{8026--8037} (\bibinfo{year}{2019}).
+
+\bibitem{fey2019fast}
+\bibinfo{author}{Fey, M.} \& \bibinfo{author}{Lenssen, J.~E.}
+\newblock \bibinfo{title}{Fast graph representation learning with pytorch
+  geometric}.
+\newblock \emph{\bibinfo{journal}{arXiv preprint arXiv:1903.02428}}
+  (\bibinfo{year}{2019}).
+
+\bibitem{Hutter_Iannuzzi_Schiffmann_VandeVondele_2014}
+\bibinfo{author}{Hutter, J.}, \bibinfo{author}{Iannuzzi, M.},
+  \bibinfo{author}{Schiffmann, F.} \& \bibinfo{author}{VandeVondele, J.}
+\newblock \bibinfo{title}{cp2k: atomistic simulations of condensed matter
+  systems}.
+\newblock \emph{\bibinfo{journal}{WIREs Computational Molecular Science}}
+  \textbf{\bibinfo{volume}{4}}, \bibinfo{pages}{15–25}
+  (\bibinfo{year}{2014}).
+\newblock \bibinfo{note}{00000}.
+
+\bibitem{vasp1}
+\bibinfo{author}{Kresse, G.} \& \bibinfo{author}{Hafner, J.}
+\newblock \bibinfo{title}{Ab initiomolecular dynamics for liquid metals}.
+\newblock \emph{\bibinfo{journal}{Physical Review B}}
+  \textbf{\bibinfo{volume}{47}}, \bibinfo{pages}{558--561}
+  (\bibinfo{year}{1993}).
+\newblock \urlprefix\url{https://doi.org/10.1103/physrevb.47.558}.
+
+\bibitem{vasp2}
+\bibinfo{author}{Kresse, G.} \& \bibinfo{author}{Furthm\"{u}ller, J.}
+\newblock \bibinfo{title}{Efficiency of ab-initio total energy calculations for
+  metals and semiconductors using a plane-wave basis set}.
+\newblock \emph{\bibinfo{journal}{Computational Materials Science}}
+  \textbf{\bibinfo{volume}{6}}, \bibinfo{pages}{15--50} (\bibinfo{year}{1996}).
+\newblock \urlprefix\url{https://doi.org/10.1016/0927-0256(96)00008-0}.
+
+\bibitem{vasp3}
+\bibinfo{author}{Kresse, G.} \& \bibinfo{author}{Furthm\"{u}ller, J.}
+\newblock \bibinfo{title}{Efficient iterative schemes forab initiototal-energy
+  calculations using a plane-wave basis set}.
+\newblock \emph{\bibinfo{journal}{Physical Review B}}
+  \textbf{\bibinfo{volume}{54}}, \bibinfo{pages}{11169--11186}
+  (\bibinfo{year}{1996}).
+\newblock \urlprefix\url{https://doi.org/10.1103/physrevb.54.11169}.
+
+\bibitem{PBE}
+\bibinfo{author}{Perdew, J.~P.}, \bibinfo{author}{Burke, K.} \&
+  \bibinfo{author}{Ernzerhof, M.}
+\newblock \bibinfo{title}{Generalized gradient approximation made simple}.
+\newblock \emph{\bibinfo{journal}{Physical Review Letters}}
+  \textbf{\bibinfo{volume}{77}}, \bibinfo{pages}{3865--3868}
+  (\bibinfo{year}{1996}).
+\newblock \urlprefix\url{https://doi.org/10.1103/physrevlett.77.3865}.
+
+\bibitem{PAW}
+\bibinfo{author}{Kresse, G.} \& \bibinfo{author}{Joubert, D.}
+\newblock \bibinfo{title}{From ultrasoft pseudopotentials to the projector
+  augmented-wave method}.
+\newblock \emph{\bibinfo{journal}{Physical Review B}}
+  \textbf{\bibinfo{volume}{59}}, \bibinfo{pages}{1758--1775}
+  (\bibinfo{year}{1999}).
+\newblock \urlprefix\url{https://doi.org/10.1103/physrevb.59.1758}.
+
+\bibitem{kingma2014adam}
+\bibinfo{author}{Kingma, D.~P.} \& \bibinfo{author}{Ba, J.}
+\newblock \bibinfo{title}{Adam: A method for stochastic optimization}.
+\newblock \emph{\bibinfo{journal}{arXiv preprint arXiv:1412.6980}}
+  (\bibinfo{year}{2014}).
+
+\bibitem{loshchilov2017decoupled}
+\bibinfo{author}{Loshchilov, I.} \& \bibinfo{author}{Hutter, F.}
+\newblock \bibinfo{title}{Decoupled weight decay regularization}.
+\newblock \emph{\bibinfo{journal}{arXiv preprint arXiv:1711.05101}}
+  (\bibinfo{year}{2017}).
+
+\bibitem{reddi2019convergence}
+\bibinfo{author}{Reddi, S.~J.}, \bibinfo{author}{Kale, S.} \&
+  \bibinfo{author}{Kumar, S.}
+\newblock \bibinfo{title}{On the convergence of adam and beyond}.
+\newblock \emph{\bibinfo{journal}{arXiv preprint arXiv:1904.09237}}
+  (\bibinfo{year}{2019}).
+
+\end{thebibliography}

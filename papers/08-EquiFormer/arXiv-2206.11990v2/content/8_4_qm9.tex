@@ -1,0 +1,190 @@
+\section{Details of Experiments on QM9}
+\label{appendix:sec:qm9}
+
+
+
+\begin{table}[]
+\centering
+\resizebox{\ifdim\width>\textwidth\textwidth\else\width\fi}{!}{
+\begin{tabular}{ll}
+%\cline{7-11}
+\toprule[1.2pt]
+Hyper-parameters & Value or description
+ \\
+\midrule[1.2pt]
+Optimizer & AdamW \\
+Learning rate scheduling & Cosine learning rate with linear warmup \\
+Warmup epochs & $5$ \\
+%Maximum learning rate & $1.5 \times 10 ^{-4}$ for $G$, $H$, $U$ and $U_0$, and $5 \times 10 ^{-4}$ for others \\
+Maximum learning rate & $1.5 \times 10 ^{-4}$, $5 \times 10 ^{-4}$ \\
+%Batch size & $64$ for $G$, $H$, $U$ and $U_0$, and $128$ for others \\
+Batch size & $64$, $128$ \\
+%Number of epochs & $600$ for $G$, $H$, $U$ and $U_0$, and $300$ for others \\
+Number of epochs & $300$, $600$ \\
+%Weight decay & $0$ for $G$, $H$, $U$ and $U_0$, and $5 \times 10^{-3}$ for others \\
+Weight decay & $0$, $5 \times 10^{-3}$ \\
+%Dropout rate & $0.0$ for $G$, $H$, $U$ and $U_0$, $0.1$ for $R^{2}$, and $0.2$ for others \\
+Dropout rate & $0.0$, $0.1$, $0.2$ \\
+% ===============================
+%   Add this back in the futrure
+% ===============================
+%Dropout rate & $0.1$, $0.2$ \\
+\midrule[0.6pt]
+Cutoff radius ($\angstrom$) & $5$ \\
+Number of radial bases & $128$ for Gaussian radial basis, $8$ for radial bessel basis \\
+Hidden sizes of radial functions & $64$ \\
+Number of hidden layers in radial functions & $2$ \\
+
+\midrule[0.6pt]
+
+\multicolumn{2}{c}{Equiformer} \\
+\\
+Number of Transformer blocks & $6$ \\
+Embedding dimension $d_{embed}$ & $[(128, 0), (64, 1), (32, 2)]$ \\
+Spherical harmonics embedding dimension $d_{sh}$ & $[(1, 0), (1, 1), (1, 2)]$ \\
+Number of attention heads $h$ & $4$ \\
+Attention head dimension $d_{head}$ & $[(32, 0), (16, 1), (8, 2)]$\\
+Hidden dimension in feed forward networks $d_{ffn}$ & $[(384, 0), (192, 1) , (96, 2)]$ \\
+Output feature dimension $d_{feature}$ & $[(512, 0)]$\\
+
+\midrule[0.6pt]
+
+\multicolumn{2}{c}{$E(3)$-Equiformer} \\
+\\
+Number of Transformer blocks & $6$ \\
+Embedding dimension $d_{embed}$ & $[(128, 0, e), (32, 0, o), (32, 1, e), (32, 1, o), (16, 2, e), (16, 2, o)]$ \\
+Spherical harmonics embedding dimension $d_{sh}$ & $[(1, 0, e), (1, 1, o), (1, 2, e)]$ \\
+Number of attention heads $h$ & $4$ \\
+Attention head dimension $d_{head}$ & $[(32, 0, e), (8, 0, o), (8, 1, e), (8, 1, o), (4, 2, e), (4, 2, o)]$ \\
+Hidden dimension in feed forward networks $d_{ffn}$ & $[(384, 0, e), (96, 0, o), (96, 1, e), (96, 1, o), (48, 2, e), (48, 2, o)]$ \\
+Output feature dimension $d_{feature}$ & $[(512, 0, e)]$\\
+\bottomrule[1.2pt]
+\end{tabular}
+}
+\vspace{-2mm}
+\caption{\textbf{Hyper-parameters for QM9 dataset.}
+We denote $C_L$ type-$L$ vectors as $(C_L, L)$ and $C_{(L, p)}$ type-$(L, p)$ vectors as $(C_{(L, p)}, L, p)$ and use brackets to represent concatenations of vectors.
+}
+\label{appendix:tab:qm9}
+\end{table}
+
+
+\subsection{Training Details}
+\label{appendix:subsec:qm9_training_details}
+%%%We normalize ground truth by subtracting mean and dividing by standard deviation.
+%%%For the task of $U$, $U_0$, $G$, and $H$, where single-atom reference values are available, we subtract those reference values from ground truth before normalizing. 
+We use the same data partition as TorchMD-NET~\citep{torchmd_net}.
+For the task of $U$, $U_0$, $G$, and $H$, where single-atom reference values are available, we subtract those reference values from ground truth. 
+For other tasks, we normalize ground truth by subtracting mean and dividing by standard deviation.
+
+We train Equiformer with 6 blocks with $L_{max} = 2$.
+%We choose Gaussian radial basis~\cite{schnet, spinconv, gemnet, graphormer_3d} for the first six tasks in Table~\ref{tab:qm9_result} and radial Bessel basis for the others.
+We choose Gaussian radial basis~\citep{schnet, spinconv, gemnet, graphormer_3d} for the first six tasks in Table~\ref{tab:qm9_result} and radial Bessel basis~\citep{dimenet, dimenet_pp} for the others.
+% ===============================
+%   Add these back in the future
+% ===============================
+We apply dropout~\citep{dropout} to attention weights $a_{ij}$.
+The dropout rate is $0.0$ for the tasks of $G$, $H$, $U$ and $U_0$, is $0.1$ for the task of $R^2$ and is $0.2$ for others.
+Since the tasks of $G$, $H$, $U$, and $U_0$ require longer training, we use slightly different hyper-parameters.
+The number of epochs is $600$ for the tasks of $G$, $H$, $U$, and $U_0$ and is $300$ for others.
+The learning rate is $1.5 \times 10 ^{-4}$ for the tasks of $G$, $H$, $U$, and $U_0$ and is $5 \times 10^{-4}$ for others.
+The batch size is $64$ for the tasks of $G$, $H$, $U$, and $U_0$ and is $128$ for others.
+The weight decay is $0$ for the tasks of $G$, $H$, $U$, and $U_0$ and is $5 \times 10^{-3}$ for others.
+Table~\ref{appendix:tab:qm9} summarizes the hyper-parameters for the QM9 dataset.
+The detailed description of architectural hyper-parameters can be found in Sec.~\ref{appendix:subsec:equiformer_architecture}. 
+
+We use one A6000 GPU with 48GB to train each model and summarize the computational cost of training for one epoch as follows.
+Training $E(3)$-Equiformer in Table~\ref{appendix:tab:e3_qm9} for one epoch takes about $16.3$ minutes.
+The time of training Equiformer, Equiformer with linear messages (indicated by Index $2$ in Table~\ref{tab:qm9_ablation}), and Equiformer with linear messages and dot product attention (indicated by Index $3$ in Table~\ref{tab:qm9_ablation}) for one epoch is $12.1$ minutes, $7.2$ minutes and $7.8$ minutes, respectively.
+
+
+%We set cutoff radius to be $5 \angstrom$ and represent relative distances with Gaussian radial basis~\cite{schnet, spinconv, gemnet, graphormer_3d} with dimension $128$.
+%Please refer to appendix for further details on Equiformer architecture.
+%\todo{We apply dropout~\cite{dropout} with probability $0.2$ to attention weights}. 
+%We use AdamW optimizer~\cite{adamw} with weight decay $5 \times 10^{-3}$ and use cosine learning rate with linear warmup, where the maximum learning rate is $5 \times 10 ^{-4}$ and warmup epoch is $5$.
+%The batch size is $128$ and the number of epochs is $300$.
+
+
+\subsection{Comparison between $SE(3)$ and $E(3)$ Equivariance}
+\label{appendix:subsec:e3_qm9}
+We train two versions of Equiformers, one with $SE(3)$-equivariant features denoted as ``Equiformer'' and the other with $E(3)$-equivariant features denoted as ``$E(3)$-Equiformer'', and we compare them in Table~\ref{appendix:tab:e3_qm9}.
+%Including equivariance to inversion further improves the performance on QM9 dataset.
+As for Table~\ref{tab:qm9_result}, we compare ``Equiformer'' with other works since most of them do not include equivariance to inversion.
+
+\begin{table}[th]
+\centering
+\resizebox{\ifdim\width>\textwidth\textwidth\else\width\fi}{!}{
+\begin{tabular}{llccccccccc}
+%\cline{7-11}
+\toprule[1.2pt]
+& Task & $\alpha$ & $\Delta \varepsilon$ & $\varepsilon_{\text{HOMO}}$ & $\varepsilon_{\text{LUMO}}$ & $\mu$ & $C_{\nu}$ & Training time & Number of \\
+%Methods & Units & bohr$^3$ & meV & meV & meV & D & cal/mol K & (minutes/epoch) & parameters \\
+Methods & Units & $a_0^3$ & meV & meV & meV & D & cal/mol K & (minutes/epoch) & parameters \\
+\midrule[1.2pt]
+
+
+Equiformer & & .046 & 30 & 15 & 14 & .011 & .023 & 12.1 & 3.53M \\
+$E(3)$-Equiformer & & .045 & 30 & 15 & 14 & .012 & .023 & 16.3 & 3.28M\\
+%\midrule[0.6pt]
+%Equiformer + NAT & 0.4737 & 0.7245 & 0.4862 & 0.6493 & 0.5834 & 6.01 & 2.45 & 5.41 & 2.71 & \\
+\bottomrule[1.2pt]
+
+\end{tabular}
+}
+\vspace{-2mm}
+\caption{\textbf{Ablation study of $SE(3)$/$E(3)$ equivariance on QM9 testing set.}  
+``Equiformer'' operates on $SE(3)$-equivariant features while ``$E(3)$-Equiformer'' uses $E(3)$-equivariant features.
+Including inversion achieves similar performance.
+}
+\vspace{-2.5mm}
+\label{appendix:tab:e3_qm9}
+\end{table}
+
+
+\subsection{Comparison of Training Time and Numbers of Parameters}
+\label{appendix:subsec:qm9_training_time_comparison}
+We compare training time and numbers of parameters between SEGNN~\citep{segnn}, TorchMD-NET~\citep{torchmd_net} and Equiformer and summarize the results in Table~\ref{appendix:tab:qm9_training_time}.
+Training Equiformer for $300$ epochs and for $600$ epochs takes $61$ and $122$ GPU-hours, respectively.
+
+Compared to SEGNN, which is written with the same \texttt{e3nn} library~\citep{e3nn}, Equiformer with MLP attention and non-linear message is faster.
+Although Equiformer has more channels and more parameters, the training time is comparable. 
+The reasons are as follows.
+Equiformer uses more efficient depth-wise tensor products (DTP), where one output channel depends on only one input channel. 
+SEGNN uses more compute-intensive fully connected tensor products (FCTP), where one output channel depends on all input channels. 
+Besides, SEGNN uses 4 FCTPs in each message passing block while Equiformer uses only 2 DTPs in each block. 
+
+Compared to TorchMD-NET, which is trained for $3000$ epochs, Equiformer achieves competitve results after trained for $300$ or $600$ epochs.
+Equiformer takes more time for each epoch since Equiformer uses more expressive non-linear messages, which compared to linear messages used in other equivariant Transformers, doubles the number of tensor products and therefore almost doubles the training time.
+Moreover, Equiformer incorporates tensors of higher degrees (e.g., $L_{max}=2$), which improves performance but slows down the training.
+
+
+
+\begin{table}[t]
+\begin{adjustwidth}{0cm}{0cm}
+\centering
+\resizebox{\ifdim\width>\textwidth\textwidth\else\width\fi}{!}{
+\begin{tabular}{lccc}
+%\cline{7-11}
+\toprule[1.2pt]
+Methods & Number of parameters & Training time (GPU-hours) \\
+\midrule[1.2pt]
+
+SEGNN~\citep{segnn} & 1.03M & 81 \\
+TorchMD-NET~\citep{torchmd_net} & 6.86M & 92 \\
+\midrule[0.6pt]
+Equiformer & 3.53M & 61 \\
+
+\bottomrule[1.2pt]
+
+\end{tabular}
+}
+\vspace{-3mm}
+\end{adjustwidth}
+\caption{\textbf{Comparison of training time and numbers of parameters for QM9 dataset.}  
+%\note{Dropout rate = 0.1.}
+%%%$\dagger$ denotes using different training, validation, testing data partitions. % as mentioned in SEGNN~\cite{segnn}.
+%$\dagger$ denotes using different data partitions.
+%$\ddagger$ denotes results from SE(3)-Transformer~\cite{se3_transformer}.
+}
+\label{appendix:tab:qm9_training_time}
+\end{table}

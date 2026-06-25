@@ -1,0 +1,28 @@
+\section{Limitations}
+\label{appendix:sec:limitations}
+
+
+We discuss several limitations of the proposed Equiformer and equivariant graph attention below.
+
+First, Equiformer is based on irreducible representations (irreps) and therefore can inherit the limitations common to all equivariant networks based on irreps and the library \texttt{e3nn}~\citep{e3nn}.
+For example, using higher degrees $L$ can result in larger features and using tensor products can be compute-intensive. 
+Part of the reasons that tensor products can be computationally expensive are that the kernels have not been heavily optimized and customized as other operations in common libraries like PyTorch~\citep{pytorch}. 
+But this is the issue related to software, not the design of networks. 
+While tensor products of irreps naively do not scale well, if all possible interactions and paths are considered, some paths in tensor products can also be pruned for computational efficiency. 
+We leave these potential efficiency gains to future work and in this work focus on general equivariant attention if all possible paths up to $L_{max}$ in tensor products are allowed.
+
+Second,  the improvement of the proposed equivariant graph attention can depend on tasks and datasets. For QM9, MLP attention improves not significantly upon dot product attention as shown in Table~\ref{tab:qm9_ablation}. 
+We surmise that this is because QM9 contains less atoms and less diverse atom types and therefore linear attention is enough. For OC20, MLP attention clearly improves upon dot product attention as shown in Table~\ref{tab:oc20_ablation}. Non-linear messages improve upon linear ones for the two datasets.
+
+Third, equivariant graph attention requires more computation than typical graph convolution. 
+It includes one softmax operation and thus requires one additional sum aggregation compared to typical message passing. For non-linear message passing, it increases the number of tensor products from one to two and requires more computation. 
+We note that if there is a constraint on training budget, using stronger attention (i.e., MLP attention and non-linear messages) would not always be optimal because for some tasks or datasets, the improvement is not that significant and using stronger attention can slow down training. 
+
+%For example, for the task of $C_\nu$ on QM9, using linear (index 2) or non-linear messages (index 1) results in the same performance as shown in Table~\ref{tab:qm9_ablation}.
+%However, non-linear messages increase the training time of one epoch from 6.6 minutes to 11 minutes.
+%}
+
+Fourth, the proposed attention has complexity proportional to the products of numbers of channels and numbers of edges since the the attention is restricted to local neighborhoods. 
+In the context of 3D atomistic graphs, the complexity is the same as that of messages and graph convolutions.
+However, in other domains like computer vision, the memory complexity of convolution is proportional to the number of pixels or nodes, not that of edges. 
+Therefore, it would require further modifications in order to use the proposed attention in other domains.

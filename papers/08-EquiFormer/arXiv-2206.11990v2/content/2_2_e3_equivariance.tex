@@ -1,0 +1,34 @@
+
+\subsection{$E(3)$ Equivariance}
+\vspace{-3mm}
+Atomistic systems are often described using coordinate systems.
+For 3D Euclidean space, we can freely choose coordinate systems and change between them via the symmetries of 3D space: 3D translation, rotation and inversion ( $\vec{r} \rightarrow -\vec{r}$ ).
+The groups of 3D translation, rotation and inversion form Euclidean group $E(3)$, with the first two forming $SE(3)$, the second being $SO(3)$, and the last two forming $O(3)$.
+%The laws of physics are invariant to this choice and the properties and interactions of the physical system are equivariant, i.e. transform predictable, with a change of coordinate system. 
+The laws of physics are invariant to the choice of coordinate systems and therefore properties of atomistic systems are equivariant, e.g., when we rotate our coordinate system, quantities like energy remain the same while others like force rotate accordingly.
+%For example, while the energy of a system is invariant under a chance of coordinate system, the position of node $i$ is described by the 3D vector $\vec{r}$ and if we rotate our coordinate system with rotation $g \in \text{SO}(3)$, the vector rotates with $D[g] \vec{r}$ where $D[g]$ is a familiar $3 \times 3$ rotation matrix. 
+%
+%To preserve the equivariance of the properties of our system, we make our neural network operations equivariant.
+% As interaction within atomistic systems remains the same regardless of coordinate systems, when we change coordinate systems and therefore position $r_i$ of each node, some invariant quantities like energy will remain the same while other equivariant quantities like forces will change accordingly.
+%In addition to encoding directional information, another desirable property is to maintain equivariance to 3D translation, rotation and reflection.
+% This is referred to as equivariance, where outputs will change predictably when inputs are changed with certain geometric transformations.
+Formally, a function $f$ mapping between vector spaces $X$ and $Y$ is equivariant to a group of transformation $G$ if for any input $x \in X$, output $y \in Y$ and group element $g \in G$, we have $f(D_X(g) x) = D_Y(g) f(x)$, where $D_X(g)$ and $D_Y(g)$ are transformation matrices parametrized by $g$ in $X$ and $Y$. 
+%Intuitively, if $f$ is equivariant then, we can apply $g$ to our or we can apply $g$ to our outputs and obtain the same result. This ensures that our function $f$ is not biased by our choice of coordinate system.
+%%%
+%%%Incorporating equivariance into neural networks as inductive biases is crucial as this enables generalizing to unseen data in a predictable manner.
+%For example, 2D convolution $f$ is equivariant to the group of 2D translation, and when input features $x$ are shifted by an amount parametrized by $g$, output features $y$ will be shifted by the same amount.
+%%%For example, 2D convolution $f$ is equivariant to the group of 2D translation, and thus, CNNs can identify patterns at any location even if they have never seen the patterns at that specific location before.
+%For atomistic graphs in 3D spaces, we consider 3D Euclidean group -- E(3), consisting of 3D translation, rotation and inversion (which include reflections which are combinations of inverse and rotation).
+%For atomistic graphs in 3D spaces, we consider 3D Euclidean group E(3).
+For learning on 3D atomistic graphs, features and learnable functions should be $E(3)$-equivariant to geometric transformation acting on position $\vec{r}$. 
+%Features $f_i^{l}$ and $e_{ij}^l$ and learnable functions $\phi_m$ and $\phi_u$ should be $E(3)$-equivariant to geometric transformation acting on position $\vec{r}_i$. 
+%%%Features and learnable functions should be $E(3)$-equivariant to geometric transformation acting on position $\vec{r}$. 
+%In this work, we achieve E(3)-equivariance following the methods of Refs. \cite{tfn,kondor2018clebsch,3dsteerable} implemented in \texttt{e3nn}~\cite{e3nn}.
+In this work, following previous works~\citep{tfn,kondor2018clebsch,3dsteerable} implemented in \texttt{e3nn}~\citep{e3nn}, we achieve $SE(3)$/$E(3)$-equivariance by using equivariant features based on vector spaces of irreducible representations and equivariant operations for learnable functions.
+In the main text, we discuss $SE(3)$-equivariance and benchmark Equiformer with $SE(3)$-equivariance.
+We leave the discussion on inversion and $E(3)$-equivariance in Sec.~\ref{appendix:sec:additional_background} and present results of $E(3)$-equivariance in Sec.~\ref{appendix:subsec:e3_qm9} and Sec.~\ref{appendix:subsec:e3_oc20} in appendix.
+
+%We decompose our features into irreducible representations, use equivariant activation functions, and replace all element-wise multiplication in our network in with geometric tensor products, the bilinear map on the space of irreducible representations of $O(3)$.
+%\revision{We use equivariant features based on vector spaces of irreducible representations and replace typical multiplication with tensor products.}
+% for features and equivariant operations like tensor product for learnable functions.
+%We can extend this to the case of 3D, where outputs change accordingly when inputs are transformed with translation, rotation or reflection.

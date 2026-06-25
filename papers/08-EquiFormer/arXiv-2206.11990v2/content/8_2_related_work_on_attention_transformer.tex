@@ -1,0 +1,86 @@
+\section{Related Works}
+\label{appendix:sec:related_works}
+
+\subsection{Graph Neural Networks for 3D Atomistic Graphs}
+\label{appendix:subsec:gnn_3d_graphs}
+Graph neural networks (GNNs) are well adapted to perform property prediction of atomic systems because they can handle discrete and topological structures.
+%There are two main ways to represent atomistic graphs~\cite{atom3d}, which are 2D planar chemical bond graphs and 3D spatial graphs.
+There are two main ways to represent atomistic graphs~\citep{atom3d}, which are chemical bond graphs, sometimes denoted as 2D graphs, and 3D spatial graphs.
+Chemical bond graphs use edges to represent covalent bonds without considering 3D geometry.
+Due to their similarity to graph structures in other applications, generic GNNs~\citep{graphsage, neural_message_passing_quantum_chemistry, gcn, gin, gat, gatv2} can be directly applied to predict their properties~\citep{qm9_2, qm9_1, deepchem, ogb, ogblsc}.
+On the other hand, 3D spatial graphs consider positions of atoms in 3D spaces and therefore 3D geometry.
+Although 3D graphs can faithfully represent atomistic systems, one challenge of moving from chemical bond graphs to 3D spatial graphs is to remain invariant or equivariant to geometric transformation acting on atom positions.
+Therefore, invariant neural networks and equivariant neural networks have been proposed for 3D atomistic graphs, with the former leveraging invariant information like distances and angles and the latter operating on geometric tensors like type-$L$ vectors.
+
+% =================
+% Invariant & Equivariant Graphs
+% =================
+%There are two main graph neural networks approaches for operating on atomistic graphs, invariant graph neural networks which make use of invariant features of atomic systems and equivariant graph neural networks which make use of both invariant and equivariant features of atomic systems.
+
+%Common invariant features include atom types for nodes and bond type or pairwise distances for edges. It is also possible to specify invariant features that require more than two atom indices, such as the invariants of bond angle (3 atom indices) and dihedral angles (4 atom indices) which are used in Ref. \cite{dimenet, dimenet_pp}. Common equivariant features include velocities for nodes and relative distance vectors for edges.
+
+%\tess{Because the edge features of bond graphs and distance graphs are scalars and do not change under a chance of coordinate system, generic GNNs~\cite{gcn, neural_message_passing_quantum_chemistry, graphsage, gat, gin, gatv2} can be applied to predict their properties~\cite{qm9_2, qm9_1, deepchem, ogb, ogblsc}.
+%Edge features of relative distance (3D) vectors, require additional care because in order for the graph neural network to not be biased by the choice of coordinate system the graph neural network operations must be equivariant to a change of coordinate system as discussed in Sec.~\ref{sec:background}.}
+
+
+
+\subsection{\revision{Detailed Comparison between equivariant Transformers}}
+\label{appendix:subsec:detailed_comparison_between_equivariant_transformers}
+\revision{First, we compare the impact of previous equivariant Transformers~\citep{se3_transformer, torchmd_net, eqgat} in the following four aspects:
+\begin{enumerate}
+    \item Previous equivariant Transformers do not perform well across datasets. For instance, SE(3)-Transformer~\citep{se3_transformer} is not as performant as other equivariant networks on QM9 as shown in Table~\ref{tab:qm9_result}. TorchMD-NET~\citep{torchmd_net} does not achieve comparable results to NequIP~\citep{nequip} on MD17 as shown in Table~\ref{tab:md17_result} although it is competitive on QM9 in Table~\ref{tab:qm9_result}.
+    \item Equiformer simultaneously achieves the best results for MD17, QM9 and OC20 datasets, indicating that the Transformer architecture is generally effective in the literature of equivariant neural networks and 3D atomistic graphs. 
+    \item Extensive ablation studies have been conducted to justify a better attention mechanism in this literature.
+    \item To the best of our knowledge, we are the first to apply equivariant Transformers to large and complicated datasets like OC20 and demonstrate that equivariant Transformers can achieve competitive results to large models like GNS~\citep{noisy_nodes} and Graphormer~\citep{graphormer_3d} while saving $2.3\times$ to $15.5\times$ training time as summarized in Table~\ref{tab:is2re_is2rs_testing}. 
+\end{enumerate}
+}
+
+\revision{Second, we compare the technical differences of architectures of equivariant Transformers. 
+%In addition to using stronger equivariant graph attention, we note that the architecture 
+The proposed Equiformer consists of equivariant graph attention and an equivariant Transformer architecture. 
+The latter is obtained by simply replacing orginal operations in Transformers with their equivariant counterparts and including tensor product operations and corresponds to ``Equiformer with dot product attention and linear message passing'' as indicated by Index 3 in Table~\ref{tab:qm9_ablation} and~\ref{tab:oc20_ablation}. 
+Although with minimal modifications to original Transformers, we note that this architecture has not been explored in previous equivariant Transformers and achieves competitive results on QM9 and OC20 datasets.
+Below we discuss the advantages of the architecture, Equiformer with dot product attention and linear message passing, over other equivariant Transformers:
+\begin{enumerate}
+    \item  \textbf{Simpler.} We simply replace original operations with their equivariant counterparts and include tensor products without making further modifications. In contrast, SE(3)-Transformer~\citep{se3_transformer} merges normalization and activation to form norm nonlinearities, which does not exist in original Transformers. We empirically find that the norm nonlinearities~\citep{se3_transformer} leads to higher errors compared to the equivariant layer norm used by our work.
+    \item \textbf{More general.} SE(3)-Transformer~\citep{se3_transformer} and our proposed architecture can support vectors of any degree $L$ while other equivariant Transformers~\citep{torchmd_net, eqgat} are limited to $L = 0$ and $1$. It has been shown that higher $L$ (e.g., $L$ up to $2$ and $3$) can improve the performance of networks on QM9~\citep{segnn} and MD17~\citep{nequip}. Thus, the incapability to use $L$ higher than $1$ can limit their performance.
+    \item \textbf{More efficient tensor products.} Compared to SE(3)-Transformer~\citep{se3_transformer}, we use more efficient depth-wise tensor products instead of fully connected tensor products. Since the proposed architecture and SE(3)-Transformer~\citep{se3_transformer} use relative distances to parametrize the weights of tensor products, depth-wise tensor products enalbe using  more channels without incurring out-of-memory errors. Specifically, for QM9, SE(3)-Transformer~\citep{se3_transformer} only uses $16$ channels for vectors of each degree $L$ while the proposed architecture can use $128$, $64$, and $32$ channels for vectors of degree $0$, $1$, and $2$. Using a very small number of channels can potentially lead to insufficient model capacity.
+\end{enumerate}
+We note that the novelty of the proposed architecture, Equiformer with dot product attention and linear message passing, lies in how we choose the right operations as well as internal representations (i.e., vectors of any degree $L$) and combine them in an effective manner that achieves the three advantages mentioned above.
+We further improve this simple architecture with our proposed equivariant graph attention, which consists of MLP attention and non-linear message passing.
+}
+
+\subsection{Invariant GNNs}
+\label{appendix:subsec:invariant_gnn}
+Previous works~\citep{schnet, cgcnn, physnet, dimenet, dimenet_pp, orbnet, spherenet, spinconv, gemnet} extract invariant information from 3D atomistic graphs and operate on the resulting invariant graphs.
+They mainly differ in leveraging different geometric information such as distances, bond angles (3 atom features) or dihedral angles (4 atom features).
+SchNet~\citep{schnet} uses relative distances and proposes continuous-filter convolutional layers to learn local interaction between atom pairs. 
+DimeNet series~\citep{dimenet, dimenet_pp} incorporate bond angles by using triplet representations of atoms.
+%SphereNet~\cite{spherenet} and GemNet~\cite{gemnet} further extend to consider dihedral angles, which has been shown by GemNet~\cite{gemnet} to be universal approximators. 
+SphereNet~\citep{spherenet} and GemNet~\citep{gemnet, gemnet_oc} further extend to consider dihedral angles for better performance.
+In order to consider directional information contained in angles, they rely on triplet or quadruplet representations of atoms.
+In addition to being memory-intensive~\citep{gemnet_xl}, they also change graph structures by introducing higher-order interaction terms~\citep{line_graph}, which would require non-trivial modifications to generic GNNs in order to apply them to 3D graphs.
+In contrast, the proposed Equiformer uses equivariant irreps features to consider directional information without complicating graph structures and therefore can directly inherit the design of generic GNNs.
+
+
+\subsection{Attention and Transformer}
+\label{appendix:subsec:attention_and_transformers}
+
+\paragraph{Graph Attention.}
+Graph attention networks (GAT)~\citep{gat, gatv2} use multi-layer perceptrons (MLP) to calculate attention weights in a similar manner to message passing networks.
+Subsequent works using graph attention mechanisms follow either GAT-like MLP attention~\citep{relational_graph_attention_networks, graph_attention_with_self_supervision} or Transformer-like dot product attention~\citep{gaan, hard_graph_attention, masked_label_prediction, generalization_transformer_graphs, graph_attention_with_self_supervision, spectral_attention}.
+In particular, Kim \textit{et al.}~\citep{graph_attention_with_self_supervision} compares these two types of attention mechanisms empirically under a self-supervised setting.
+Brody \textit{et al.}~\citep{gatv2} analyzes their theoretical differences and compares their performance in general settings.
+%Since GAT-like MLP attention includes non-linearity when calculating attention weights, from theoretical perspectives, it is more expressive than Transformer-like dot product attention, where only linear operations are used for attention weights.
+
+\paragraph{Graph Transformer.}
+A different line of research focuses on adapting standard Transformer networks to graph problems~\citep{generalization_transformer_graphs, grove, spectral_attention, graphormer, graphormer_3d}.
+They adopt dot product attention in Transformers~\citep{transformer} and propose different approaches to incorporate graph-related inductive biases into their networks.
+GROVE~\citep{grove} includes additional message passing layers or graph convolutional layers to incorporate local graph structures when calculating attention weights.
+SAN~\citep{spectral_attention} proposes to learn position embeddings of nodes with full Laplacian spectrum.
+Graphormer~\citep{graphormer} proposes to encode degree information in centrality embeddings and encode distances and edge features in attention biases.
+The proposed Equiformer belongs to one of these attempts to generalize standard Transformers to graphs and is dedicated to 3D graphs.
+To incorporate 3D-related inductive biases, we adopt an equivariant version of Transformers with irreps features and propose novel equivariant graph attention.
+
+%\todo{Mention Transformer in other domains briefly in broader impact.}
+

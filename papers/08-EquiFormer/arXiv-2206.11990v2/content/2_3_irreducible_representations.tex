@@ -1,0 +1,87 @@
+\vspace{-2.5mm}
+\subsection{Irreducible Representations}
+\vspace{-2.5mm}
+\label{subsec:irreducible_representations}
+%A powerful result of group representation theory is that the action of group elements can be expressed as matrices acting on vector spaces via matrix multiplication. Colloquially, we use the term ``representation'' to refer to both the vector space and the representation of the group as matrices acting on that vector space.
+%A group representation defines how we write down transformation matrices of group elements that act on a vector space. Equivariant operations commute with the action of the group on the vector space.
+%\todo{[Cite group representation theory.]}
+A group representation~\citep{Dresselhaus2007, zee} defines transformation matrices $D_{X}(g)$ of group elements $g$ that act on a vector space $X$. 
+%Equivariant operations commute with the action of the group on the vector space.
+For 3D Euclidean group $E(3)$, two examples of vector spaces with different transformation matrices are scalars and Euclidean vectors in $\mathbb{R}^3$, i.e., vectors change with rotation while scalars do not.
+%\tess{In this work, we only consider relative positions (similar to convolutions) and do not need to directly treat the group of translation $T(3)$. However, we must address $O(3)$ which is the direct product of 3D rotations $SO(3)$ and inversion $\mathbb{Z}_2$.
+%The transformation matrices of rotation and inversion are separable and commute, so we first focus on the irreducible representations of $SO(3)$.}
+%To address translation symmetry, we simply operate on relative positions; below we focus our discussion on $O(3)$ which requires a more complex treatment.
+To address translation symmetry, we operate on relative positions.
+%%%Below we focus our discussion on $O(3)$.
+% Since we only operate on relative positions, we do not consider translation but only focus on $O(3)$.
+%The transformation matrices of rotation and inversion are separable and commute, so we first focus on the irreducible representations of $SO(3)$.
+%%%The transformation matrices of rotation and inversion are separable and commute, and we first discuss irreducible representations of $SO(3)$.
+The transformation matrices of rotation and inversion are separable and commute. 
+%%%We discuss irreducible representations of $SO(3)$ below and those of inversion in appendix \todo{Section of inversion}.
+We discuss irreducible representations of $SO(3)$ below and discuss inversion in Sec.~\ref{appendix:subsec:equivariant_irreps_feature} in appendix.
+%There are many ways to represent a group. If there exists a change of basis $P$ for a given representation $D(g)$ such that $P^{-1} D(g) P = D'(g)$ that makes $D'(g)$ block diagonal for all $g \in G$, meaning $g$ acts on independent subspaces of the vector space, the representation $D(g)$ is deemed reducible. A particular class of representations that are convenient for generalizable, composable functions are irreducible representations or ``irreps'', which cannot be further reduced. We can express any group representation as a direct sum of irreps \cite{zee,Dresselhaus2007,e3nn}. 
+
+%Since we only consider relative positions, we can ignore translation and focus on a smaller group of rotation and inversion called $O(3)$ contained in $E(3)$. 
+%$O(3)$ is the direct product of $SO(3) \times \mathbb{Z}_2$, where $\mathbb{Z}_2$ is the inversion group (the group of 1 and -1), so we can deal with the irreps of these two groups separately. 
+
+%\tess{Any group representation of $SO(3)$ on a given vector space can be decomposed into a direct sum (concatenation) of provably smallest transformation matrices called irreducible representations (irreps).}
+%Any group representation of $SO(3)$ on a given vector space can be decomposed into a direct sum (concatenation) of provably smallest transformation matrices called irreducible representations (irreps).
+Any group representation of $SO(3)$ on a given vector space can be decomposed into a concatenation of provably smallest transformation matrices called irreducible representations (irreps).
+Specifically, for group element $g \in SO(3)$, there are $(2L+1)$-by-$(2L+1)$ irreps matrices $D_{L}(g)$ called Wigner-D matrices acting on $(2L+1)$-dimensional vector spaces, where degree $L$ is a non-negative integer.
+$L$ can be interpreted as an angular frequency and determines how quickly vectors change when rotating coordinate systems.
+$D_{L}(g)$ of different $L$ act on independent vector spaces.
+Vectors transformed by $D_{L}(g)$ are type-$L$ vectors, with scalars and Euclidean vectors being type-$0$ and type-$1$ vectors.
+%\revision{It is common to index these $(2L+1)$ dimensions with an index $m$ called order, where $-L \leq m \leq L$.}
+It is common to index elements of type-$L$ vectors with an index $m$ called order, where $-L \leq m \leq L$.
+
+%The inversion group which is isomorphic $\mathbb{Z}_2$ has two elements, the identity and inversion, commonly notated as 1 and -1, and only two irreps: one even ($e$) irrep that does not change sign under inversion and an odd irrep which does. We create irreps of $O(3)$ by simply multiplying $SO(3)$ and $\mathbb{Z}_2$ irreps.
+%\revision{The group of inversion $\mathbb{Z}_2$ only has two elements, identity and inversion denoted as $1$ and $-1$, and therefore only two irreps, even $e$ and odd $o$.}
+
+\begin{comment}
+\todo{The group of inversion $\mathbb{Z}_2$ only has two elements, identity and inversion, and two irreps, even $e$ and odd $o$.
+Vectors transformed by irrep $e$ do not change sign under inversion while those by irrep $o$ do.
+We create irreps of $O(3)$ by simply multiplying those of $SO(3)$ and $\mathbb{Z}_2$,  and we introduce parity $p$ to type-$L$ vectors to denote how they transform under inversion.
+%Therefore for $O(3)$, type-$L$ vectors in $SO(3)$ are extended to type-$(L, p)$ vectors, where $p$ is $e$ or $o$.
+Therefore, type-$L$ vectors in $SO(3)$ are extended to type-$(L, p)$ vectors in $O(3)$, where $p$ is $e$ or $o$.
+In the following, we use type-$L$ vectors for the ease of discussion, but we can generalize to type-$(L, p)$ vectors, unless otherwise stated.}
+\end{comment}
+
+\vspace{-3mm}
+\paragraph{Irreps Features.}
+We concatenate multiple type-$L$ vectors to form $SE(3)$-equivariant irreps features. 
+%We additionally index our type-$L$ features by parity $p$ which indicates the whether the feature is even or odd under inversion, but for simplicity we drop this index from our description.
+Concretely, irreps feature $f$ has $C_{L}$ type-$L$ vectors, where $0 \leq L \leq L_{max}$ and $C_{L}$ is the number of channels for type-$L$ vectors.
+%\tess{We index irreps features $f$ by channel $c$, degree $L$, order $m$, and parity $p$ and denote as $f^{(L, p)}_{c, m}$.}
+We index irreps features $f$ by channel $c$, degree $L$, and order $m$ and denote as $f^{(L)}_{c, m}$.
+%\revision{Different channels of type-$L$ vectors are parametrized by different weights but are transformed with the same Wigner-D matrix $D_{L, p}(g)$.}
+Different channels of type-$L$ vectors are parametrized by different weights but are transformed with the same $D_{L}(g)$.
+%\tess{}{Note that regular scalar features correspond to including only type-$0$ vectors with even parity with $D_{0, \text{even}}(g)$ being identity for all $g$.}
+Regular scalar features correspond to only type-$0$ vectors.
+%Note that this can generalize to include inversion by extending $L$ to $(L, p)$.
+%This can generalize to $E(3)$ by including inversion and extending $L$ to $(L, p)$.
+
+\vspace{-3mm}
+\paragraph{Spherical Harmonics.}
+Euclidean vectors $\vec{r}$ in $\mathbb{R}^3$ can be projected into type-$L$ vectors $f^{(L)}$ by using spherical harmonics (SH) $Y^{(L)}$: $f^{(L)} = Y^{(L)}(\frac{\vec{r}}{|| \vec{r} ||})$.
+SH are $E(3)$-equivariant with $D_L(g) f^{(L)} = Y^{(L)}(\frac{D_{1}(g) \vec{r}}{|| D_{1}(g) \vec{r} ||})$.
+SH of relative position $\vec{r}_{ij}$ generates the first set of irreps features. Equivariant information propagates to other irreps features through equivariant operations like tensor products.
+
+
+% The irreducible matrix representations of $g \in SO(3)$ are called the Wigner-D matrices, $D_{L}(g)$. These $(2L+1)$-by-$(2L+1)$ transformation matrices act on $(2L+1)$-dimensional vectors, with $L$, a positive integer inclusive of zero, corresponding to the degree of the irrep, which can be interpreted as an angular frequency i.e. how quickly the feature changes under a rotation of the coordinate system. It is common to index these $(2L+1)$ dimensions with an additional index $m$ called the order where $-L \leq m \leq L$. There are only 2 irreps of the inversion group and they are both 1-dimensional; they correspond to whether or not something changes sign under spatial inversion $(x, y, z) = (-x, -y, -z)$. $D(g) = 1, \forall g \in \mathbb{Z}_2$ for the even irrep and $D(i) = -1$ for the odd irrep, where $i$ indicates the inversion operation.
+
+% We use the irreps of $O(3)$ to express features, which define how these features transform under rotation and inversion (or parity). The irreps of $O(3)$ are identified by two values: the angular frequency $L$ from the irreps of $O(3)$ and the parity $p$ which is even (1) or odd (-1) from the irreps of inversion or $\mathbb{Z}_2$. For example, a scalar like a mass or atom type does not change under rotation and it does not change under spatial inversion, thus it is denoted as $L=0, p=1$ or ``even''. A vector like a force or a position rotates at the same frequency as a rotation of the coordinate system and does incur a minus sign under inversion, thus it is denoted as $L=1, p=-1$ or ``odd''. In \texttt{e3nn}, scalars and vectors are notated as \texttt{0e} and \texttt{1o}, respectively. 
+
+% \paragraph{Irrep Features.}
+% We express the vector spaces of equivariant features as a direct sum of irrep vector spaces. This direct sum can contain multiple copies of a given irrep. For example, if our features contain one scalar and two vectors, we say the features transform as the direct sum of one scalar irrep and two vector irreps; in \texttt{e3nn} we use \texttt{o3.Irreps('1x0e+2x1o')} to denote this where the format \texttt{cxLp} means \texttt{c} copies or channels of the irrep with $L$ and $p$. We use the term irrep features to denote features that span a vector space composed of a direct sum of irrep vector spaces.
+
+% Because irreps have different sizes, in practice we concatenate our direct sum of irrep vector spaces along the feature dimension and keep track which specific irrep each element in the feature vector corresponds to; in \texttt{e3nn} this is taken care of by the \texttt{o3.Irreps} class. Thus, the dimensionality of a given instance of irrep features is equal to $sum_{L \in \text{irreps}} c \times (2 L + 1)$. In the case of multiple copies of a given irrep in a given irrep features, each irrep of the same type are parameterized by different weights but under rotation are transformed with the same Wigner-D matrix. 
+
+% We index irreps features $f$ by channel $c$, degree $l$, and order $m$ and denote as $f^{(l)}_{c, m}$. Note that regular scalar features corresponds to including only type-$0$ vectors.
+
+%\todo{Add the reason to incorporate vectors of higher $l$}
+
+%\paragraph{Projecting 3D Vectors onto Spherical Harmonics.}
+%Euclidean vectors $\vec{r}$ in $\mathbb{R}^3$ can be projected into type-$l$ vectors $f^{(l)}$ by using spherical harmonics $Y^{(l)}$: $f^{(l)} = Y^{(l)}(\frac{\vec{r}}{|| \vec{r} ||})$.
+%The spherical harmonics embedding of relative position $\vec{r}_{ij}$ generates the first set of equivariant irreps features that we use in our network.
+
+%\todo{Add a figure showing spherical harmonic projection}

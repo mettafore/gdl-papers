@@ -1,0 +1,75 @@
+
+
+%We benchmark Equiformer on two quantum properties prediction datasets, QM9~\cite{qm9_2, qm9_1} and OC20~\cite{oc20}.
+%Our implementation is based on PyTorch~\cite{pytorch}, PyG~\cite{pytorch_geometric}, \texttt{e3nn}~\cite{e3nn} and \texttt{timm}~\cite{timm}.
+
+
+\begin{table}[t]
+\begin{adjustwidth}{0cm}{0cm}
+\centering
+\resizebox{\ifdim\width>\textwidth\textwidth\else\width\fi}{!}{
+\begin{tabular}{llcccccccccccc}
+%\cline{7-11}
+\toprule[1.2pt]
+& Task & $\alpha$ & $\Delta \varepsilon$ & $\varepsilon_{\text{HOMO}}$ & $\varepsilon_{\text{LUMO}}$ & $\mu$ & $C_{\nu}$ & $G$ & $H$ & $R^2$ & $U$ & $U_0$ & ZPVE \\ 
+%Methods & Units & bohr$^3$ & meV & meV & meV & D & cal/mol K & meV & meV & bohr$^3$ & meV & meV & meV\\
+Methods & Units & $a_0^3$ & meV & meV & meV & D & cal/mol K & meV & meV & $a_0^2$ & meV & meV & meV\\
+\midrule[1.2pt]
+
+NMP~\citep{neural_message_passing_quantum_chemistry}$^{\dagger}$ & & .092 & 69 & 43 & 38 & .030 & .040 & 19 & 17 & .180 & 20 & 20 & 1.50 \\
+SchNet~\citep{schnet} & & .235 & 63 & 41 & 34 & .033 & .033 & 14 & 14 & .073 & 19 & 14 & 1.70 \\
+Cormorant~\citep{cormorant}$^{\dagger}$ & & .085 & 61 & 34 & 38 & .038 & .026 & 20 & 21 & .961 & 21 & 22 & 2.03 \\
+LieConv~\citep{lieconv}$^{\dagger}$ & & .084 & 49 & 30 & 25 & .032 & .038 & 22 & 24 & .800 & 19 & 19 & 2.28 \\
+DimeNet++~\citep{dimenet_pp} & & \textbf{.044} & 33 & 25 & 20 & .030 & .023 & 8 & 7 & .331 & 6 & 6 & 1.21 \\
+TFN~\citep{tfn}$^{\dagger}$ & & .223 & 58 & 40 & 38 & .064 & .101 & - & - & - & - & - & - \\
+\multicolumn{2}{l}{SE(3)-Transformer~\citep{se3_transformer}$^{\dagger}$} & .142 & 53 & 35 & 33 & .051 & .054 & - & - & - & - & - & - \\
+EGNN~\citep{egnn}$^{\dagger}$ & & .071 & 48 & 29 & 25 & .029 & .031 & 12 & 12 & .106 & 12 & 11 & 1.55 \\
+
+PaiNN~\citep{painn} & & .045 & 46 & 28 & 20 & .012 & .024 & \textbf{7.35} & \textbf{5.98} & .066 & \textbf{5.83} & \textbf{5.85} & 1.28 \\
+
+TorchMD-NET~\citep{torchmd_net} & & .059 & 36 & 20 & 18 & \textbf{.011} & .026 & 7.62 & 6.16 & \textbf{.033} & 6.38 & 6.15 & 1.84 \\
+
+SphereNet~\citep{spherenet} & & .046 & 32 & 23 & 18 & .026 & \textbf{.021} & 8 & 6 & .292 & 7 & 6 & \textbf{1.12} \\
+
+SEGNN~\citep{segnn}$^{\dagger}$ & & .060 & 42 & 24 & 21 & .023 & .031 & 15 & 16 & .660 & 13 & 15 & 1.62 \\
+
+%Equiformer& 0.5093& 0.6285 & 0.5053 & 0.5556 & 0.5497 & 5.04 & 2.85 & 4.90 & 3.04 & \\
+EQGAT~\citep{eqgat} & & .053 & 32 & 20 & 16 & \textbf{.011} & .024 & 23 & 24 & .382 & 25 & 25 & 2.00 \\
+\midrule[0.6pt]
+
+Equiformer & & .046 & \textbf{30} & \textbf{15} & \textbf{14} & \textbf{.011} & .023 & 7.63 & 6.63 & .251 & 6.74 & 6.59 & 1.26 \\
+%\midrule[0.6pt]
+%Equiformer + NAT & 0.4737 & 0.7245 & 0.4862 & 0.6493 & 0.5834 & 6.01 & 2.45 & 5.41 & 2.71 & \\
+\bottomrule[1.2pt]
+
+\end{tabular}
+}
+\vspace{-3mm}
+\end{adjustwidth}
+\caption{\textbf{MAE results on QM9 testing set.}  
+%\note{Dropout rate = 0.1.}
+%%%$\dagger$ denotes using different training, validation, testing data partitions. % as mentioned in SEGNN~\cite{segnn}.
+$\dagger$ denotes using different data partitions.
+%$\ddagger$ denotes results from SE(3)-Transformer~\cite{se3_transformer}.
+}
+\vspace{-3mm}
+\label{tab:qm9_result}
+\end{table}
+
+
+\vspace{-2.5mm}
+\section{Experiment}
+\vspace{-3mm}
+
+%%%Our implementation is based on PyTorch~\citep{pytorch} (Modified BSD license), PyG~\citep{pytorch_geometric} (MIT license), \texttt{e3nn}~\citep{e3nn} (MIT license), \texttt{timm}~\citep{timm} (Apache-2.0 license), and \texttt{ocp}~\citep{oc20} (MIT license).
+We benchmark Equiformer on QM9 (Sec.~\ref{subsec:qm9_exp}), MD17 (Sec.~\ref{subsec:md17}) and OC20 (Sec.~\ref{subsec:oc20}) datasets.
+%Moreover, we conduct ablation studies (Sec.~\ref{subsec:ablation_study}) to demonstrate that the proposed equivariant graph attention, consisting of MLP attention and non-linear message passing, improves upon typical dot product attention in Transformer as well as dot product attention in other equivariant Transformers.
+\revision{Moreover, ablation studies (Sec.~\ref{subsec:ablation_study}) are conducted to demonstrate that Equiformer with dot prodcut attention and linear message passing has already achieved strong empirical results on QM9 and OC20 datasets and verify that the proposed equivariant graph attention improves upon typical dot product attention in Transformer as well as dot product attention in other equivariant Transformers.}
+Additional results of including inversion can be found in Sec.~\ref{appendix:subsec:e3_qm9} and Sec.~\ref{appendix:subsec:e3_oc20}.
+
+
+\input{content/5_1_qm9}
+\input{content/5_2_md17.tex}
+\input{content/5_3_oc20}
+
+\input{content/5_4_ablation_study}
