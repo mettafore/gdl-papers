@@ -27,9 +27,9 @@ uv run pytest papers/00-template/
 In Claude Code, drive any paper in natural language — the `run-paper` skill maps it
 to the commands above:
 
-- `/train 00-template` — train with defaults
-- `/train 00-template lr 1e-3, 50 epochs` — train with overrides (forwarded to CLI args)
-- `/eval 00-template --run <run_id>` — evaluate a run
+- "train 00-template" — train with defaults
+- "train 00-template with lr 1e-3, 50 epochs" — overrides forwarded to CLI args
+- "evaluate 00-template run <run_id>" — evaluate a run
 
 Ask `gdl-repo-map` things like "where does shared code go?" or "how do I add a paper?"
 

@@ -21,7 +21,7 @@ Human overview in [README.md](README.md); current scope in [docs/spec.md](docs/s
 | Run training (template) | `uv run python papers/00-template/train.py` (prints a `run_id`) |
 | Run evaluation (template) | `uv run python papers/00-template/evaluate.py --run <run_id>` |
 | Run tests | `uv run pytest papers/00-template/` |
-| Run a paper via skill | `/train <paper> [overrides]` · `/eval <paper> --run <id>` (the `run-paper` skill) |
+| Run a paper via skill | say "train <paper> [overrides]" / "evaluate <paper> run <id>" (the `run-paper` skill) |
 
 > Run scripts **by path**, not `-m` — folder names like `00-template` aren't valid
 > Python module names.

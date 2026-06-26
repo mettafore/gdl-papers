@@ -52,11 +52,11 @@ editable — edits take effect live).
 9. The metric is config-driven: `config.json` names the metric; `evaluate.py` looks
    it up in the registry (simple papers) — `accuracy` is not hardcoded.
 10. Both skills live at `.agents/skills/<name>/SKILL.md` (+ `.claude/skills/` symlinks)
-    and activate on the right triggers: `run-paper` (procedural) on `/train`/`/eval`;
-    `gdl-repo-map` (knowledge) on "where does code go / how do I add a paper / run-folder
-    layout" — a discovery surface, not a dump.
+    and activate on the right triggers: `run-paper` (procedural) on "train/evaluate
+    <paper>"; `gdl-repo-map` (knowledge) on "where does code go / how do I add a paper /
+    run-folder layout" — a discovery surface, not a dump.
 11. Root `README.md` explains what the repo is, a quickstart (incl. a **hyperparameter
-    override** train example), how to run via skills (`/train`, `/eval`, `gdl-repo-map`),
+    override** train example), how to run via the skills (natural language),
     the layout, and where rules / skills / MCP / docs live. It also points out that
     **each paper has its own README** (what the paper is, how to run, expected results) —
     a self-contained learning resource for students new to that paper/area.
@@ -181,12 +181,11 @@ doc and runs it.
 - **`run-paper` skill** — generic orchestration with override pass-through. Lives at
   `.agents/skills/run-paper/SKILL.md` (tool-neutral, open-standard format), with a
   `.claude/skills/run-paper` → `../../.agents/skills/run-paper` symlink so Claude Code
-  discovers it. Invokable by natural language ("train 00-template") or via the thin
-  `.claude/commands/train.md` + `eval.md` slash commands that delegate to it. Two operations:
-  - `/train <paper> [overrides...]` → read the paper's README `## Run`, build the train
+  discovers it. Invoked by **natural language** (no slash commands). Two operations:
+  - "train `<paper>` [overrides]" → read the paper's README `## Run`, build the train
     command, **forward colloquial overrides to CLI args** ("lr 1e-4, 50 epochs" →
     `--lr 1e-4 --epochs 50`), execute, report loss + run folder.
-  - `/eval <paper> --run <id>` → execute the evaluate command, report the metric.
+  - "evaluate `<paper>` run `<id>`" → execute the evaluate command, report the metric.
 
   The skill forwards overrides **without hardcoding any paper's schema** — the paper
   owns the knobs (defaults in `train.py`, documented in its README); the skill passes
@@ -234,8 +233,7 @@ doc and runs it.
 - `uv run python papers/00-template/evaluate.py --run <id>` → prints accuracy on the
   held-out split.
 - `uv run pytest papers/00-template/` → green (incl. the split-determinism test).
-- Invoke `/train 00-template` in a fresh session → the `run-paper` skill fires, runs
+- Say "train 00-template" in a fresh session → the `run-paper` skill fires, runs
   training, reports the run_id (verify the `.claude/skills/` symlink resolves; if not,
   fall back to placing the skill directly under `.claude/skills/`).
-- Invoke `/eval 00-template --run <id>` → the skill fires, runs evaluation, reports the
-  metric.
+- Say "evaluate 00-template run <id>" → the skill fires, runs evaluation, reports the metric.
