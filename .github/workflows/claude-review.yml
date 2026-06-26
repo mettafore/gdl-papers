@@ -22,4 +22,11 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          prompt: "Review this pull request. Check for correctness, code quality, and any issues."
+          prompt: |
+            Review this pull request for correctness, code quality, and any issues.
+            Post a single summary comment on the PR using `gh pr comment` with:
+            - an overall verdict (approve / minor / needs-changes),
+            - the top findings (file:line + why),
+            - anything you checked that looked good.
+            Leave inline comments for specific line-level issues. If nothing is
+            wrong, still post the summary saying the PR looks good and why.
