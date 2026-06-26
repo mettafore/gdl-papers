@@ -12,7 +12,7 @@ import torch
 
 import data
 from model import MLP
-from gdl import load_run_config, load_checkpoint, METRICS
+from gdl import load_run_config, load_checkpoint, METRICS, run_dir
 
 PAPER_DIR = Path(__file__).parent
 
@@ -26,8 +26,8 @@ def evaluate(run_id, runs_base="runs", paper_dir=PAPER_DIR):
         hidden=cfg["model"]["hidden"],
         out_dim=cfg["data"]["out_dim"],
     )
-    run_dir = Path(paper_dir) / runs_base / run_id
-    load_checkpoint(model, run_dir)
+    rdir = run_dir(paper_dir, run_id, base=runs_base)
+    load_checkpoint(model, rdir)
     model.eval()
 
     _, _, X_test, y_test, _, _ = data.load_split(

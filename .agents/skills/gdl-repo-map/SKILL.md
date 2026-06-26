@@ -11,7 +11,7 @@ description: >
 
 ## Layout
 - `src/gdl/` — shared, paper-agnostic helpers (`seed`, `metrics` + `METRICS`
-  registry, `logging`, `run`, `checkpoint`). Installed package → `from gdl import ...`.
+  registry, `run_log`, `run`, `checkpoint`). Installed package → `from gdl import ...`.
   Pulled BY papers; never calls into them.
 - `papers/NN-name/` — one self-contained paper each: `model.py`, `data.py`,
   `train.py`, `evaluate.py`, `README.md`.

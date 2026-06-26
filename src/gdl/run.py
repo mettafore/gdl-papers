@@ -10,6 +10,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
+def run_dir(paper_dir, run_id: str, base: str = "runs") -> Path:
+    """The canonical path to a run folder. One definition; all callers use it."""
+    return Path(paper_dir) / base / run_id
+
+
 def new_run_dir(paper_dir, config: dict, base: str = "runs"):
     """Create a fresh run folder and write config.json.
 
@@ -18,18 +23,18 @@ def new_run_dir(paper_dir, config: dict, base: str = "runs"):
     """
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     run_id, suffix = stamp, 0
-    while (Path(paper_dir) / base / run_id).exists():
+    while run_dir(paper_dir, run_id, base).exists():
         suffix += 1
         run_id = f"{stamp}-{suffix}"  # avoid collision on same-second runs
-    run_dir = Path(paper_dir) / base / run_id
-    run_dir.mkdir(parents=True, exist_ok=True)
-    with (run_dir / "config.json").open("w") as f:
+    rdir = run_dir(paper_dir, run_id, base)
+    rdir.mkdir(parents=True, exist_ok=True)
+    with (rdir / "config.json").open("w") as f:
         json.dump(config, f, indent=2)
-    return run_id, run_dir
+    return run_id, rdir
 
 
 def load_run_config(paper_dir, run_id: str, base: str = "runs") -> dict:
     """Read config.json for a given run."""
-    path = Path(paper_dir) / base / run_id / "config.json"
+    path = run_dir(paper_dir, run_id, base) / "config.json"
     with path.open() as f:
         return json.load(f)

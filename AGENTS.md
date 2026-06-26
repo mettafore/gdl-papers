@@ -29,7 +29,7 @@ Human overview in [README.md](README.md); current scope in [docs/spec.md](docs/s
 ## Key paths
 
 - `src/gdl/` — **shared, paper-agnostic** toolbox: `seed`, metric registry
-  (`metrics`), `logging` (console + JSONL), `run` (run folders + config),
+  (`metrics`), `run_log` (console + JSONL), `run` (run folders + config),
   `checkpoint`. Pulled by papers; never calls them. Installed package — see Setup
   in `docs/spec.md` (`from gdl import ...`).
 - `papers/NN-name/` — one self-contained paper each. Owns its `model.py`,

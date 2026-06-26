@@ -75,7 +75,7 @@ src/gdl/                       # shared, paper-agnostic — pulled BY papers, ne
   __init__.py
   seed.py        set_seed(seed) -> None                  # random, numpy, torch
   metrics.py     accuracy / mae / rmse — all (output, target) -> float; METRICS = {name: fn}
-  logging.py     log_metrics(metrics: dict, step, run_dir) -> None
+  run_log.py     log_metrics(metrics: dict, step, run_dir) -> None
                  # dual sink: prints to console + appends a line to run_dir/metrics.jsonl.
   run.py         new_run_dir(paper_dir, config, base="runs") -> (run_id, run_dir)
                  # run_id = UTC timestamp "YYYYMMDD-HHMMSS"; makes <base>/<id>/, writes config.json.

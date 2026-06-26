@@ -15,5 +15,5 @@ def save_checkpoint(model, run_dir) -> None:
 
 def load_checkpoint(model, run_dir) -> None:
     """Load weights into an already-built model (built from config.json)."""
-    state = torch.load(Path(run_dir) / "checkpoint.pt")
+    state = torch.load(Path(run_dir) / "checkpoint.pt", weights_only=True)
     model.load_state_dict(state)
