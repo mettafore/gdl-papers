@@ -181,7 +181,8 @@ doc and runs it.
 - **`run-paper` skill** — generic orchestration with override pass-through. Lives at
   `.agents/skills/run-paper/SKILL.md` (tool-neutral, open-standard format), with a
   `.claude/skills/run-paper` → `../../.agents/skills/run-paper` symlink so Claude Code
-  discovers it. Two operations:
+  discovers it. Invokable by natural language ("train 00-template") or via the thin
+  `.claude/commands/train.md` + `eval.md` slash commands that delegate to it. Two operations:
   - `/train <paper> [overrides...]` → read the paper's README `## Run`, build the train
     command, **forward colloquial overrides to CLI args** ("lr 1e-4, 50 epochs" →
     `--lr 1e-4 --epochs 50`), execute, report loss + run folder.
