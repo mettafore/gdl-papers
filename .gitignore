@@ -5,7 +5,8 @@ __pycache__/
 .venv/
 dist/
 build/
-
+course/
+course/*
 # LaTeX build artifacts
 *.aux
 *.log
@@ -20,6 +21,11 @@ build/
 *.toc
 *.synctex.gz
 *Notes.bib
+
+# ML run artifacts (per-run folders, checkpoints)
+runs/
+*.pt
+*.ckpt
 
 # macOS
 .DS_Store

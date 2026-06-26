@@ -12,6 +12,7 @@ permissions:
   contents: read
   pull-requests: write
   issues: write
+  id-token: write
 
 jobs:
   claude-review:
@@ -20,5 +21,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          prompt: "Review this pull request. Check for correctness, code quality, and any issues."
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            Review this pull request for correctness, code quality, and any issues.
+            Post a single summary comment on the PR using `gh pr comment` with:
+            - an overall verdict (approve / minor / needs-changes),
+            - the top findings (file:line + why),
+            - anything you checked that looked good.
+            Leave inline comments for specific line-level issues. If nothing is
+            wrong, still post the summary saying the PR looks good and why.

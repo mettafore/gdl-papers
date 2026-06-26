@@ -1,45 +1,65 @@
-# GDL Papers
+# gdl-papers
 
-Reproducing key papers in Geometric Deep Learning from scratch in PyTorch.
+PyTorch reproductions of geometric deep learning papers. Each paper is implemented,
+trained, evaluated against its published benchmark, and written up. One
+self-contained paper per folder, sharing a small train/evaluate scaffold.
 
-## Goal
+## Quickstart
 
-Build working implementations of foundational GDL papers, benchmark them against published results on standard datasets (QM9, MD17, etc.), and document what we learn along the way.
+```bash
+uv sync                                               # install deps + the gdl package
 
-## Repo Structure
+# train with defaults
+uv run python papers/00-template/train.py             # prints a run_id
 
+# train with hyperparameter overrides
+uv run python papers/00-template/train.py --lr 1e-3 --epochs 50 --hidden 32
+
+# evaluate a specific run
+uv run python papers/00-template/evaluate.py --run <run_id>
+
+# tests
+uv run pytest papers/00-template/
 ```
-gdl-papers/
-├── README.md
-├── papers/
-│   └── 01-EGNN/
-│       ├── CLAUDE.md      # Full context for Claude Code sessions
-│       ├── notes.md       # Reading notes, observations, benchmark results
-│       └── src/           # Implementation code
-```
 
-Each paper gets a numbered folder. Inside:
+## Running via skills (conversational)
 
-- **CLAUDE.md** — everything Claude Code needs to help implement the paper: key equations, architecture details, target benchmarks, implementation plan.
-- **notes.md** — your reading notes, questions, experiment logs, and results.
-- **src/** — the actual PyTorch implementation.
+In Claude Code, drive any paper in natural language — the `run-paper` skill maps it
+to the commands above:
+
+- "train 00-template" — train with defaults
+- "train 00-template with lr 1e-3, 50 epochs" — overrides forwarded to CLI args
+- "evaluate 00-template run <run_id>" — evaluate a run
+
+Ask `gdl-repo-map` things like "where does shared code go?" or "how do I add a paper?"
+
+## Layout
+
+- `src/gdl/` — shared, paper-agnostic helpers (seed, metrics, logging, run, checkpoint)
+- `papers/NN-name/` — one paper each (model, data, train, evaluate, README, runs/)
+- `papers/00-template/` — the runnable template; copy it to start a new paper
+
+## Learning from this repo
+
+Each paper folder has its own README — what the paper does, how to run it, and the
+expected results — so it works as a self-contained learning resource. New to
+geometric deep learning? Start at `papers/00-template/` (the simplest), then read
+each paper's README to follow the progression.
+
+## AI operating surface
+
+Built with **Claude Code**.
+
+- **Rules** → [AGENTS.md](AGENTS.md)
+- **Skills** → `.agents/skills/` — `run-paper` (run train/eval), `gdl-repo-map` (repo map)
+- **MCP** → context7 (live library docs)
+- **Docs** → [docs/spec.md](docs/spec.md) (scope + contracts), [docs/reference-index.md](docs/reference-index.md)
 
 ## Papers
 
-| # | Paper | Authors | Venue | Status |
-|---|-------|---------|-------|--------|
-| 01 | [E(n) Equivariant Graph Neural Networks](https://arxiv.org/abs/2102.09844) | Satorras, Hoogeboom, Welling | ICML 2021 | In Progress |
+| # | Paper | Status |
+|---|-------|--------|
+| 00 | Template (Iris MLP) | scaffold ✅ |
+| 01 | EGNN | reading / HW2 |
 
-## Setup
-
-```bash
-uv venv --python 3.10
-source .venv/bin/activate
-uv pip install torch torch-geometric
-```
-
-## Convention
-
-- One paper per folder, numbered in reading order
-- Implementations should be self-contained within each paper's `src/`
-- Target: match or come within 5% of published benchmark numbers
+See [references/papers.md](references/papers.md) for the full list and tiers.
