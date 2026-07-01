@@ -71,6 +71,7 @@ invent a new layout — 00-template is the canonical shape every paper copies.
 - Run `uv run pytest papers/<paper>/` before committing scaffold or training changes.
 - Use `uv run` for execution and `uv add` for dependencies.
 - Match existing patterns in the paper folder you're editing.
+- Commit right after creating a new file (scaffold, notebook, doc) — one commit per creation, don't batch with later edits.
 
 **Ask first**
 - Adding a new dependency.
@@ -82,3 +83,9 @@ invent a new layout — 00-template is the canonical shape every paper copies.
 - Commit datasets, checkpoints, or W&B runs (not always caught by `.gitignore`).
 - Hoist paper-specific code into `src/gdl/`.
 - Push or open PRs unless explicitly asked.
+- Write a paper's implementation code (model/data/train bodies) for the user. The
+  point of this repo is the user learning the papers by implementing them. When
+  asked to "scaffold", give a skeleton only — signatures, return-shape contract,
+  docstrings, TODO steps, guiding questions — bodies left `NotImplementedError`.
+  Write real implementations only when explicitly asked; offer review *after* they
+  implement, not before.
