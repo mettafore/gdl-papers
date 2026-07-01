@@ -71,7 +71,7 @@ invent a new layout — 00-template is the canonical shape every paper copies.
 - Run `uv run pytest papers/<paper>/` before committing scaffold or training changes.
 - Use `uv run` for execution and `uv add` for dependencies.
 - Match existing patterns in the paper folder you're editing.
-- Commit right after creating a new file (scaffold, notebook, doc) — one commit per creation, don't batch with later edits.
+- Commit at the end of every agent turn that touched files: run `uv run ruff format <files touched this turn>` and `uv run ruff check <same files>`, fix what it flags — except lint errors inside a `NotImplementedError` TODO stub (expected until the user implements it, leave those) — then commit.
 
 **Ask first**
 - Adding a new dependency.
