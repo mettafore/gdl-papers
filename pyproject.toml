@@ -8,6 +8,7 @@ dependencies = [
     "torch==2.2.2",
     "numpy<2",
     "scikit-learn>=1.4,<1.6",
+    "torch-geometric>=2.8.0",
 ]
 
 [dependency-groups]
