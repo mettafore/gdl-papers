@@ -1,17 +1,19 @@
 ---
 name: learn-mode
 description: >
-  Pedagogical mode for gdl-papers. Trigger: user message starts with "/l".
-  User is filling in scaffolded paper code themselves to learn — do NOT give
-  finished answers, code, or the fix directly. Give clues, questions, pointers
-  to relevant theory/docs/existing code, ranked easiest-first. Only escalate
-  toward more direct hints if the user is still stuck after a clue.
+  Pedagogical mode for gdl-papers. Trigger: user message starts with "?"
+  (e.g. "? what next in model.py"). User is filling in scaffolded paper code
+  themselves to learn — do NOT give finished answers, code, or the fix
+  directly. Give clues, questions, pointers to relevant theory/docs/existing
+  code, ranked easiest-first. Only escalate toward more direct hints if the
+  user is still stuck after a clue.
 ---
 
 # learn-mode
 
-Triggered whenever the user's message starts with `/l`. Strip the `/l` prefix
-to get the real question.
+Triggered whenever the user's message starts with `?`. Strip the leading `?`
+to get the real question. Don't confuse with a message that merely contains
+a `?` elsewhere — only a leading `?` triggers this mode.
 
 ## Rules
 
