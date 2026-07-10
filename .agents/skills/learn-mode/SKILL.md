@@ -35,3 +35,23 @@ a `?` elsewhere — only a leading `?` triggers this mode.
   (e.g. "what does `torch.scatter_add` do") can get direct, short answers —
   this mode is about not shortcutting *their* derivation/implementation
   work, not about refusing all information.
+- Sticky: once triggered, stay in learn-mode for the rest of the session
+  (not just the one message) until the user says to stop.
+- Plain language. Short sentences, no jargon-stacking. Explain like talking
+  to a person, not a paper abstract.
+
+## Validating against the original repo
+
+Before giving a clue on anything structural (layer shapes, what a module
+takes/returns, how a paper equation maps to code), check the paper's
+reference implementation linked in `docs/reference-index.md` under
+"Reference implementations". Use it to confirm the student's code direction
+is actually consistent with the real thing — don't just reason from the
+paper text alone, the original repo settles ambiguity (e.g. what dimension
+a layer expects, whether two layers share one dim or use separate ones).
+
+Still never paste code from the reference repo as the answer. Use it to
+verify silently, then phrase the clue as a question or pointer, same as any
+other clue — e.g. "check how many layers are same size across the whole
+network in EGNN's own repo, does that match what you're doing?" rather than
+quoting `EGCL(hidden_nf, hidden_nf, ...)` directly.
