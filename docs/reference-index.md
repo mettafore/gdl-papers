@@ -21,6 +21,9 @@ lookups; the links below are the canonical entry points.
 - Geometric Deep Learning proto-book (Bronstein et al.) — https://arxiv.org/abs/2104.13478
 - Paper list + tiers → [`references/papers.md`](../references/papers.md)
 
+### Reference implementations (original author code)
+- EGNN (Satorras et al.) — https://github.com/vgsatorras/egnn
+
 ## Living context — keep current
 
 In-repo docs that must not rot. Update each when its trigger fires:
