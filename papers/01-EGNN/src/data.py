@@ -14,7 +14,7 @@ Standard split: 100K train / 18K val / 13K test.
 
 ------------------------------------------------------------------------------
 WHAT YOU NEED TO BUILD (in rough order):
-  1. NormStats.normalize / denormalize        — the (y-mean)/std transform
+  1. NormStats.normalize / denormalize        — the (y-mean)/mad transform
   2. load_split:
        a. load QM9(root)
        b. deterministic permutation w/ an EXPLICIT generator (not global RNG)
@@ -61,6 +61,12 @@ QM9_TARGETS: dict[str, int] = {
     "gap": 4,  # HOMO-LUMO gap (eV)
     "U0": 7,  # internal energy at 0K (eV)
     "Cv": 11,  # heat capacity (cal/mol/K)
+    "R2": 5,   # electronic spatial extent (bohr^2)
+    "ZPVE": 6,  # zero-point vibrational energy (eV)
+    "U": 8,    # internal energy at 298K (eV)
+    "H": 9,    # enthalpy at 298K (eV)
+    "G": 10,   # free energy at 298K (eV)
+
 }
 
 # Standard QM9 split sizes (Satorras et al.).
@@ -70,16 +76,18 @@ N_VAL = 18_000
 
 @dataclass
 class NormStats:
-    """Train-set target normalization: subtract mean, divide by std."""
+    """Train-set target normalization: subtract mean, divide by MAD."""
 
     mean: float
-    std: float
+    mad: float
 
     def normalize(self, y: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError("TODO: (y - mean) / std")
+        y_norm = (y - self.mean) / self.mad
+        return y_norm
 
     def denormalize(self, y: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError("TODO: inverse of normalize")
+        y_denorm = y * self.mad + self.mean
+        return y_denorm
 
 
 def _require_pyg() -> None:
@@ -105,10 +113,25 @@ def load_split(
         raise KeyError(f"unknown target {target!r}; choose from {sorted(QM9_TARGETS)}")
     col = QM9_TARGETS[target]
 
-    # TODO a: dataset = QM9(root=rootht)
+    # TODO a: load QM9
+    dataset = QM9(root=root)
     # TODO b: deterministic perm with an EXPLICIT torch.Generator().manual_seed(seed)
+    gen = torch.Generator().manual_seed(seed)
+    perm = torch.randperm(len(dataset), generator=gen)
     # TODO c: slice perm -> train_idx / val_idx / test_idx (use N_TRAIN, N_VAL)
+    train_idx = perm[:N_TRAIN]
+    val_idx = perm[N_TRAIN:N_TRAIN + N_VAL]
+    test_idx = perm[N_TRAIN + N_VAL:]
     # TODO d: fit NormStats on train targets at column `col` (train ONLY)
+    train_data = dataset[train_idx]
+    train_y = torch.cat([i.y[:, col] for i in train_data], dim=0)
+    mean = train_y.mean().item()
+    mad = (train_y - mean).abs().mean().item()
+    normalizer = NormStats(mean=mean, mad=mad)
     # TODO e: wrap each split in PyGDataLoader (shuffle train, not val/test)
-    # TODO f: build dims = {"in_node_dim": ..., "out_dim": 1}
-    raise NotImplementedError("TODO: implement the QM9 load + split + normalize")
+    train_loader = PyGDataLoader(dataset[train_idx], shuffle=True, batch_size=batch_size)
+    val_loader = PyGDataLoader(dataset[val_idx], batch_size=batch_size)
+    test_loader = PyGDataLoader(dataset[test_idx], batch_size=batch_size)
+    # TODO f: build dims
+    dims = {"in_node_dim": dataset.num_features, "out_dim": 1}
+    return train_loader, val_loader, test_loader, normalizer, dims
