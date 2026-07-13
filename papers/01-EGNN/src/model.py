@@ -154,13 +154,39 @@ class EGNN(nn.Module):
     QM9: 7 layers, 128 features, sum pooling.
     """
 
-    # TODO: __init__
-    #   - embedding: Linear(in_node_dim, hidden)
-    #   - 7 EGCL layers
-    #   - node_dec: Linear → Swish → Linear
-    #   - graph_dec: Linear → Swish → Linear → 1
+    def __init__(self, in_node_nf, hidden_nf, n_layers=7, edges_in_d=0, act_fn=nn.SiLU()):
+        """
+        Args:
+            in_node_nf: input node feature dim (e.g. 5 for one-hot H/C/N/O/F).
+            hidden_nf: hidden width (128 for QM9).
+            n_layers: number of EGCL layers (7 for QM9).
+            edges_in_d: edge feature dim passed to each EGCL.
+        # TODO:
+        #   - super().__init__()
+        #   - self.embedding = Linear(in_node_nf, hidden_nf)  # one-hot -> hidden, once
+        #   - self.layers = nn.ModuleList([EGCL(hidden_nf, hidden_nf, edges_in_d, ...) for _ in range(n_layers)])
+        #     (ModuleList, NOT a plain list, so params register — see notes.md)
+        #   - self.node_dec = Sequential(Linear(hidden_nf, hidden_nf), SiLU, Linear(hidden_nf, hidden_nf))
+        #   - self.graph_dec = Sequential(Linear(hidden_nf, hidden_nf), SiLU, Linear(hidden_nf, 1))
+        """
+        raise NotImplementedError
 
-    # TODO: forward(h, x, edge_index, edge_attr)
-    #   - embed h
-    #   - pass through EGCL layers
-    #   - node_dec → sum pooling → graph_dec → scalar
+    def forward(self, h, x, edge_index, edge_attr=None):
+        """Predict one scalar graph property (invariant to E(3) on x).
+
+        Args:
+            h: (num_nodes, in_node_nf) — one-hot atom features.
+            x: (num_nodes, 3) — coordinates.
+            edge_index: (2, num_edges) — (row, col).
+            edge_attr: (num_edges, edges_in_d) or None.
+
+        Returns:
+            scalar (or (1,)) — predicted property for the single graph.
+        # TODO:
+        #   - h = self.embedding(h)
+        #   - for layer in self.layers: h = layer(h, x, edge_index, edge_attr)
+        #   - h = self.node_dec(h)
+        #   - pool: sum over nodes -> (hidden_nf,)  [single graph; batching comes later]
+        #   - return self.graph_dec(pooled)
+        """
+        raise NotImplementedError

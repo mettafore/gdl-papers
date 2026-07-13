@@ -2,7 +2,7 @@
 
 import torch
 
-from src.model import unsorted_segment_sum, EGCL
+from src.model import unsorted_segment_sum, EGCL, EGNN
 
 
 def test_unsorted_segment_sum_known_values():
@@ -165,3 +165,48 @@ def test_node_model_matches_manual_aggregate_and_mlp():
         out = egcl.node_model(h, (row, col), edge_feat)
 
     assert torch.allclose(out, expected)
+
+
+# --- EGNN (full model) ---
+
+def _small_egnn():
+    return EGNN(in_node_nf=5, hidden_nf=8, n_layers=3, edges_in_d=0)
+
+
+def _mol(num_nodes=6):
+    torch.manual_seed(0)
+    h = torch.randn(num_nodes, 5)
+    x = torch.randn(num_nodes, 3)
+    # ring graph
+    row = torch.arange(num_nodes)
+    col = (row + 1) % num_nodes
+    return h, x, (row, col)
+
+
+def test_egnn_output_is_scalar():
+    model = _small_egnn()
+    h, x, ei = _mol()
+    out = model(h, x, ei)
+    assert out.numel() == 1
+
+
+def test_egnn_layers_registered_as_params():
+    # ModuleList (not a plain list) means EGCL params show up in model.parameters().
+    # A plain list would silently drop them and the layers would never train.
+    model = _small_egnn()
+    names = [n for n, _ in model.named_parameters()]
+    assert any("layers" in n for n in names)
+    # 3 layers each with edge_mlp + node_mlp params -> comfortably > 10 tensors
+    assert len(names) > 10
+
+
+def test_egnn_is_e3_invariant():
+    # Whole-model property prediction must be unchanged under rotation+translation.
+    model = _small_egnn()
+    h, x, ei = _mol()
+    Q, _ = torch.linalg.qr(torch.randn(3, 3))
+    t = torch.randn(3)
+    with torch.no_grad():
+        out = model(h, x, ei)
+        out_t = model(h, x @ Q.T + t, ei)
+    assert torch.allclose(out, out_t, atol=1e-4)
