@@ -77,7 +77,7 @@ invent a new layout — 00-template is the canonical shape every paper copies.
   2. `uv run ruff check <files>`
   3. `uv run mypy <files>` (or repo's configured type checker)
   4. fix what's flagged — except lint/type errors inside a `NotImplementedError` TODO stub (expected until the user implements it, leave those)
-  5. run the `code-review` skill and the `security-review` skill on the diff, fix real findings
+  5. if the turn touched any `.py` files: run the `code-review` skill and the `security-review` skill on the diff, fix real findings
   Then commit.
 
 **Ask first**
