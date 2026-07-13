@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-07-13
+**Last updated:** 2026-07-13 (unsorted_segment_sum done, tested vs reference)
 
 ---
 
@@ -55,7 +55,7 @@ Tier definitions → [`references/papers.md`](../references/papers.md).
 | `EGCL.__init__` (edge/coord/node MLPs) | ✅ |
 | `EGCL._coord2radial` | ✅ |
 | `EGCL.edge_model` | ✅ |
-| `unsorted_segment_sum` helper | ⬜ |
+| `unsorted_segment_sum` helper | ✅ |
 | `EGCL.node_model` | 🟡 logic sketched, not in file |
 | `EGCL.forward` | ⬜ |
 | `EGNN` (embed → 7× EGCL → head) | ⬜ |
