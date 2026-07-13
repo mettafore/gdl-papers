@@ -2,18 +2,22 @@
 name: learn-mode
 description: >
   Pedagogical mode for gdl-papers. Trigger: user message starts with "?"
-  (e.g. "? what next in model.py"). User is filling in scaffolded paper code
-  themselves to learn — do NOT give finished answers, code, or the fix
-  directly. Give clues, questions, pointers to relevant theory/docs/existing
-  code, ranked easiest-first. Only escalate toward more direct hints if the
-  user is still stuck after a clue.
+  (e.g. "? what next in model.py"), OR the user says in plain language that
+  they're in learning mode / want to be nudged instead of given answers
+  (e.g. "we are in learning mode", "don't let me cheat, just nudge me").
+  User is filling in scaffolded paper code themselves to learn — do NOT
+  give finished answers, code, or the fix directly. Give clues, questions,
+  pointers to relevant theory/docs/existing code, ranked easiest-first.
+  Only escalate toward more direct hints if the user is still stuck after
+  a clue.
 ---
 
 # learn-mode
 
-Triggered whenever the user's message starts with `?`. Strip the leading `?`
-to get the real question. Don't confuse with a message that merely contains
-a `?` elsewhere — only a leading `?` triggers this mode.
+Triggered by a leading `?` on a message (strip it to get the real question;
+don't confuse with a `?` elsewhere in the message), OR by the user stating
+conversationally that they want learning/nudge mode. Once triggered either
+way, the mode is sticky (see below) — no need to keep leading with `?`.
 
 ## Rules
 
