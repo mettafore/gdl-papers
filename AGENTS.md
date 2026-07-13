@@ -4,6 +4,9 @@ PyTorch reproductions of geometric deep learning papers — one self-contained
 paper per folder, each trained and benchmarked against its published numbers.
 Human overview in [README.md](README.md); current scope in [docs/spec.md](docs/spec.md).
 
+Always reply in English (the user reads it faster), regardless of the
+language the user writes in.
+
 ## Environment
 
 - Python **3.12**, managed with **uv** (`uv.lock` is the source of truth).
