@@ -35,6 +35,30 @@ def test_unsorted_segment_sum_dtype_device_match_data():
     assert out.device == data.device
 
 
+# --- edge_model ---
+
+def test_edge_model_output_shape():
+    egcl = EGCL(input_nf=4, hidden_nf=4, edges_in_d=0)
+    num_edges = 5
+    h_row = torch.randn(num_edges, 4)
+    h_col = torch.randn(num_edges, 4)
+    radial = torch.randn(num_edges, 1)
+    edge_attr = torch.zeros(num_edges, 0)
+    out = egcl.edge_model(h_row, h_col, radial, edge_attr)
+    assert out.shape == (num_edges, 4)
+
+
+def test_edge_model_with_edge_attr():
+    egcl = EGCL(input_nf=4, hidden_nf=6, edges_in_d=2)
+    num_edges = 3
+    h_row = torch.randn(num_edges, 4)
+    h_col = torch.randn(num_edges, 4)
+    radial = torch.randn(num_edges, 1)
+    edge_attr = torch.randn(num_edges, 2)
+    out = egcl.edge_model(h_row, h_col, radial, edge_attr)
+    assert out.shape == (num_edges, 6)
+
+
 # --- node_model ---
 
 def _zeroed_egcl(hidden_nf=4):

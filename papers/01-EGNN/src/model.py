@@ -53,7 +53,7 @@ class EGCL(nn.Module):
         self.edge_mlp = nn.Sequential(
             nn.Linear(2 * self.input_nf + self.edges_in_d + 1, self.hidden_nf),
             nn.SiLU(),
-            nn.Linear(self.hidden_nf, hidden_nf),
+            nn.Linear(self.hidden_nf, self.hidden_nf),
             nn.SiLU(),
         )
 
@@ -64,9 +64,9 @@ class EGCL(nn.Module):
         )
 
         self.node_mlp = nn.Sequential(
-            nn.Linear(self.hidden_nf + self.input_nf, self.hidden_nf),
+            nn.Linear(self.hidden_nf + self.input_nf, self.input_nf),
             nn.SiLU(),
-            nn.Linear(self.hidden_nf, self.hidden_nf),
+            nn.Linear(self.input_nf, self.input_nf),
         )
 
     #   - edge_mlp (φ_e): [h_i, h_j, ||dist||^2, edge_attr] → hidden
@@ -79,8 +79,18 @@ class EGCL(nn.Module):
         radial = torch.sum(coord_diff**2, dim=1, keepdim=True)
         return radial
 
-    # TODO: edge_model(h_row, h_col, radial, edge_attr)
     def edge_model(self, h_row, h_col, radial, edge_attr):
+        """Message computation (eq. 3): m_ij = φ_e(h_i, h_j, ||x_i - x_j||², a_ij).
+
+        Args:
+            h_row: (num_edges, input_nf) — embedding of destination node per edge (h[row]).
+            h_col: (num_edges, input_nf) — embedding of source node per edge (h[col]).
+            radial: (num_edges, 1) — squared distance per edge (from _coord2radial).
+            edge_attr: (num_edges, edges_in_d) — edge features a_ij (empty if edges_in_d==0).
+
+        Returns:
+            (num_edges, hidden_nf) tensor — per-edge messages m_ij.
+        """
         combined_input = torch.cat([h_row, h_col, radial, edge_attr], dim=1)
         return self.edge_mlp(combined_input)
 
