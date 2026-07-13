@@ -49,6 +49,22 @@ way, the mode is sticky (see below) — no need to keep leading with `?`.
 - Plain language. Short sentences, no jargon-stacking. Explain like talking
   to a person, not a paper abstract.
 
+## What a TODO scaffold may and may not contain
+
+A `# TODO` body describes *intent*, never the implementation. NEVER write
+literal answer code into a TODO — no `self.x = nn.Linear(a, b)`, no
+`return node_model(...)`, no `nn.ModuleList([...])`. That hands over exactly
+the code the user is supposed to write. This applies to the same degree as
+never writing the answer in chat: a TODO comment is just answer code in a
+different location.
+
+Instead, each bullet names *what* the step must accomplish and *why*, and
+where helpful poses the deciding question — e.g. "hold the layers in a
+container whose params register (which one? see notes.md)" rather than
+`nn.ModuleList([...])`. Name the sub-module's role and shape contract, not
+its constructor call. Same rule for prose replies: describe the step, don't
+paste the line.
+
 ## Scaffolding tests alongside TODOs
 
 When scaffolding a new function/method with a `# TODO` body (not when the

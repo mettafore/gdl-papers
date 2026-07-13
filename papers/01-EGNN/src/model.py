@@ -161,15 +161,13 @@ class EGNN(nn.Module):
             hidden_nf: hidden width (128 for QM9).
             n_layers: number of EGCL layers (7 for QM9).
             edges_in_d: edge feature dim passed to each EGCL.
-        # TODO:
-        #   - super().__init__()
-        #   - self.embedding = Linear(in_node_nf, hidden_nf)  # one-hot -> hidden, once
-        #   - self.layers = nn.ModuleList([EGCL(hidden_nf, hidden_nf, edges_in_d, ...) for _ in range(n_layers)])
-        #     (ModuleList, NOT a plain list, so params register — see notes.md)
-        #   - self.node_dec = Sequential(Linear(hidden_nf, hidden_nf), SiLU, Linear(hidden_nf, hidden_nf))
-        #   - self.graph_dec = Sequential(Linear(hidden_nf, hidden_nf), SiLU, Linear(hidden_nf, 1))
+        # TODO: build the sub-modules (see notes.md / CLAUDE.md architecture):
+        #   - an embedding that lifts one-hot atom features to hidden width (applied once)
+        #   - n_layers EGCL layers — what container makes their params register? (notes.md)
+        #   - node_dec: per-node MLP (hidden -> hidden) applied after the layers
+        #   - graph_dec: MLP mapping the pooled graph vector down to a single scalar
         """
-        raise NotImplementedError
+        super().__init__()
 
     def forward(self, h, x, edge_index, edge_attr=None):
         """Predict one scalar graph property (invariant to E(3) on x).
@@ -182,11 +180,12 @@ class EGNN(nn.Module):
 
         Returns:
             scalar (or (1,)) — predicted property for the single graph.
-        # TODO:
-        #   - h = self.embedding(h)
-        #   - for layer in self.layers: h = layer(h, x, edge_index, edge_attr)
-        #   - h = self.node_dec(h)
-        #   - pool: sum over nodes -> (hidden_nf,)  [single graph; batching comes later]
-        #   - return self.graph_dec(pooled)
+        # TODO (eq. flow: embed -> message-passing layers -> readout):
+        #   - embed h once
+        #   - run h through each EGCL layer in turn (coords x stay fixed for QM9)
+        #   - apply node_dec per node
+        #   - pool the per-node vectors into one graph vector (sum, single graph for now;
+        #     batching comes later)
+        #   - map the pooled vector to a scalar with graph_dec
         """
         raise NotImplementedError
