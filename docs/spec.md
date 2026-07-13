@@ -64,9 +64,11 @@ editable — edits take effect live).
     (a) **External docs** (static bookmarks) — PyTorch, scikit-learn, uv, pytest,
     GDL proto-book; prefer context7 MCP for live API lookups.
     (b) **Living context — keep current** — the in-repo docs that must not rot, each
-    with its update trigger: `docs/spec.md` (per feature), `AGENTS.md` (when commands/
-    paths change), `references/papers.md` (as papers progress), per-paper `README.md`
-    (results/status), the skills (when conventions change), root `README.md` status table.
+    with its update trigger: `docs/progress.md` (**always** when paper work starts,
+    finishes, or pauses), `docs/spec.md` (per feature), `AGENTS.md` (when commands/
+    paths change), `references/papers.md` (tier or repo path changes), per-paper
+    `README.md` (results/run instructions), per-paper `notes.md` (experiments),
+    the skills (when conventions change), root `README.md` (links to progress.md).
 
 ## Scaffold detail
 

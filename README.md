@@ -57,9 +57,7 @@ Built with **Claude Code**.
 
 ## Papers
 
-| # | Paper | Status |
-|---|-------|--------|
-| 00 | Template (Iris MLP) | scaffold ✅ |
-| 01 | EGNN | reading / HW2 |
+**Status:** [docs/progress.md](docs/progress.md) — canonical tracker, update it when you
+work on a paper.
 
-See [references/papers.md](references/papers.md) for the full list and tiers.
+Full list and tiers → [references/papers.md](references/papers.md).

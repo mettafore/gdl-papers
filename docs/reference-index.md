@@ -30,9 +30,11 @@ In-repo docs that must not rot. Update each when its trigger fires:
 
 | Doc | Update when |
 |-----|-------------|
+| `docs/progress.md` | **always** — start, finish, or pause work on any paper |
 | `docs/spec.md` | starting or changing a feature |
 | `AGENTS.md` | commands or key paths change |
-| `references/papers.md` | a paper's status/tier changes |
+| `references/papers.md` | a paper's tier or repo path changes |
 | `papers/NN/README.md` | results or run instructions change |
+| `papers/NN/notes.md` | reading notes or experiment log entries |
 | `.agents/skills/*` | a convention changes |
-| `README.md` (root) | a paper lands (status table) |
+| `README.md` (root) | quickstart or layout changes (status → link to progress.md) |
