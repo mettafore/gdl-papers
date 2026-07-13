@@ -57,7 +57,7 @@ Tier definitions → [`references/papers.md`](../references/papers.md).
 | `EGCL.edge_model` | ✅ |
 | `unsorted_segment_sum` helper | ✅ |
 | `EGCL.node_model` | ✅ |
-| `EGCL.forward` | ⬜ |
+| `EGCL.forward` | ✅ |
 | `EGNN` (embed → 7× EGCL → head) | ⬜ |
 
 ### Train / eval / benchmark
@@ -65,14 +65,16 @@ Tier definitions → [`references/papers.md`](../references/papers.md).
 | Item | Status |
 |------|--------|
 | `train.py` / `evaluate.py` (00-template shape) | ⬜ |
-| Tests | ⬜ |
+| Tests (model scaffold, 13 passing) | 🟡 |
 | First training run | ⬜ |
 | Benchmark vs paper Table 1 | ⬜ |
 
 ### Next step
 
-Write `unsorted_segment_sum` → `node_model` → `EGCL.forward`. Detail in
-[`papers/01-EGNN/notes.md`](../papers/01-EGNN/notes.md) (model.py section, 2026-07-10).
+`EGCL` complete + tested (13 passing, incl. E(3)-invariance). Next: `EGNN`
+class (embedding → 7× EGCL → node_dec → sum pool → graph_dec), then edge
+construction, then `train.py`/`evaluate.py` (00-template shape), first run,
+benchmark.
 
 ---
 
