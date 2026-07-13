@@ -49,6 +49,18 @@ way, the mode is sticky (see below) — no need to keep leading with `?`.
 - Plain language. Short sentences, no jargon-stacking. Explain like talking
   to a person, not a paper abstract.
 
+## Scaffolding tests alongside TODOs
+
+When scaffolding a new function/method with a `# TODO` body (not when the
+user is filling in an existing TODO), also write a failing test skeleton for
+it in the paper's test file — asserting the documented behavior (shapes,
+known-input/known-output, invariants like equivariance) so the user gets a
+red/green signal instead of eyeballing correctness. The test itself is not a
+clue: assert expected results plainly, don't comment hints about *how* to
+implement toward it. Test stays failing (`NotImplementedError` or wrong
+output) until the user's implementation makes it pass — never write the
+implementation to turn it green yourself.
+
 ## Validating against the original repo
 
 Before giving a clue on anything structural (layer shapes, what a module
