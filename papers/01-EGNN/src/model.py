@@ -140,7 +140,12 @@ class EGCL(nn.Module):
         #     (if edge_attr is None, pass an empty (num_edges, 0) tensor so cat works)
         #   - return node_model(h, edge_index, edge_feat)
         """
-        raise NotImplementedError
+        row, col = edge_index
+        radial = self._coord2radial(edge_index, x)
+        if edge_attr is None:
+            edge_attr = torch.zeros(len(row), 0)
+        edge_feat = self.edge_model(h[row], h[col], radial, edge_attr)
+        return self.node_model(h, edge_index, edge_feat)
 
 
 class EGNN(nn.Module):
