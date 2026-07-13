@@ -102,6 +102,51 @@ def test_node_model_more_edges_than_nodes():
     assert out.shape == (4, 3)
 
 
+def test_forward_output_shape():
+    egcl = EGCL(input_nf=4, hidden_nf=4, edges_in_d=0)
+    h = torch.randn(5, 4)
+    x = torch.randn(5, 3)
+    edge_index = (torch.tensor([0, 1, 2, 3]), torch.tensor([1, 2, 3, 4]))
+    out = egcl.forward(h, x, edge_index)
+    assert out.shape == (5, 4)
+
+
+def test_forward_matches_manual_chain():
+    # forward must equal node_model(h, ei, edge_model(h[row], h[col], radial, attr)).
+    egcl = EGCL(input_nf=3, hidden_nf=3, edges_in_d=0)
+    h = torch.randn(4, 3)
+    x = torch.randn(4, 3)
+    row = torch.tensor([0, 1, 2, 3])
+    col = torch.tensor([1, 2, 3, 0])
+    with torch.no_grad():
+        radial = egcl._coord2radial((row, col), x)
+        empty_attr = torch.zeros(row.size(0), 0)
+        edge_feat = egcl.edge_model(h[row], h[col], radial, empty_attr)
+        expected = egcl.node_model(h, (row, col), edge_feat)
+        out = egcl.forward(h, x, (row, col))
+    assert torch.allclose(out, expected)
+
+
+def test_forward_is_e3_invariant():
+    # EGNN's core property: node features depend only on distances, so rotating
+    # AND translating input coords must leave the output h unchanged.
+    torch.manual_seed(0)
+    egcl = EGCL(input_nf=4, hidden_nf=4, edges_in_d=0)
+    h = torch.randn(6, 4)
+    x = torch.randn(6, 3)
+    edge_index = (torch.tensor([0, 1, 2, 3, 4, 5]), torch.tensor([1, 2, 3, 4, 5, 0]))
+
+    # random rotation (Q from QR) + translation
+    Q, _ = torch.linalg.qr(torch.randn(3, 3))
+    t = torch.randn(3)
+    x_transformed = x @ Q.T + t
+
+    with torch.no_grad():
+        out = egcl.forward(h, x, edge_index)
+        out_t = egcl.forward(h, x_transformed, edge_index)
+    assert torch.allclose(out, out_t, atol=1e-5)
+
+
 def test_node_model_matches_manual_aggregate_and_mlp():
     # Cross-check node_model's full output (real, non-zeroed node_mlp) against
     # manually computing agg via the already-tested unsorted_segment_sum and

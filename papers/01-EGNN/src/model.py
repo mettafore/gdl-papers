@@ -122,7 +122,25 @@ class EGCL(nn.Module):
             return self.node_mlp(concat_input)
 
 
-    # TODO: forward(h, x, edge_index, edge_attr)
+    def forward(self, h, x, edge_index, edge_attr=None):
+        """One EGCL layer (eq. 3, 5-6); coord update (eq. 4) skipped for QM9.
+
+        Args:
+            h: (num_nodes, input_nf) — node embeddings.
+            x: (num_nodes, 3) — coordinates (static for QM9; used only for distances).
+            edge_index: (2, num_edges) — (row, col) = (dest, src) per edge.
+            edge_attr: (num_edges, edges_in_d) or None — edge features a_ij.
+
+        Returns:
+            (num_nodes, input_nf) tensor — updated node embeddings.
+        # TODO:
+        #   - split edge_index into row, col
+        #   - radial = _coord2radial(edge_index, x)
+        #   - edge_feat = edge_model(h[row], h[col], radial, edge_attr)
+        #     (if edge_attr is None, pass an empty (num_edges, 0) tensor so cat works)
+        #   - return node_model(h, edge_index, edge_feat)
+        """
+        raise NotImplementedError
 
 
 class EGNN(nn.Module):
