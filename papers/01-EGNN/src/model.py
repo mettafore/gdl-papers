@@ -23,17 +23,18 @@ def unsorted_segment_sum(data, segment_ids, num_segments):
     Returns:
         (num_segments, feat_dim) tensor, row i = sum of data[e] for all edges e
         where segment_ids[e] == i.
-
     # TODO:
     #   - allocate output tensor of zeros, shape (num_segments, data.size(1)),
     #     same dtype/device as data
     #   - expand segment_ids to match data's shape so it can index every column
     #     (hint: unsqueeze + expand_as)
+    
     #   - use Tensor.scatter_add_ along dim 0
     #   - (equivalent alt: torch_scatter.scatter or torch_geometric.utils.scatter)
     """
-    raise NotImplementedError
-
+    output = torch.zeros(num_segments, data.size(1), dtype=data.dtype, device=data.device)
+    segment_id_exp = torch.unsqueeze(segment_ids, 1).expand_as(data)
+    return output.scatter_add_(0, segment_id_exp, data)
 
 class EGCL(nn.Module):
     """Equivariant Graph Convolutional Layer (equations 3-6).
@@ -83,7 +84,25 @@ class EGCL(nn.Module):
         combined_input = torch.cat([h_row, h_col, radial, edge_attr], dim=1)
         return self.edge_mlp(combined_input)
 
-    # TODO: node_model(h, edge_index, edge_feat)
+    def node_model(self, h, edge_index, edge_feat):
+        """Node update (eq. 5-6): aggregate incoming messages, apply φ_h with residual.
+
+        Args:
+            h: (num_nodes, hidden_nf) — current node embeddings.
+            edge_index: (2, num_edges) — (row, col) = (dest, src) per edge.
+            edge_feat: (num_edges, hidden_nf) — per-edge messages m_ij (edge_model output).
+
+        Returns:
+            (num_nodes, hidden_nf) tensor — updated node embeddings h_i^(l+1).
+        # TODO:
+        #   - split edge_index into row, col
+        #   - aggregate edge_feat per destination node (row) via unsorted_segment_sum,
+        #     num_segments = h.size(0)
+        #   - concat [h, agg] along dim=1, pass through self.node_mlp
+        #   - return residual: h + node_mlp output (MLP predicts a correction)
+        """
+        raise NotImplementedError
+
     # TODO: forward(h, x, edge_index, edge_attr)
 
 

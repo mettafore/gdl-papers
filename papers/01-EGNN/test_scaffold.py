@@ -2,7 +2,7 @@
 
 import torch
 
-from src.model import unsorted_segment_sum
+from src.model import unsorted_segment_sum, EGCL
 
 
 def test_unsorted_segment_sum_known_values():
@@ -33,3 +33,54 @@ def test_unsorted_segment_sum_dtype_device_match_data():
     out = unsorted_segment_sum(data, segment_ids, num_segments=2)
     assert out.dtype == data.dtype
     assert out.device == data.device
+
+
+# --- node_model ---
+
+def _zeroed_egcl(hidden_nf=4):
+    """EGCL with node_mlp weights/biases zeroed so node_mlp(x) == 0 for any x,
+    isolating the residual/aggregation wiring in node_model from φ_h's output."""
+    egcl = EGCL(input_nf=hidden_nf, hidden_nf=hidden_nf, edges_in_d=0)
+    with torch.no_grad():
+        for p in egcl.node_mlp.parameters():
+            p.zero_()
+    return egcl
+
+
+def test_node_model_shape():
+    egcl = _zeroed_egcl(hidden_nf=4)
+    h = torch.randn(3, 4)
+    edge_index = (torch.tensor([0, 1, 2]), torch.tensor([1, 2, 0]))
+    edge_feat = torch.randn(3, 4)
+    out = egcl.node_model(h, edge_index, edge_feat)
+    assert out.shape == h.shape
+
+
+def test_node_model_residual_with_zeroed_mlp():
+    # node_mlp(x) == 0 for all x here, so node_model must reduce to pure residual: h + 0 == h.
+    egcl = _zeroed_egcl(hidden_nf=4)
+    h = torch.randn(3, 4)
+    edge_index = (torch.tensor([0, 1, 2]), torch.tensor([1, 2, 0]))
+    edge_feat = torch.randn(3, 4)
+    out = egcl.node_model(h, edge_index, edge_feat)
+    assert torch.allclose(out, h)
+
+
+def test_node_model_matches_manual_aggregate_and_mlp():
+    # Cross-check node_model's full output (real, non-zeroed node_mlp) against
+    # manually computing agg via the already-tested unsorted_segment_sum and
+    # feeding [h, agg] through egcl.node_mlp directly. Pins down aggregation
+    # index (row = destination) and the residual add, without prescribing
+    # the internal order of operations inside node_model.
+    egcl = EGCL(input_nf=3, hidden_nf=3, edges_in_d=0)
+    h = torch.randn(4, 3)
+    row = torch.tensor([0, 0, 2, 3])
+    col = torch.tensor([1, 2, 0, 1])
+    edge_feat = torch.randn(4, 3)
+
+    with torch.no_grad():
+        agg = unsorted_segment_sum(edge_feat, row, num_segments=h.size(0))
+        expected = h + egcl.node_mlp(torch.cat([h, agg], dim=1))
+        out = egcl.node_model(h, (row, col), edge_feat)
+
+    assert torch.allclose(out, expected)
