@@ -41,7 +41,8 @@ Human overview in [README.md](README.md); current scope in [docs/spec.md](docs/s
   new paper; its `README.md` is the canonical contract (`## Files/Data/Hyperparameters/Run/Results`).
 - `.agents/skills/run-paper/` — the procedural skill (canonical, tool-neutral);
   `.claude/skills/run-paper` is a symlink to it.
-- `docs/` — durable truth: `spec.md` (scope), `reference-index.md` (doc links).
+- `docs/` — durable truth: `progress.md` (paper status — update when you work),
+  `spec.md` (scope), `reference-index.md` (doc links).
 - `references/papers.md` — the paper list with arXiv IDs and tiers.
 - `course/` — AI-assisted-coding coursework. Gitignored, **not part of the research artifact.**
 
@@ -71,7 +72,13 @@ invent a new layout — 00-template is the canonical shape every paper copies.
 - Run `uv run pytest papers/<paper>/` before committing scaffold or training changes.
 - Use `uv run` for execution and `uv add` for dependencies.
 - Match existing patterns in the paper folder you're editing.
-- Commit at the end of every agent turn that touched files: run `uv run ruff format <files touched this turn>` and `uv run ruff check <same files>`, fix what it flags — except lint errors inside a `NotImplementedError` TODO stub (expected until the user implements it, leave those) — then commit.
+- Commit at the end of every agent turn that touched files. Before committing, on touched files (excluding `.ipynb` notebooks):
+  1. `uv run ruff format <files>`
+  2. `uv run ruff check <files>`
+  3. `uv run mypy <files>` (or repo's configured type checker)
+  4. fix what's flagged — except lint/type errors inside a `NotImplementedError` TODO stub (expected until the user implements it, leave those)
+  5. run the `code-review` skill and the `security-review` skill on the diff, fix real findings
+  Then commit.
 
 **Ask first**
 - Adding a new dependency.
