@@ -44,12 +44,13 @@ class EGCL(nn.Module):
     """
 
     # TODO: __init__
-    def __init__(self, input_nf, hidden_nf, edges_in_d=0, act_fn=nn.SiLU()):
+    def __init__(self, input_nf, hidden_nf, edges_in_d=0, residual=True, act_fn=nn.SiLU()):
         super().__init__()
         self.input_nf = input_nf
         self.hidden_nf = hidden_nf
         self.edges_in_d = edges_in_d
         self.act_fn = act_fn
+        self.residual = residual
 
         self.edge_mlp = nn.Sequential(
             nn.Linear(2 * self.input_nf + self.edges_in_d + 1, self.hidden_nf),
@@ -112,10 +113,13 @@ class EGCL(nn.Module):
         #   - concat [h, agg] along dim=1, pass through self.node_mlp
         #   - return residual: h + node_mlp output (MLP predicts a correction)
         """
-        row, col = edge_index
+        row, _ = edge_index
         agg = unsorted_segment_sum(edge_feat, row, len(h))
         concat_input = torch.concat([h, agg], dim=1)
-        return h + self.node_mlp(concat_input)
+        if self.residual:
+            return h + self.node_mlp(concat_input)
+        else:
+            return self.node_mlp(concat_input)
 
 
     # TODO: forward(h, x, edge_index, edge_attr)
