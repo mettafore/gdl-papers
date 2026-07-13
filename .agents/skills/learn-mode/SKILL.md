@@ -61,6 +61,12 @@ implement toward it. Test stays failing (`NotImplementedError` or wrong
 output) until the user's implementation makes it pass — never write the
 implementation to turn it green yourself.
 
+When two dimensions could be confused (num_edges vs num_nodes, batch vs
+feature, in_dim vs out_dim), the shape tests MUST use *different* values for
+them — never leave them equal. Equal dims let a wrong-axis bug pass green.
+E.g. test node aggregation with num_edges != num_nodes, so sizing off the
+wrong count fails loudly.
+
 ## Validating against the original repo
 
 Before giving a clue on anything structural (layer shapes, what a module

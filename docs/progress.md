@@ -56,7 +56,7 @@ Tier definitions → [`references/papers.md`](../references/papers.md).
 | `EGCL._coord2radial` | ✅ |
 | `EGCL.edge_model` | ✅ |
 | `unsorted_segment_sum` helper | ✅ |
-| `EGCL.node_model` | 🟡 logic sketched, not in file |
+| `EGCL.node_model` | ✅ |
 | `EGCL.forward` | ⬜ |
 | `EGNN` (embed → 7× EGCL → head) | ⬜ |
 
