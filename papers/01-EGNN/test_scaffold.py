@@ -90,6 +90,18 @@ def test_node_model_residual_with_zeroed_mlp():
     assert torch.allclose(out, h)
 
 
+def test_node_model_more_edges_than_nodes():
+    # num_edges (6) != num_nodes (4): output must have one row per node, not
+    # per edge. Guards against sizing num_segments off the edge count.
+    egcl = _zeroed_egcl(hidden_nf=3)
+    h = torch.randn(4, 3)
+    row = torch.tensor([0, 0, 1, 1, 2, 3])
+    col = torch.tensor([1, 2, 0, 3, 0, 1])
+    edge_feat = torch.randn(6, 3)
+    out = egcl.node_model(h, (row, col), edge_feat)
+    assert out.shape == (4, 3)
+
+
 def test_node_model_matches_manual_aggregate_and_mlp():
     # Cross-check node_model's full output (real, non-zeroed node_mlp) against
     # manually computing agg via the already-tested unsorted_segment_sum and

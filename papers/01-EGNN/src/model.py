@@ -4,6 +4,7 @@ Paper: Satorras et al., "E(n) Equivariant Graph Neural Networks", ICML 2021.
 QM9 config: 7 EGCL layers, 128 hidden features, Swish activation.
 """
 
+from typing import Any
 import torch
 import torch.nn as nn
 
@@ -111,7 +112,11 @@ class EGCL(nn.Module):
         #   - concat [h, agg] along dim=1, pass through self.node_mlp
         #   - return residual: h + node_mlp output (MLP predicts a correction)
         """
-        raise NotImplementedError
+        row, col = edge_index
+        agg = unsorted_segment_sum(edge_feat, row, len(h))
+        concat_input = torch.concat([h, agg], dim=1)
+        return h + self.node_mlp(concat_input)
+
 
     # TODO: forward(h, x, edge_index, edge_attr)
 
