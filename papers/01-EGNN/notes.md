@@ -56,9 +56,10 @@ Working through `src/model.py` in learn-mode (`?`-triggered, see `.agents/skills
   ```
 - `unsorted_segment_sum` helper — decided to hand-roll (not PyG scatter) for the learning value; look at `torch.Tensor.scatter_add_` signature, needs a zero-init result tensor shaped `[num_segments, feat_dim]`.
 
-**Still TODO:**
-- `EGCL.forward(h, x, edge_index, edge_attr)` — ties coord2radial → edge_model → node_model together
-- `EGNN.__init__` — embedding in/out linear layers + stack of 7 EGCL (use `nn.ModuleList`, not plain Python list, so params register)
-- `EGNN.forward`
+**Done:** `unsorted_segment_sum`, `EGCL` (edge/node model + forward), full `EGNN`
+(`__init__`: emb + 7×EGCL ModuleList + node_dec/graph_dec; `forward`: embed →
+layers → node_dec → sum-pool → graph_dec). 16/16 tests pass. Model complete.
 
-**Next session:** write `unsorted_segment_sum`, then `node_model`, then `EGCL.forward`.
+**Next session (Stage 1 — data):** QM9 via `torch_geometric.datasets.QM9`,
+train/val/test split, fully-connected edge_index, target normalization, DataLoader.
+Then Stage 4: training loop (Adam + ReduceLROnPlateau, L1 loss).

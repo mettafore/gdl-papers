@@ -168,6 +168,24 @@ class EGNN(nn.Module):
         #   - graph_dec: MLP mapping the pooled graph vector down to a single scalar
         """
         super().__init__()
+        self.emb = nn.Linear(in_node_nf, hidden_nf)
+        self.layers = nn.ModuleList([EGCL(input_nf=hidden_nf,
+                                            hidden_nf=hidden_nf,
+                                            edges_in_d=edges_in_d
+                                            ) for _ in range(n_layers)
+        ]
+                                        )
+        self.node_dec = nn.Sequential(
+                                        nn.Linear(hidden_nf, hidden_nf),
+                                        act_fn,
+                                        nn.Linear(hidden_nf, hidden_nf)
+
+        )
+        self.graph_dec = nn.Sequential(
+                                        nn.Linear(hidden_nf, hidden_nf),
+                                        act_fn,
+                                        nn.Linear(hidden_nf, 1)
+        )
 
     def forward(self, h, x, edge_index, edge_attr=None):
         """Predict one scalar graph property (invariant to E(3) on x).
@@ -188,4 +206,11 @@ class EGNN(nn.Module):
         #     batching comes later)
         #   - map the pooled vector to a scalar with graph_dec
         """
-        raise NotImplementedError
+        h = self.emb(h)
+        for egcl in self.layers:
+            h = egcl(h, x, edge_index, edge_attr)
+        
+        out = self.node_dec(h)
+        out = out.sum(dim=0, keepdim=True)
+        return self.graph_dec(out)
+        

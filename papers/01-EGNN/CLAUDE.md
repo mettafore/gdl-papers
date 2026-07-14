@@ -119,9 +119,9 @@ QM9 contains ~130K small molecules with up to 9 heavy atoms (C, N, O, F) plus hy
 - [ ] Unit test: verify equivariance (rotate inputs, check outputs transform correctly)
 
 ### Stage 3: Full Model
-- [ ] Stack 7 EGNN layers
-- [ ] Input embedding: one-hot atomic number → hidden dim
-- [ ] Output head: node-level MLP → graph-level sum pooling → prediction
+- [x] Stack 7 EGNN layers
+- [x] Input embedding: one-hot atomic number → hidden dim
+- [x] Output head: node-level MLP → graph-level sum pooling → prediction
 - [ ] Optional: attention mechanism (sigmoid gate on messages)
 
 ### Stage 4: Training Loop
