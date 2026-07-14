@@ -65,32 +65,19 @@ def raw_target_for(batch, col):
   return batch.y[:, col:col+1]
 
 
-def train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
+def train(target="gap", lr=1e-3, epochs=1000, hidden_nf=128, n_layers=7,
           seed=42, batch_size=96, runs_base="runs", paper_dir=PAPER_DIR,
-          data_root="data/qm9", num_workers=0):
-    """Train and persist a run. Returns (run_id, run_dir, ...).
+          data_root="data/qm9", num_workers=0, weight_decay=1e-16,
+          early_stop_patience=50):
+    """Train and persist a run. Returns (run_id, run_dir, best_val).
 
-    # TODO (rough order — see module docstring for the batching gotcha):
-    #   a. seed everything (there's a helper imported for this — not torch's
-    #      own seeding function)
-    #   b. get the three loaders + norm stats + dims from this file's sibling
-    #      data module, using this function's own target/seed/batch_size args
-    #   c. assemble a config dict describing this run (data/model/hyperparams/
-    #      seed/metric) — look at the template's train.py for the shape
-    #   d. create the run folder from that config (helper imported already)
-    #   e. build the model from `dims` (don't hardcode the node-feature width —
-    #      read it off what load_split returned)
-    #   f. optimizer + scheduler, per the recipe in this paper's CLAUDE.md
-    #      (Adam, ReduceLROnPlateau — exact hyperparams are documented there)
-    #   g. loss: L1, computed against the NORMALIZED target column (the norm
-    #      object from load_split does this) — and don't forget the model's
-    #      forward now needs a `batch` argument; a PyG batch object carries
-    #      exactly that under one of its attributes
-    #   h. per epoch: train pass, then a no-grad val pass, step the scheduler
-    #      on val loss (not train — think about why), log metrics, checkpoint
-    #      whenever val loss improves
-    #   i. optional: stop early if val loss stalls for a while
-    #   return whatever a caller needs to locate + inspect this run
+    Recipe matches vgsatorras/egnn's main_qm9.py: Adam(lr=1e-3,
+    weight_decay=1e-16) + CosineAnnealingLR over the full `epochs` schedule
+    (not ReduceLROnPlateau — that halves LR on every 10-epoch stall, which
+    on noisy val loss can collapse LR toward its floor early and freeze
+    training; cosine annealing decays smoothly regardless of per-epoch
+    noise). L1 loss on the normalized target. Checkpoints on every val_loss
+    improvement; stops early after `early_stop_patience` epochs without one.
     """
     set_seed(seed)
     train_loader, val_loader, test_loader, norm, dims = data.load_split(
@@ -104,7 +91,8 @@ def train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
       "data":{"target": target,"dims": dims},
       "model": {"hidden_nf": hidden_nf,
       "n_layers": n_layers},
-      "hyperparams": {"lr": lr, "epochs": epochs},
+      "hyperparams": {"lr": lr, "epochs": epochs, "weight_decay": weight_decay,
+                      "early_stop_patience": early_stop_patience},
       "seed": seed,
       "metric":METRIC
       
@@ -118,15 +106,18 @@ def train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
       hidden_nf=hidden_nf,
       n_layers=n_layers
                 ).to(device)
-    optimizer = torch.optim.Adam(egnn.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-                  optimizer, 
-                  patience=10,
-                  factor=0.5,
-                  min_lr=1e-7)
+    optimizer = torch.optim.Adam(egnn.parameters(), lr=lr, weight_decay=weight_decay)
+    # CosineAnnealingLR (not ReduceLROnPlateau): matches the reference repo's
+    # recipe. ReduceLROnPlateau halves LR on every 10-epoch stall, which on a
+    # noisy val loss can collapse LR toward its floor within ~200 epochs and
+    # freeze training — that's what happened on the first real run (flat
+    # val_loss from epoch ~200 on). Cosine annealing decays smoothly across
+    # the full schedule regardless of per-epoch noise.
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, epochs)
     loss = nn.L1Loss()
 
     best_val = float("inf")
+    epochs_since_improve = 0
     for epoch in range(epochs):
       egnn.train()
       for b in train_loader:
@@ -148,11 +139,18 @@ def train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
           target = raw_target_for(b, dims["target_col"])
           val_losses.append(loss(pred, target).item())
       val_loss = sum(val_losses) / len(val_losses)
-      scheduler.step(val_loss)
-      log_metrics({"val_loss":val_loss}, epoch, run_dir)
+      # CosineAnnealingLR steps on a schedule, not on val_loss (no arg).
+      scheduler.step()
+      log_metrics({"val_loss": val_loss}, epoch, run_dir)
       if val_loss < best_val:
         best_val = val_loss
+        epochs_since_improve = 0
         save_checkpoint(egnn, run_dir)
+      else:
+        epochs_since_improve += 1
+        if epochs_since_improve >= early_stop_patience:
+          print(f"early stop: no val_loss improvement in {early_stop_patience} epochs")
+          break
     return run_id, run_dir, best_val
 
 
