@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-07-14 (EGNN model + train.py done, TDD'd, first CLI run verified)
+**Last updated:** 2026-07-14 (evaluate.py done; first real GPU benchmark run — gap MAE 93.01 meV vs paper's 48.39 meV, ~1.9x off target)
 
 ---
 
@@ -37,8 +37,20 @@ Tier definitions → [`references/papers.md`](../references/papers.md).
 
 **Goal:** QM9 property prediction; match paper MAE within ~5–10%.
 
-**Overall:** data pipeline, model, and training loop all done and TDD'd.
-No `evaluate.py` yet — that's the only thing blocking a real benchmark run.
+**Overall:** full pipeline done (data, model, train, evaluate), TDD'd, and
+run end-to-end on real Modal GPU hardware. First real benchmark result is
+in — not yet within target, see below.
+
+**First real benchmark (2026-07-14):** `gap`, run `20260714-151153`, 261
+epochs (of 1000 — plateaued, no early stopping implemented so it just kept
+running until manually stopped). **MAE 93.01 meV vs paper's 48.39 meV — ~1.9x
+off**, outside the ~5-10% target. Val loss froze essentially flat from
+~epoch 200 on (ReduceLROnPlateau likely decayed LR to a near-zero floor).
+Needs investigation: possibly needs the full 1000 epochs / different LR
+schedule tuning, possibly a real gap vs the reference implementation
+(attention mechanism not implemented, coordinate updates skipped per QM9
+convention — worth double-checking against vgsatorras/egnn's qm9 config
+for anything else missed).
 
 ### Data (`papers/01-EGNN/src/data.py`)
 
@@ -64,18 +76,23 @@ No `evaluate.py` yet — that's the only thing blocking a real benchmark run.
 | Item | Status |
 |------|--------|
 | `train.py` (`train()` + `main()` CLI) | ✅ verified via real CLI run |
-| `evaluate.py` | ⬜ not started |
-| Tests (22 passing: model + data + train helpers) | ✅ |
+| `evaluate.py` | ✅ (loads checkpoint, denormalizes, reports MAE incl. meV conversion for paper-comparable units) |
+| Modal GPU wrapper (`modal_train.py`) | ✅ (had to fix: train.py never used the GPU at all initially, ~5x speedup once fixed; +num_workers ~1.35x on top) |
+| Tests (23 passing: model + data + train + evaluate) | ✅ |
 | First training run (smoke test, 1 epoch) | ✅ |
-| Full training run (1000 epochs, real target) | ⬜ |
-| Benchmark vs paper Table 1 | ⬜ (blocked on `evaluate.py`) |
+| Real training run (gap, GPU) | ✅ 261/1000 epochs, plateaued — see benchmark result above |
+| Benchmark vs paper Table 1 | 🟡 first data point in, not within target yet (93.01 vs 48.39 meV) |
 
 ### Next step
 
-Build `evaluate.py`: load a checkpoint by `run_id`, run the held-out test
-split, report denormalized MAE per target, compare against paper's Table 1.
-Then a real (non-smoke) training run on `gap` to sanity-check the numbers
-before running the full benchmark sweep across all 7 targets.
+Investigate the MAE gap: early stopping was never implemented (skipped as
+"optional" in the original scaffold) — the run coasted at a frozen val loss
+for 60+ epochs before being manually stopped instead of the scheduler/early
+stop catching it. Options to try: implement early stopping properly, tune
+LR schedule, diff remaining hyperparams against vgsatorras/egnn's qm9
+config, or just let a run go the full 1000 epochs to rule out
+under-training. Then re-run the benchmark and, if `gap` lands in range,
+sweep the other 6 targets (mu, alpha, homo, lumo, U0, Cv).
 
 ---
 
