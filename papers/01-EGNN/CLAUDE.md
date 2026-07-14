@@ -103,32 +103,33 @@ QM9 contains ~130K small molecules with up to 9 heavy atoms (C, N, O, F) plus hy
 ## Implementation Plan
 
 ### Stage 1: Data Pipeline
-- [ ] Load QM9 via `torch_geometric.datasets.QM9`
-- [ ] Implement standard train/val/test split
-- [ ] Build edge index (fully connected or k-NN within cutoff)
-- [ ] Normalize targets
-- [ ] DataLoader with batching
+- [x] Load QM9 via `torch_geometric.datasets.QM9`
+- [x] Implement standard train/val/test split (100K/18K/13K, seeded)
+- [x] Fully connected edges (QM9 molecules are small; PyG's default `edge_index`)
+- [x] Normalize targets (NormStats: mean/MAD, fit on train only)
+- [x] DataLoader with batching
 
 ### Stage 2: EGNN Layer
-- [ ] Implement single EGNN layer as `nn.Module`
+- [x] Implement single EGNN layer as `nn.Module`
   - Edge MLP: `φ_e(h_i, h_j, d²_ij) → m_ij`
   - Coord MLP: `φ_x(m_ij) → scalar` (with tanh)
   - Node MLP: `φ_h(h_i, Σ m_ij) → h_i'`
-- [ ] Coordinate update with mean aggregation
-- [ ] Residual connection on node features
-- [ ] Unit test: verify equivariance (rotate inputs, check outputs transform correctly)
+- [ ] Coordinate update with mean aggregation (skipped for QM9 — positions static)
+- [x] Residual connection on node features
+- [x] Unit test: verify equivariance (rotate inputs, check outputs transform correctly)
 
 ### Stage 3: Full Model
 - [x] Stack 7 EGNN layers
 - [x] Input embedding: one-hot atomic number → hidden dim
 - [x] Output head: node-level MLP → graph-level sum pooling → prediction
+- [x] Batch-aware pooling (PyG `batch` index; multi-molecule batches, not just single-graph)
 - [ ] Optional: attention mechanism (sigmoid gate on messages)
 
 ### Stage 4: Training Loop
-- [ ] Training script with Adam + ReduceLROnPlateau
-- [ ] Logging (wandb or tensorboard)
-- [ ] Checkpointing best model
-- [ ] Evaluation on test set
+- [x] Training script with Adam + ReduceLROnPlateau
+- [x] Logging (this repo's own JSONL `log_metrics`, not wandb/tensorboard)
+- [x] Checkpointing best model (on val-loss improvement)
+- [ ] Evaluation on test set (belongs in `evaluate.py`, not yet built)
 
 ### Stage 5: Benchmarking
 - [ ] Run on mu, alpha, HOMO, LUMO, gap, U0, Cv

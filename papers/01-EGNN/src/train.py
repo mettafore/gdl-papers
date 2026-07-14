@@ -43,6 +43,7 @@ Questions worth answering as you go:
 ------------------------------------------------------------------------------
 """
 
+import argparse
 from pathlib import Path
 
 import torch
@@ -60,9 +61,13 @@ def target_for(batch, norm, col):
     """Normalized target column for one PyG batch, shaped (num_graphs, 1)."""
     return norm.normalize(batch.y[:, col : col + 1])
 
+def raw_target_for(batch, col):
+  return batch.y[:, col:col+1]
+
 
 def train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
-          seed=42, batch_size=96, runs_base="runs", paper_dir=PAPER_DIR):
+          seed=42, batch_size=96, runs_base="runs", paper_dir=PAPER_DIR,
+          data_root="data/qm9"):
     """Train and persist a run. Returns (run_id, run_dir, ...).
 
     # TODO (rough order — see module docstring for the batching gotcha):
@@ -89,9 +94,10 @@ def train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
     """
     set_seed(seed)
     train_loader, val_loader, test_loader, norm, dims = data.load_split(
-                target=target, 
-                seed=seed, 
-                batch_size=batch_size
+                target=target,
+                seed=seed,
+                batch_size=batch_size,
+                root=data_root,
                 )
     config = {
       "data":{"target": target,"dims": dims},
@@ -118,7 +124,7 @@ def train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
                   min_lr=1e-7)
     loss = nn.L1Loss()
 
-    best_val = None
+    best_val = float("inf")
     for epoch in range(epochs):
       egnn.train()
       for b in train_loader:
@@ -128,6 +134,22 @@ def train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
         loss_value = loss(out, target)
         loss_value.backward()
         optimizer.step()
+    
+      egnn.eval()
+      val_losses = []
+      with torch.no_grad():
+        for b in val_loader:
+          out = egnn(b.x, b.pos, b.edge_index, batch=b.batch)
+          pred = norm.denormalize(out)
+          target = raw_target_for(b, dims["target_col"])
+          val_losses.append(loss(pred, target).item())
+      val_loss = sum(val_losses) / len(val_losses)
+      scheduler.step(val_loss)
+      log_metrics({"val_loss":val_loss}, epoch, run_dir)
+      if val_loss < best_val:
+        best_val = val_loss
+        save_checkpoint(egnn, run_dir)
+    return run_id, run_dir, best_val
 
 
 def main():
@@ -139,8 +161,32 @@ def main():
     #   - call train(...) with parsed args
     #   - print(f"run_id: {run_id}")
     """
-    raise NotImplementedError
+    p = argparse.ArgumentParser()
+    p.add_argument("--lr", type=float, default=5e-4)
+    p.add_argument("--target", type=str, default="gap")
+    p.add_argument("--epochs", type=int, default=1000)
+    p.add_argument("--hidden-nf", type=int, default=128)
+    p.add_argument("--n-layers", type=int, default=7)
+    p.add_argument("--seed", type=int, default=42)
+    p.add_argument("--batch-size", type=int, default=96)
+    p.add_argument("--runs-base", type=str, default="runs")
 
+    args = p.parse_args()
+    run_id, run_dir, best_val = train(
+      target= args.target,
+      lr = args.lr,
+      epochs = args.epochs,
+      hidden_nf = args.hidden_nf,
+      n_layers = args.n_layers,
+      seed = args.seed,
+      batch_size = args.batch_size,
+      runs_base = args.runs_base,
+      paper_dir = PAPER_DIR
+    )
+
+    print(f"run_id: {run_id}")
+
+    
 
 if __name__ == "__main__":
     main()

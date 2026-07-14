@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-07-13 (unsorted_segment_sum done, tested vs reference)
+**Last updated:** 2026-07-14 (EGNN model + train.py done, TDD'd, first CLI run verified)
 
 ---
 
@@ -17,7 +17,7 @@ Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 | # | Paper | Tier | Status | Last touched |
 |---|-------|------|--------|--------------|
 | 00 | Template (Iris MLP) | scaffold | ✅ done | — |
-| 01 | EGNN | implement | 🟡 in progress | 2026-07-10 |
+| 01 | EGNN | implement | 🟡 in progress | 2026-07-14 |
 | 02 | Hitchhiker's Guide | study | 📄 PDF only | — |
 | 03 | MPNN | study | 📄 PDF only | — |
 | 05 | SchNet | study | 📄 PDF + sources | — |
@@ -37,7 +37,8 @@ Tier definitions → [`references/papers.md`](../references/papers.md).
 
 **Goal:** QM9 property prediction; match paper MAE within ~5–10%.
 
-**Overall:** data pipeline mostly done; model partially done; no train/eval scaffold yet.
+**Overall:** data pipeline, model, and training loop all done and TDD'd.
+No `evaluate.py` yet — that's the only thing blocking a real benchmark run.
 
 ### Data (`papers/01-EGNN/src/data.py`)
 
@@ -46,35 +47,35 @@ Tier definitions → [`references/papers.md`](../references/papers.md).
 | `NormStats` (mean / MAD) | ✅ |
 | QM9 load + deterministic split (100K / 18K / 13K) | ✅ |
 | DataLoaders | ✅ |
-| Edge construction | ⬜ (decide: here vs model) |
+| Edge construction | ✅ (QM9 default fully-connected `edge_index`, no cutoff needed at this size) |
+| `dims["target_col"]` (which QM9 y-column this run trains on) | ✅ |
 
 ### Model (`papers/01-EGNN/src/model.py`)
 
 | Item | Status |
 |------|--------|
-| `EGCL.__init__` (edge/coord/node MLPs) | ✅ |
-| `EGCL._coord2radial` | ✅ |
-| `EGCL.edge_model` | ✅ |
+| `EGCL` (edge/coord/node MLPs, forward) | ✅ |
 | `unsorted_segment_sum` helper | ✅ |
-| `EGCL.node_model` | ✅ |
-| `EGCL.forward` | ✅ |
-| `EGNN` (embed → 7× EGCL → head) | ⬜ |
+| `EGNN` (embed → 7× EGCL → node_dec → pool → graph_dec) | ✅ |
+| Batch-aware pooling (`batch` arg, multi-molecule DataLoader batches) | ✅ (bug caught + fixed after initial "done" only handled single-graph) |
 
 ### Train / eval / benchmark
 
 | Item | Status |
 |------|--------|
-| `train.py` / `evaluate.py` (00-template shape) | ⬜ |
-| Tests (model scaffold, 13 passing) | 🟡 |
-| First training run | ⬜ |
-| Benchmark vs paper Table 1 | ⬜ |
+| `train.py` (`train()` + `main()` CLI) | ✅ verified via real CLI run |
+| `evaluate.py` | ⬜ not started |
+| Tests (22 passing: model + data + train helpers) | ✅ |
+| First training run (smoke test, 1 epoch) | ✅ |
+| Full training run (1000 epochs, real target) | ⬜ |
+| Benchmark vs paper Table 1 | ⬜ (blocked on `evaluate.py`) |
 
 ### Next step
 
-`EGCL` complete + tested (13 passing, incl. E(3)-invariance). Next: `EGNN`
-class (embedding → 7× EGCL → node_dec → sum pool → graph_dec), then edge
-construction, then `train.py`/`evaluate.py` (00-template shape), first run,
-benchmark.
+Build `evaluate.py`: load a checkpoint by `run_id`, run the held-out test
+split, report denormalized MAE per target, compare against paper's Table 1.
+Then a real (non-smoke) training run on `gap` to sanity-check the numbers
+before running the full benchmark sweep across all 7 targets.
 
 ---
 

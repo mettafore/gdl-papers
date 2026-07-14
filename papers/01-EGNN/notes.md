@@ -58,8 +58,23 @@ Working through `src/model.py` in learn-mode (`?`-triggered, see `.agents/skills
 
 **Done:** `unsorted_segment_sum`, `EGCL` (edge/node model + forward), full `EGNN`
 (`__init__`: emb + 7×EGCL ModuleList + node_dec/graph_dec; `forward`: embed →
-layers → node_dec → sum-pool → graph_dec). 16/16 tests pass. Model complete.
+layers → node_dec → batch-aware pool → graph_dec, takes a `batch` arg so a
+multi-molecule DataLoader batch pools per-graph, not into one blended scalar).
+`data.py` (`load_split`: QM9 load, seeded split, NormStats fit on train,
+`dims["target_col"]`). `train.py` (`train()` + `main()`: full epoch loop —
+train pass, val pass denormalized to original units, scheduler.step on val
+loss, checkpoint on improvement). 22/22 tests pass. Verified with a real CLI
+run (`uv run python papers/01-EGNN/src/train.py --epochs 1 ...`) end to end.
 
-**Next session (Stage 1 — data):** QM9 via `torch_geometric.datasets.QM9`,
-train/val/test split, fully-connected edge_index, target normalization, DataLoader.
-Then Stage 4: training loop (Adam + ReduceLROnPlateau, L1 loss).
+**Bugs caught + fixed via TDD (not just manual check):**
+- `EGNN.forward` originally summed every node across a whole call into one
+  scalar — broke on real multi-molecule batches (see reference repo's
+  `qm9/models.py` for the pooling convention this was compared against).
+- `train.py`'s loss compared model output `(N,1)` against QM9's full 19-column
+  `y` `(N,19)` — L1Loss silently broadcasts instead of erroring, so it would've
+  trained on the wrong signal with no crash. Fixed via `dims["target_col"]` +
+  `target_for`/`raw_target_for` helpers, tests written before the fix.
+
+**Next session (Stage 5 — evaluate.py):** build `evaluate.py` — load a
+checkpoint by `run_id`, run test split, report denormalized MAE per target,
+compare against paper's Table 1 numbers (see CLAUDE.md benchmark targets).

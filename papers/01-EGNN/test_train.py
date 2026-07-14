@@ -11,7 +11,7 @@ import torch
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from data import NormStats
-from train import target_for
+from train import target_for, raw_target_for
 
 
 def _fake_batch(y):
@@ -34,5 +34,22 @@ def test_target_for_keeps_column_dim_for_loss_shape():
     norm = NormStats(mean=0.0, mad=1.0)
 
     target = target_for(_fake_batch(y), norm, col=0)
+
+    assert target.shape == (3, 1)
+
+
+def test_raw_target_for_selects_column_without_normalizing():
+    # values chosen so a normalize-then-return would fail this check
+    y = torch.arange(19).float().unsqueeze(0).repeat(2, 1)
+
+    target = raw_target_for(_fake_batch(y), col=4)
+
+    assert torch.equal(target, torch.tensor([[4.0], [4.0]]))
+
+
+def test_raw_target_for_keeps_column_dim():
+    y = torch.arange(19).float().unsqueeze(0).repeat(3, 1)
+
+    target = raw_target_for(_fake_batch(y), col=0)
 
     assert target.shape == (3, 1)
