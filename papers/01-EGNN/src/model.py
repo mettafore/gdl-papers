@@ -187,30 +187,41 @@ class EGNN(nn.Module):
                                         nn.Linear(hidden_nf, 1)
         )
 
-    def forward(self, h, x, edge_index, edge_attr=None):
-        """Predict one scalar graph property (invariant to E(3) on x).
+    def forward(self, h, x, edge_index, edge_attr=None, batch=None):
+        """Predict one scalar graph property per molecule (invariant to E(3) on x).
 
         Args:
             h: (num_nodes, in_node_nf) — one-hot atom features.
             x: (num_nodes, 3) — coordinates.
             edge_index: (2, num_edges) — (row, col).
             edge_attr: (num_edges, edges_in_d) or None.
+            batch: (num_nodes,) int tensor — which molecule each node belongs
+                to (PyG's `data.batch`), or None for a single molecule (all
+                nodes -> graph 0).
 
         Returns:
-            scalar (or (1,)) — predicted property for the single graph.
-        # TODO (eq. flow: embed -> message-passing layers -> readout):
+            (num_graphs, 1) — one predicted scalar per molecule in the batch.
+        # TODO: batch-aware pooling (see reference: vgsatorras/egnn qm9/models.py,
+        #   EGNN.forward — they reshape+sum since QM9 batches are padded to a
+        #   fixed n_nodes; we use PyG's ragged `batch` index instead):
         #   - embed h once
         #   - run h through each EGCL layer in turn (coords x stay fixed for QM9)
         #   - apply node_dec per node
-        #   - pool the per-node vectors into one graph vector (sum, single graph for now;
-        #     batching comes later)
-        #   - map the pooled vector to a scalar with graph_dec
+        #   - if batch is None, treat every node as graph 0
+        #     (torch.zeros(h.size(0), dtype=torch.long))
+        #   - pool PER GRAPH, not across the whole call — look at
+        #     unsorted_segment_sum in this file (or torch_geometric.nn.global_add_pool):
+        #     you need num_segments = number of distinct graphs in `batch`
+        #   - map each pooled graph vector to a scalar with graph_dec ->
+        #     shape (num_graphs, 1)
         """
+        if batch is None:
+            batch = torch.zeros(x.size(0), dtype=torch.long)
         h = self.emb(h)
         for egcl in self.layers:
             h = egcl(h, x, edge_index, edge_attr)
-        
         out = self.node_dec(h)
-        out = out.sum(dim=0, keepdim=True)
+        out = unsorted_segment_sum(out, batch, int(batch.max().item()) + 1)
         return self.graph_dec(out)
-        
+            
+
