@@ -56,13 +56,89 @@ PAPER_DIR = Path(__file__).parent
 METRIC = "mae"
 
 
+def target_for(batch, norm, col):
+    """Normalized target column for one PyG batch, shaped (num_graphs, 1)."""
+    return norm.normalize(batch.y[:, col : col + 1])
+
+
 def train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
           seed=42, batch_size=96, runs_base="runs", paper_dir=PAPER_DIR):
-    """Train and persist a run. Returns (run_id, run_dir, ...)."""
-    raise NotImplementedError
+    """Train and persist a run. Returns (run_id, run_dir, ...).
+
+    # TODO (rough order — see module docstring for the batching gotcha):
+    #   a. seed everything (there's a helper imported for this — not torch's
+    #      own seeding function)
+    #   b. get the three loaders + norm stats + dims from this file's sibling
+    #      data module, using this function's own target/seed/batch_size args
+    #   c. assemble a config dict describing this run (data/model/hyperparams/
+    #      seed/metric) — look at the template's train.py for the shape
+    #   d. create the run folder from that config (helper imported already)
+    #   e. build the model from `dims` (don't hardcode the node-feature width —
+    #      read it off what load_split returned)
+    #   f. optimizer + scheduler, per the recipe in this paper's CLAUDE.md
+    #      (Adam, ReduceLROnPlateau — exact hyperparams are documented there)
+    #   g. loss: L1, computed against the NORMALIZED target column (the norm
+    #      object from load_split does this) — and don't forget the model's
+    #      forward now needs a `batch` argument; a PyG batch object carries
+    #      exactly that under one of its attributes
+    #   h. per epoch: train pass, then a no-grad val pass, step the scheduler
+    #      on val loss (not train — think about why), log metrics, checkpoint
+    #      whenever val loss improves
+    #   i. optional: stop early if val loss stalls for a while
+    #   return whatever a caller needs to locate + inspect this run
+    """
+    set_seed(seed)
+    train_loader, val_loader, test_loader, norm, dims = data.load_split(
+                target=target, 
+                seed=seed, 
+                batch_size=batch_size
+                )
+    config = {
+      "data":{"target": target,"dims": dims},
+      "model": {"hidden_nf": hidden_nf,
+      "n_layers": n_layers},
+      "hyperparams": {"lr": lr, "epochs": epochs},
+      "seed": seed,
+      "metric":METRIC
+      
+    }
+
+    run_id, run_dir = new_run_dir(paper_dir, config, runs_base)
+
+    egnn = EGNN(
+      in_node_nf=dims["in_node_dim"],
+      hidden_nf=hidden_nf,
+      n_layers=n_layers
+                )
+    optimizer = torch.optim.Adam(egnn.parameters(), lr=lr)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                  optimizer, 
+                  patience=10,
+                  factor=0.5,
+                  min_lr=1e-7)
+    loss = nn.L1Loss()
+
+    best_val = None
+    for epoch in range(epochs):
+      egnn.train()
+      for b in train_loader:
+        optimizer.zero_grad()
+        out = egnn(b.x, b.pos, b.edge_index, batch=b.batch)
+        target = target_for(b, norm, dims["target_col"])
+        loss_value = loss(out, target)
+        loss_value.backward()
+        optimizer.step()
 
 
 def main():
+    """CLI entrypoint. Mirrors papers/00-template/train.py's main().
+
+    # TODO:
+    #   - argparse: --target, --lr, --epochs, --hidden-nf, --n-layers, --seed,
+    #     --batch-size, --runs-base (see template main() for the pattern)
+    #   - call train(...) with parsed args
+    #   - print(f"run_id: {run_id}")
+    """
     raise NotImplementedError
 
 

@@ -133,5 +133,5 @@ def load_split(
     val_loader = PyGDataLoader(dataset[val_idx], batch_size=batch_size)
     test_loader = PyGDataLoader(dataset[test_idx], batch_size=batch_size)
     # TODO f: build dims
-    dims = {"in_node_dim": dataset.num_features, "out_dim": 1}
+    dims = {"in_node_dim": dataset.num_features, "out_dim": 1, "target_col": col}
     return train_loader, val_loader, test_loader, normalizer, dims
