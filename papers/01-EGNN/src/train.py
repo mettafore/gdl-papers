@@ -111,11 +111,12 @@ def train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
 
     run_id, run_dir = new_run_dir(paper_dir, config, runs_base)
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     egnn = EGNN(
       in_node_nf=dims["in_node_dim"],
       hidden_nf=hidden_nf,
       n_layers=n_layers
-                )
+                ).to(device)
     optimizer = torch.optim.Adam(egnn.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
                   optimizer, 
@@ -128,6 +129,7 @@ def train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
     for epoch in range(epochs):
       egnn.train()
       for b in train_loader:
+        b = b.to(device)
         optimizer.zero_grad()
         out = egnn(b.x, b.pos, b.edge_index, batch=b.batch)
         target = target_for(b, norm, dims["target_col"])
@@ -139,6 +141,7 @@ def train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
       val_losses = []
       with torch.no_grad():
         for b in val_loader:
+          b = b.to(device)
           out = egnn(b.x, b.pos, b.edge_index, batch=b.batch)
           pred = norm.denormalize(out)
           target = raw_target_for(b, dims["target_col"])

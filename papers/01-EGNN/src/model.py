@@ -143,7 +143,7 @@ class EGCL(nn.Module):
         row, col = edge_index
         radial = self._coord2radial(edge_index, x)
         if edge_attr is None:
-            edge_attr = torch.zeros(len(row), 0)
+            edge_attr = torch.zeros(len(row), 0, dtype=h.dtype, device=h.device)
         edge_feat = self.edge_model(h[row], h[col], radial, edge_attr)
         return self.node_model(h, edge_index, edge_feat)
 
@@ -216,7 +216,7 @@ class EGNN(nn.Module):
         #     shape (num_graphs, 1)
         """
         if batch is None:
-            batch = torch.zeros(x.size(0), dtype=torch.long)
+            batch = torch.zeros(x.size(0), dtype=torch.long, device=x.device)
         h = self.emb(h)
         for egcl in self.layers:
             h = egcl(h, x, edge_index, edge_attr)
