@@ -14,6 +14,14 @@ def save_checkpoint(model, run_dir) -> None:
 
 
 def load_checkpoint(model, run_dir) -> None:
-    """Load weights into an already-built model (built from config.json)."""
-    state = torch.load(Path(run_dir) / "checkpoint.pt", weights_only=True)
+    """Load weights into an already-built model (built from config.json).
+
+    map_location="cpu": a checkpoint saved from CUDA tensors (e.g. trained on
+    Modal) can't deserialize on a CPU-only machine without this. load_state_dict
+    then copies values into whatever device `model`'s own parameters already
+    live on, so this is safe regardless of where the model itself was built.
+    """
+    state = torch.load(
+        Path(run_dir) / "checkpoint.pt", map_location="cpu", weights_only=True,
+    )
     model.load_state_dict(state)
