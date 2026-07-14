@@ -46,7 +46,7 @@ volume = modal.Volume.from_name("egnn-qm9", create_if_missing=True)
 VOLUME_PATH = "/vol"
 
 
-@app.function(image=image, gpu="T4", volumes={VOLUME_PATH: volume}, timeout=60 * 60 * 12)
+@app.function(image=image, gpu="T4", cpu=4, volumes={VOLUME_PATH: volume}, timeout=60 * 60 * 12)
 def run_train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
               seed=42, batch_size=96):
     import sys
@@ -71,6 +71,8 @@ def run_train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
         # PyG's QM9 dataset checks for already-processed files at `root`
         # before downloading, so repeat runs just load from disk.
         data_root=f"{VOLUME_PATH}/data/qm9",
+        # profiled at ~1.35x speedup on a 4-cpu container (modal_profile.py)
+        num_workers=4,
     )
     volume.commit()
     return run_id, run_dir, best_val

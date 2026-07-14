@@ -102,6 +102,7 @@ def load_split(
     root: str = "data/qm9",
     seed: int = 42,
     batch_size: int = 96,
+    num_workers: int = 0,
 ):
     """Return (train_loader, val_loader, test_loader, norm, dims).
 
@@ -129,9 +130,15 @@ def load_split(
     mad = (train_y - mean).abs().mean().item()
     normalizer = NormStats(mean=mean, mad=mad)
     # TODO e: wrap each split in PyGDataLoader (shuffle train, not val/test)
-    train_loader = PyGDataLoader(dataset[train_idx], shuffle=True, batch_size=batch_size)
-    val_loader = PyGDataLoader(dataset[val_idx], batch_size=batch_size)
-    test_loader = PyGDataLoader(dataset[test_idx], batch_size=batch_size)
+    train_loader = PyGDataLoader(
+        dataset[train_idx], shuffle=True, batch_size=batch_size, num_workers=num_workers,
+    )
+    val_loader = PyGDataLoader(
+        dataset[val_idx], batch_size=batch_size, num_workers=num_workers,
+    )
+    test_loader = PyGDataLoader(
+        dataset[test_idx], batch_size=batch_size, num_workers=num_workers,
+    )
     # TODO f: build dims
     dims = {"in_node_dim": dataset.num_features, "out_dim": 1, "target_col": col}
     return train_loader, val_loader, test_loader, normalizer, dims

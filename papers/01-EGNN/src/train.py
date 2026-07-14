@@ -67,7 +67,7 @@ def raw_target_for(batch, col):
 
 def train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
           seed=42, batch_size=96, runs_base="runs", paper_dir=PAPER_DIR,
-          data_root="data/qm9"):
+          data_root="data/qm9", num_workers=0):
     """Train and persist a run. Returns (run_id, run_dir, ...).
 
     # TODO (rough order — see module docstring for the batching gotcha):
@@ -98,6 +98,7 @@ def train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
                 seed=seed,
                 batch_size=batch_size,
                 root=data_root,
+                num_workers=num_workers,
                 )
     config = {
       "data":{"target": target,"dims": dims},
