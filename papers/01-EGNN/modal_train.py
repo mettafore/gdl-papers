@@ -53,7 +53,7 @@ VOLUME_PATH = "/vol"
 )
 def run_train(
     target="gap",
-    lr=5e-4,
+    lr=1e-3,
     epochs=1000,
     hidden_nf=128,
     n_layers=7,
@@ -93,14 +93,20 @@ def run_train(
 @app.local_entrypoint()
 def main(
     target: str = "gap",
-    lr: float = 5e-4,
+    lr: float = 1e-3,
     epochs: int = 1000,
     hidden_nf: int = 128,
     n_layers: int = 7,
     seed: int = 42,
     batch_size: int = 96,
 ):
-    run_id, run_dir, best_val = run_train.remote(
+    # spawn (not remote): dispatch the training call server-side and return a
+    # handle immediately instead of blocking for the full run. Combined with
+    # `modal run --detach`, the job then runs to completion independently of
+    # this client — killing/disconnecting the local process can't cancel it.
+    # (.remote() blocks 12h and any SIGTERM to the babysitting client cancels
+    # the remote call — that's what killed three launch attempts.)
+    call = run_train.spawn(
         target=target,
         lr=lr,
         epochs=epochs,
@@ -109,6 +115,5 @@ def main(
         seed=seed,
         batch_size=batch_size,
     )
-    print(f"run_id: {run_id}")
-    print(f"run_dir (in Modal volume): {run_dir}")
-    print(f"best_val: {best_val}")
+    print(f"spawned function call: {call.object_id}")
+    print("Detached — poll `modal app logs` or the egnn-qm9 volume for progress.")
