@@ -57,7 +57,22 @@ plateau. No benchmark number from it. Re-launch must use `modal run
 
 **Config now matches paper Table 1 (2026-07-15):** implemented the two
 remaining deviations that a paper-faithful reproduction needs — see below.
-No benchmark yet on the full config; that's the next run.
+
+**Two launch/config bugs found & fixed (2026-07-15):**
+- `modal_train.py` hardcoded `lr=5e-4` in the local_entrypoint, overriding
+  `train()`'s recipe default of 1e-3. So **every earlier Modal run trained
+  at 5e-4, not the reference 1e-3** — the recipe fix never actually reached
+  the GPU. Fixed to 1e-3.
+- `.remote()` blocks the client 12h; any SIGTERM to it cancels the remote
+  call. Killed three launch attempts (laptop sleep, manual kill, background
+  reap). Switched to `.spawn()` + `modal run --detach` — dispatch
+  server-side, client exits immediately, job runs independently.
+
+**Full paper-faithful run LIVE (2026-07-15 ~14:49, app `ap-DQXDO61eUW5nqda...`):**
+`gap`, T4, attention + charge-power + lr 1e-3 + CosineAnnealingLR, spawned
+detached, confirmed training (val_loss descending from ~0.33). First run
+with the correct LR *and* the full config. This is the benchmark that
+decides Table-1 match.
 
 ### Data (`papers/01-EGNN/src/data.py`)
 
