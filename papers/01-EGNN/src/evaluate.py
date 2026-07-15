@@ -10,11 +10,11 @@ import argparse
 from pathlib import Path
 
 import torch
-from model import EGNN
-from train import raw_target_for
 
 import data
 from gdl import METRICS, load_checkpoint, load_run_config, run_dir
+from model import EGNN
+from train import raw_target_for
 
 PAPER_DIR = Path(__file__).parent
 
@@ -32,6 +32,7 @@ def evaluate(run_id, runs_base="runs", paper_dir=PAPER_DIR, data_root="data/qm9"
         in_node_nf=cfg["data"]["dims"]["in_node_dim"],
         hidden_nf=cfg["model"]["hidden_nf"],
         n_layers=cfg["model"]["n_layers"],
+        attention=cfg["model"]["attention"],
     )
     rdir = run_dir(paper_dir, run_id, base=runs_base)
     load_checkpoint(egnn, rdir)

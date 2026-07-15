@@ -73,7 +73,7 @@ QM9 contains ~130K small molecules with up to 9 heavy atoms (C, N, O, F) plus hy
 
 ### QM9 data details
 - Train/val/test split: 100K / 18K / 13K (standard split)
-- Node features: atomic number (one-hot: H, C, N, O, F = 5 dims), optionally charge
+- Node features: 15-dim charge-power = one-hot(H,C,N,O,F) ⊗ (z/9)^{0,1,2} (matches reference; replaces PyG's default 11-dim x, dropping aromatic/hybridization/num_Hs annotations)
 - Edge construction: fully connected within cutoff (typically ~5Å) or k-nearest neighbors
 - Coordinates: 3D positions in Angstroms
 
@@ -123,7 +123,7 @@ QM9 contains ~130K small molecules with up to 9 heavy atoms (C, N, O, F) plus hy
 - [x] Input embedding: one-hot atomic number → hidden dim
 - [x] Output head: node-level MLP → graph-level sum pooling → prediction
 - [x] Batch-aware pooling (PyG `batch` index; multi-molecule batches, not just single-graph)
-- [ ] Optional: attention mechanism (sigmoid gate on messages)
+- [x] Attention mechanism (sigmoid gate on messages, eq. 8 — reference Table-1 default, `attention=True`)
 
 ### Stage 4: Training Loop
 - [x] Training script with Adam + ReduceLROnPlateau

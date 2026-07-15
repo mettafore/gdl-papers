@@ -80,6 +80,7 @@ def train(
     num_workers=0,
     weight_decay=1e-16,
     early_stop_patience=50,
+    attention=True,
 ):
     """Train and persist a run. Returns (run_id, run_dir, best_val).
 
@@ -101,7 +102,11 @@ def train(
     )
     config = {
         "data": {"target": target, "dims": dims},
-        "model": {"hidden_nf": hidden_nf, "n_layers": n_layers},
+        "model": {
+            "hidden_nf": hidden_nf,
+            "n_layers": n_layers,
+            "attention": attention,
+        },
         "hyperparams": {
             "lr": lr,
             "epochs": epochs,
@@ -116,7 +121,10 @@ def train(
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     egnn = EGNN(
-        in_node_nf=dims["in_node_dim"], hidden_nf=hidden_nf, n_layers=n_layers
+        in_node_nf=dims["in_node_dim"],
+        hidden_nf=hidden_nf,
+        n_layers=n_layers,
+        attention=attention,
     ).to(device)
     optimizer = torch.optim.Adam(egnn.parameters(), lr=lr, weight_decay=weight_decay)
     # CosineAnnealingLR (not ReduceLROnPlateau): matches the reference repo's
@@ -178,7 +186,7 @@ def main():
     #   - print(f"run_id: {run_id}")
     """
     p = argparse.ArgumentParser()
-    p.add_argument("--lr", type=float, default=5e-4)
+    p.add_argument("--lr", type=float, default=1e-3)
     p.add_argument("--target", type=str, default="gap")
     p.add_argument("--epochs", type=int, default=1000)
     p.add_argument("--hidden-nf", type=int, default=128)
@@ -186,6 +194,11 @@ def main():
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--batch-size", type=int, default=96)
     p.add_argument("--runs-base", type=str, default="runs")
+    p.add_argument(
+        "--attention",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+    )
 
     args = p.parse_args()
     run_id, run_dir, best_val = train(
@@ -198,6 +211,7 @@ def main():
         batch_size=args.batch_size,
         runs_base=args.runs_base,
         paper_dir=PAPER_DIR,
+        attention=args.attention,
     )
 
     print(f"run_id: {run_id}")

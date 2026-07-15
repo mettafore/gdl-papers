@@ -212,3 +212,53 @@ def test_egnn_is_e3_invariant():
         out = model(h, x, ei)
         out_t = model(h, x @ Q.T + t, ei)
     assert torch.allclose(out, out_t, atol=1e-4)
+
+
+# --- attention (sigmoid message gate; reference Table-1 config) ---
+
+def test_attention_off_has_no_att_mlp():
+    egcl = EGCL(input_nf=4, hidden_nf=4, attention=False)
+    assert not hasattr(egcl, "att_mlp") or egcl.att_mlp is None
+
+
+def test_attention_gate_shrinks_messages():
+    # Gate is sigmoid -> strictly in (0,1) -> every gated message must have
+    # strictly smaller magnitude than the ungated one from the same edge_mlp.
+    torch.manual_seed(0)
+    egcl = EGCL(input_nf=4, hidden_nf=4, attention=True)
+    num_edges = 6
+    h_row, h_col = torch.randn(num_edges, 4), torch.randn(num_edges, 4)
+    radial = torch.randn(num_edges, 1)
+    edge_attr = torch.zeros(num_edges, 0)
+    with torch.no_grad():
+        gated = egcl.edge_model(h_row, h_col, radial, edge_attr)
+        egcl.attention = False
+        ungated = egcl.edge_model(h_row, h_col, radial, edge_attr)
+    assert gated.shape == ungated.shape
+    assert (gated.abs() <= ungated.abs()).all()
+    assert not torch.allclose(gated, ungated)
+
+
+def test_attention_params_registered_and_trainable():
+    egcl = EGCL(input_nf=4, hidden_nf=4, attention=True)
+    att_params = [n for n, _ in egcl.named_parameters() if "att" in n]
+    assert len(att_params) >= 2  # weight + bias of the gate's Linear
+
+
+def test_egnn_threads_attention_to_layers():
+    model = EGNN(in_node_nf=5, hidden_nf=8, n_layers=3, attention=True)
+    assert all(layer.attention for layer in model.layers)
+
+
+def test_egnn_with_attention_still_e3_invariant():
+    model = EGNN(in_node_nf=5, hidden_nf=8, n_layers=2, attention=True)
+    h = torch.randn(4, 5)
+    x = torch.randn(4, 3)
+    row = torch.tensor([0, 1, 2, 3, 0, 2])
+    col = torch.tensor([1, 0, 3, 2, 2, 0])
+    Q, _ = torch.linalg.qr(torch.randn(3, 3))
+    t = torch.randn(3)
+    with torch.no_grad():
+        out = model(h, x, (row, col))
+        out_t = model(h, x @ Q.T + t, (row, col))
+    assert torch.allclose(out, out_t, atol=1e-4)

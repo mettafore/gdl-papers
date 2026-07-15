@@ -72,6 +72,56 @@ QM9_TARGETS: dict[str, int] = {
 N_TRAIN = 100_000
 N_VAL = 18_000
 
+# Charge-power node features (reference repo's Table-1 config).
+# PyG's default data.x is 11-dim: [one-hot(H,C,N,O,F), Z, aromatic, sp, sp2, sp3, num_Hs].
+# The reference instead builds 15-dim features from atomic number alone:
+#   one_hot(z) ⊗ (z / charge_scale)^p  for p = 0, 1, 2   →  5 × 3 = 15 dims
+# where charge_scale = 9 (fluorine, the max Z in QM9). See vgsatorras/egnn
+# qm9/data/utils.py `preprocess_input` (charge_power=2).
+CHARGE_SCALE = 9.0
+CHARGE_POWER = 2
+
+
+def charge_power_features(z: torch.Tensor) -> torch.Tensor:
+    """Map atomic numbers to the reference repo's 15-dim node features.
+
+    Args:
+        z: (num_nodes,) int tensor of atomic numbers (PyG QM9's `data.z`;
+           values in {1, 6, 7, 8, 9} = H, C, N, O, F).
+
+    Returns:
+        (num_nodes, 15) float tensor: for each node, the outer product of its
+        5-dim one-hot with [(z/9)^0, (z/9)^1, (z/9)^2], flattened.
+
+    # TODO:
+    #   - map z -> one-hot over the ordered vocabulary [1, 6, 7, 8, 9]
+    #     (hint: build a lookup from Z to column index; F.one_hot needs 0-based ids)
+    #   - powers: (z / CHARGE_SCALE) ** p for p in 0..CHARGE_POWER — stack into
+    #     (num_nodes, 3)
+    #   - combine: outer product per node, one_hot[:, :, None] * powers[:, None, :],
+    #     then flatten the last two dims -> (num_nodes, 15)
+    #   - sanity: p=0 slice of the output should just BE the one-hot. Why?
+    """
+    lookup = torch.full((10,), -1, dtype=torch.long)
+    lookup[torch.tensor([1, 6, 7, 8, 9])] = torch.arange(5)
+    ids = lookup[z]
+    one_hot = torch.nn.functional.one_hot(ids, num_classes=5).float()
+    powers = (z.float() / CHARGE_SCALE).unsqueeze(1) ** torch.arange(CHARGE_POWER + 1)
+    combined = one_hot[:, :, None] * powers[:, None, :]
+    return combined.reshape(z.size(0), -1)
+
+# TODO(wiring): once charge_power_features works, apply it in load_split so
+#   batches carry 15-dim x. Two options — pick one and be able to say why:
+#     (a) QM9(root, transform=...) with a small transform fn that replaces
+#         data.x from data.z (applied lazily per access, nothing re-downloaded);
+#     (b) pre_transform (bakes it into the processed cache — forces reprocess).
+#   Whichever you choose, dims["in_node_dim"] must come from the actual data
+#   (15), NOT dataset.num_features (still reports the raw 11 under option (a)).
+#   That dims value is what train.py feeds EGNN(in_node_nf=...) — nothing else
+#   should need to change
+def _to_charge_power(data):
+    data.x = charge_power_features(data.z)
+    return data
 
 @dataclass
 class NormStats:
@@ -114,7 +164,7 @@ def load_split(
     col = QM9_TARGETS[target]
 
     # TODO a: load QM9
-    dataset = QM9(root=root)
+    dataset = QM9(root=root, transform=_to_charge_power)
     # TODO b: deterministic perm with an EXPLICIT torch.Generator().manual_seed(seed)
     gen = torch.Generator().manual_seed(seed)
     perm = torch.randperm(len(dataset), generator=gen)
@@ -146,5 +196,5 @@ def load_split(
         num_workers=num_workers,
     )
     # TODO f: build dims
-    dims = {"in_node_dim": dataset.num_features, "out_dim": 1, "target_col": col}
+    dims = {"in_node_dim": dataset[0].x.shape[1], "out_dim": 1, "target_col": col}
     return train_loader, val_loader, test_loader, normalizer, dims

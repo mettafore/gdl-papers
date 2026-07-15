@@ -47,7 +47,13 @@ class EGCL(nn.Module):
 
     # TODO: __init__
     def __init__(
-        self, input_nf, hidden_nf, edges_in_d=0, residual=True, act_fn=nn.SiLU()
+        self,
+        input_nf,
+        hidden_nf,
+        edges_in_d=0,
+        residual=True,
+        act_fn=nn.SiLU(),
+        attention=False,
     ):
         super().__init__()
         self.input_nf = input_nf
@@ -55,6 +61,18 @@ class EGCL(nn.Module):
         self.edges_in_d = edges_in_d
         self.act_fn = act_fn
         self.residual = residual
+        self.attention = attention
+        # TODO(attention): reference repo Table-1 config runs with attention=1.
+        #   Build self.att_mlp ONLY when attention is True: a tiny MLP that maps
+        #   each message m_ij (hidden_nf) to a single gate value in (0, 1).
+        #   Two pieces, see vgsatorras/egnn models/gcl.py E_GCL.__init__.
+        #   Question worth answering: why (0,1) and not unbounded — what does
+        #   the gate mean, and which activation guarantees that range?
+        if self.attention:
+            self.att_mlp = nn.Sequential(
+                nn.Linear(self.hidden_nf, 1),
+                nn.Sigmoid()
+            )
 
         self.edge_mlp = nn.Sequential(
             nn.Linear(2 * self.input_nf + self.edges_in_d + 1, self.hidden_nf),
@@ -98,7 +116,15 @@ class EGCL(nn.Module):
             (num_edges, hidden_nf) tensor — per-edge messages m_ij.
         """
         combined_input = torch.cat([h_row, h_col, radial, edge_attr], dim=1)
-        return self.edge_mlp(combined_input)
+        out = self.edge_mlp(combined_input)
+        # TODO(attention): if self.attention, gate each message: multiply `out`
+        #   elementwise by att_mlp(out) — a per-edge scalar in (0,1) that lets
+        #   the layer learn to mute uninformative edges (QM9 graphs are fully
+        #   connected, so most edges are far-apart atom pairs).
+        if self.attention:
+            attn_score = self.att_mlp(out)
+            return attn_score * out
+        return out
 
     def node_model(self, h, edge_index, edge_feat):
         """Node update (eq. 5-6): aggregate incoming messages, apply φ_h with residual.
@@ -158,7 +184,13 @@ class EGNN(nn.Module):
     """
 
     def __init__(
-        self, in_node_nf, hidden_nf, n_layers=7, edges_in_d=0, act_fn=nn.SiLU()
+        self,
+        in_node_nf,
+        hidden_nf,
+        n_layers=7,
+        edges_in_d=0,
+        act_fn=nn.SiLU(),
+        attention=False,
     ):
         """
         Args:
@@ -176,7 +208,12 @@ class EGNN(nn.Module):
         self.emb = nn.Linear(in_node_nf, hidden_nf)
         self.layers = nn.ModuleList(
             [
-                EGCL(input_nf=hidden_nf, hidden_nf=hidden_nf, edges_in_d=edges_in_d)
+                EGCL(
+                    input_nf=hidden_nf,
+                    hidden_nf=hidden_nf,
+                    edges_in_d=edges_in_d,
+                    attention=attention,
+                )
                 for _ in range(n_layers)
             ]
         )
