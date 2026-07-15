@@ -62,3 +62,43 @@ def test_load_split_reports_15_dim_nodes():
     assert dims["in_node_dim"] == 15
     batch = next(iter(train_loader))
     assert batch.x.shape[1] == 15
+
+
+# --- fully-connected edges (reference uses complete graphs, not bonds) ---
+
+from src.data import fully_connected_edge_index
+
+
+def test_fc_edge_count_methane():
+    # N=5 -> 5*4 = 20 ordered pairs, no self-loops.
+    ei = fully_connected_edge_index(5)
+    assert ei.shape == (2, 20)
+
+
+def test_fc_no_self_loops():
+    ei = fully_connected_edge_index(6)
+    assert (ei[0] != ei[1]).all()
+
+
+def test_fc_covers_all_pairs():
+    # every ordered pair i!=j present exactly once.
+    n = 4
+    ei = fully_connected_edge_index(n)
+    pairs = {(int(s), int(d)) for s, d in zip(ei[0], ei[1])}
+    expected = {(i, j) for i in range(n) for j in range(n) if i != j}
+    assert pairs == expected
+    assert ei.shape[1] == len(expected)
+
+
+def test_fc_dtype_long():
+    ei = fully_connected_edge_index(3)
+    assert ei.dtype == torch.long
+
+
+def test_load_split_batches_are_fully_connected():
+    # Wiring: after the transform, a single-molecule's edge count must be
+    # N*(N-1), not the bond count. Uses the first val molecule (no shuffle).
+    _, val_loader, _, _, _ = load_split(target="gap", batch_size=1)
+    batch = next(iter(val_loader))
+    n = batch.x.shape[0]
+    assert batch.edge_index.shape[1] == n * (n - 1)

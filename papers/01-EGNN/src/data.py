@@ -119,8 +119,44 @@ def charge_power_features(z: torch.Tensor) -> torch.Tensor:
 #   (15), NOT dataset.num_features (still reports the raw 11 under option (a)).
 #   That dims value is what train.py feeds EGNN(in_node_nf=...) — nothing else
 #   should need to change
+def fully_connected_edge_index(num_nodes: int) -> torch.Tensor:
+    """Build a fully-connected `edge_index` (all ordered pairs i != j).
+
+    THE BUG THIS FIXES: PyG QM9's default `edge_index` is molecular BONDS
+    (sparse — methane gets 8 edges), but EGNN operates on distances between
+    ALL atom pairs (reference uses get_adj_matrix = fully connected). Training
+    on bonds only made the model blind to most of the geometry — capped MAE
+    at ~2x the paper. Reference has NO self-loops and NO edge features.
+
+    Args:
+        num_nodes: N atoms in one molecule.
+
+    Returns:
+        (2, N*(N-1)) long tensor: row 0 = source, row 1 = dest, every ordered
+        pair with source != dest. Methane (N=5) -> 20 edges, not 8.
+
+    # TODO:
+    #   - build all ordered pairs of node indices 0..N-1 (hint: torch.arange +
+    #     broadcasting, or torch.cartesian_prod / meshgrid)
+    #   - drop the self-pairs where source == dest (mask row != col)
+    #   - stack into shape (2, num_edges), dtype long
+    #   - sanity: N=5 -> 20 columns; no column has row[0]==row[1]
+    """
+    idx = torch.arange(num_nodes)
+    row = idx.repeat_interleave(num_nodes)
+    col = idx.repeat(num_nodes)
+    mask = row != col
+    return torch.stack([row[mask], col[mask]], dim=0)
+
+
 def _to_charge_power(data):
     data.x = charge_power_features(data.z)
+    # Reference EGNN runs QM9 on complete graphs (get_adj_matrix), not the
+    # molecular bonds PyG ships in edge_index. Rebuild per molecule here,
+    # before batching, so PyG's collate offsets it correctly. Drop the
+    # bond-typed edge_attr — reference uses in_edge_nf=0.
+    data.edge_index = fully_connected_edge_index(data.z.shape[0])
+    data.edge_attr = None
     return data
 
 @dataclass

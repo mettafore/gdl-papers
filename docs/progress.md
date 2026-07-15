@@ -81,7 +81,7 @@ decides Table-1 match.
 | `NormStats` (mean / MAD) | ✅ |
 | QM9 load + deterministic split (100K / 18K / 13K) | ✅ |
 | DataLoaders | ✅ |
-| Edge construction | ✅ (QM9 default fully-connected `edge_index`, no cutoff needed at this size) |
+| Edge construction | ✅ FIXED 2026-07-15: build fully-connected `edge_index` per molecule (all i≠j). PyG QM9's default `edge_index` is molecular BONDS (sparse), NOT fully connected — earlier claim here was wrong. Reference EGNN uses complete graphs; bonds-only made the model blind to most pairwise geometry (~2x MAE gap). |
 | `dims["target_col"]` (which QM9 y-column this run trains on) | ✅ |
 
 ### Model (`papers/01-EGNN/src/model.py`)
