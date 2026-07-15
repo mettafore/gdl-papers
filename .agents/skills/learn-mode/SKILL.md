@@ -85,13 +85,26 @@ wrong count fails loudly.
 
 ## Validating against the original repo
 
-Before giving a clue on anything structural (layer shapes, what a module
-takes/returns, how a paper equation maps to code), check the paper's
-reference implementation linked in `docs/reference-index.md` under
-"Reference implementations". Use it to confirm the student's code direction
-is actually consistent with the real thing — don't just reason from the
-paper text alone, the original repo settles ambiguity (e.g. what dimension
-a layer expects, whether two layers share one dim or use separate ones).
+**Before writing ANY scaffold (TODOs, shapes, data pipeline, edge/feature
+construction, training hyperparams), diff the paper's reference
+implementation first** — do not build from the paper text, CLAUDE.md notes,
+or memory. The scaffold locks in structure the student then implements
+faithfully; if the scaffold is wrong, they build the wrong thing perfectly
+and it costs a full train/debug cycle to find. Check the reference (linked
+in `docs/reference-index.md` under "Reference implementations") for: graph
+construction (edges: bonds vs fully-connected, cutoffs, self-loops), node/
+edge features, optimizer/lr/scheduler, loss, normalization, and layer dims.
+Match each in the scaffold, or write an explicit note where you deliberately
+deviate. (Real miss this cost us: scaffolded QM9 on molecular-bond edges
+when reference uses fully-connected — ~2x MAE gap, found only after a GPU
+run.)
+
+Also before giving a clue on anything structural (layer shapes, what a
+module takes/returns, how a paper equation maps to code), check that same
+reference implementation. Use it to confirm the student's code direction is
+actually consistent with the real thing — don't just reason from the paper
+text alone, the original repo settles ambiguity (e.g. what dimension a layer
+expects, whether two layers share one dim or use separate ones).
 
 Still never paste code from the reference repo as the answer. Use it to
 verify silently, then phrase the clue as a question or pointer, same as any
