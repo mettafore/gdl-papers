@@ -57,17 +57,23 @@ h_i^(l+1) = φ_h(h_i^l, m_i)
 
 QM9 contains ~130K small molecules with up to 9 heavy atoms (C, N, O, F) plus hydrogens. Each molecule has 3D coordinates and 12 quantum chemical properties.
 
-### Key benchmark targets (from Table 1 in paper)
+### Key benchmark targets (from Table 3 in paper — CORRECTED 2026-07-16,
+### was mislabeled "Table 1" here; gap value below also corrected from
+### 48.39 to the paper's actual printed 48 meV)
 
 | Property | Unit | EGNN (paper) | SchNet | DimeNet++ |
 |----------|------|-------------|--------|-----------|
 | mu (dipole moment) | D | 0.029 | 0.033 | 0.030 |
 | alpha (polarizability) | a₀³ | 0.071 | 0.235 | 0.044 |
-| HOMO | meV | 29.86 | 41.0 | 24.6 |
-| LUMO | meV | 25.37 | 34.0 | 19.5 |
-| gap (HOMO-LUMO) | meV | 48.39 | 63.0 | 32.6 |
-| U0 | meV | 11.0 | 14.0 | 6.32 |
-| Cv (heat capacity) | cal/mol·K | 0.031 | 0.033 | 0.023 |
+| HOMO | meV | 29 | 41 | 25 |
+| LUMO | meV | 25 | 34 | 20 |
+| gap (HOMO-LUMO) | meV | 48 | 63 | 33 |
+| U0 | meV | 11 | 14 | 6 |
+| Cv (heat capacity) | cal/mol·K | 0.031 | 0.033 | 0.030 |
+
+(All values re-verified directly against the paper's Table 3 text
+2026-07-16 — SchNet/DimeNet++ columns matched what was already here except
+the rounding above; only the EGNN-column decimals were wrong before.)
 
 **Our target:** Match EGNN paper numbers within 5-10%.
 
@@ -147,7 +153,7 @@ QM9 contains ~130K small molecules with up to 9 heavy atoms (C, N, O, F) plus hy
 
 ### Stage 5: Benchmarking
 - [ ] Run on mu, alpha, HOMO, LUMO, gap, U0, Cv — `gap` in progress
-  (63.77 meV test, resume-at-lower-LR run tracking toward paper's 48.39)
+  (63.77 meV test, resume-at-lower-LR run tracking toward paper's 48)
 - [ ] Compare MAE against paper numbers
 - [ ] Ablation: with/without coordinate updates, with/without attention
 

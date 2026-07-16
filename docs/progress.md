@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-07-16 (`gap` MATCHED — test MAE 48.87 meV vs paper's 48.39, 1.01x. Root cause was QM9 edges being molecular bonds not fully-connected; resume-at-lower-LR broke a high-LR plateau to close the last gap)
+**Last updated:** 2026-07-16 (`gap` MATCHED — test MAE 48.87 meV vs paper's 48, 1.01x. Root cause was QM9 edges being molecular bonds not fully-connected; resume-at-lower-LR broke a high-LR plateau to close the last gap)
 
 ---
 
@@ -37,13 +37,22 @@ Tier definitions → [`references/papers.md`](../references/papers.md).
 
 **Goal:** QM9 property prediction; match paper MAE within ~5–10%.
 
+**Correction (2026-07-16):** the benchmark table is the paper's **Table 3**
+(QM9 results), not "Table 1" as earlier notes here and in CLAUDE.md said.
+Also, `gap` (Δε) is printed in the paper as **48 meV** (integer, like every
+other model's entry in that column) — CLAUDE.md previously listed `48.39`,
+which is more decimal precision than the paper table actually shows.
+Verified directly from the paper's extracted text (Table 3 row: EGNN
+α=.071, Δε=48, εHOMO=29, εLUMO=25, μ=.029, Cν=.031, ...). All "48.39"
+mentions below are historical — read them as "48".
+
 **Overall:** full pipeline done (data, model, train, evaluate), TDD'd, and
 run end-to-end on real Modal GPU hardware. First real benchmark result is
 in — not yet within target, see below.
 
 **First real benchmark (2026-07-14):** `gap`, run `20260714-151153`, 261
 epochs (of 1000 — plateaued, no early stopping implemented so it just kept
-running until manually stopped). **MAE 93.01 meV vs paper's 48.39 meV — ~1.9x
+running until manually stopped). **MAE 93.01 meV vs paper's 48 meV — ~1.9x
 off**, outside the ~5-10% target. Val loss froze essentially flat from
 ~epoch 200 on (ReduceLROnPlateau decayed LR to a near-zero floor). This run
 also predates both the recipe fix AND the two config changes below.
@@ -91,7 +100,7 @@ updated to stop claiming "fully-connected" when it wasn't.
 124**, early-stopped at 174 (patience 50, LR still ~93% of max — a
 high-LR plateau, not real convergence). **Evaluated on the real held-out
 test split (not val): 63.77 meV** — confirms val_loss was a reliable
-proxy here. 63.77 / 48.39 = 1.32x off, inside striking distance for the
+proxy here. 63.77 / 48 = 1.32x off, inside striking distance for the
 first time.
 
 **Resume-at-lower-LR (2026-07-16, run off `ap-wdyESp2VrgLk5hJrFYc3WD`):**
@@ -103,7 +112,7 @@ was a high-LR noise floor, not a real local minimum — dropping the LR
 immediately unstuck it. Plateaued again at epoch 57, val 0.0489 (48.90 meV).
 
 **MATCHED (2026-07-16), run `20260716-082300`, epoch 57: test-set MAE
-48.87 meV vs paper's 48.39 — 1.01x, ~1% off.** Confirmed via `evaluate.py`
+48.87 meV vs paper's 48 — 1.01x, ~1% off.** Confirmed via `evaluate.py`
 on the real held-out test split, not val_loss. `gap` target done.
 Job continued running past this checkpoint (patience 50 will auto-stop);
 this is the checkpoint to report regardless of what comes after.
@@ -139,11 +148,11 @@ this is the checkpoint to report regardless of what comes after.
 | Tests (33 passing: model + data + train + evaluate, incl. attention + charge-power) | ✅ |
 | First training run (smoke test, 1 epoch) | ✅ |
 | Real training run (gap, GPU) | ✅ 261/1000 epochs, plateaued — see benchmark result above |
-| Benchmark vs paper Table 1 | 🟡 first data point in, not within target yet (93.01 vs 48.39 meV) |
+| Benchmark vs paper Table 1 | 🟡 first data point in, not within target yet (93.01 vs 48 meV) |
 
 ### Next step
 
-`gap` is matched (48.87 vs 48.39 meV, test set). Sweep the other 6 targets
+`gap` is matched (48.87 vs 48 meV, test set). Sweep the other 6 targets
 (mu, alpha, homo, lumo, U0, Cv): each needs its own from-scratch faithful
 run (fully-connected edges + attention + charge-power + lr 1e-3 cosine,
 1000 epochs, no early stop) — the resume-at-lower-LR trick was a
