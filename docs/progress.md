@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-07-15 (added attention gate + charge-power node features to match paper's Table-1 config; overnight recipe-fix run died at epoch 11 — not detached; benchmark still pending)
+**Last updated:** 2026-07-16 (found + fixed the real bug: QM9 edges were molecular bonds, not fully-connected — test MAE dropped 93→63.77 meV; resume-at-lower-LR run in progress, val already at ~49 meV, closing in on paper's 48.39)
 
 ---
 
@@ -68,11 +68,43 @@ remaining deviations that a paper-faithful reproduction needs — see below.
   reap). Switched to `.spawn()` + `modal run --detach` — dispatch
   server-side, client exits immediately, job runs independently.
 
-**Full paper-faithful run LIVE (2026-07-15 ~14:49, app `ap-DQXDO61eUW5nqda...`):**
-`gap`, T4, attention + charge-power + lr 1e-3 + CosineAnnealingLR, spawned
-detached, confirmed training (val_loss descending from ~0.33). First run
-with the correct LR *and* the full config. This is the benchmark that
-decides Table-1 match.
+**First full-config run diverged (2026-07-15, `ap-DQXDO61eUW5nqda...`):**
+descended cleanly to val_loss 0.11 (~110 meV) by epoch 80, then a single
+epoch (81→82) exploded to 1.08 and froze — early stop fired at epoch 130.
+Diffed our EGCL/EGNN against `vgsatorras/egnn` line-by-line (optimizer,
+scheduler, attention gate, charge-power formula, node_attr flag — all
+matched). Reference also has no gradient clipping, so that wasn't it either.
+
+**Root cause found (2026-07-15): QM9 edges were molecular BONDS, not
+fully-connected.** PyG's default `edge_index` gives methane 8 edges (its
+bonds); reference EGNN (`get_adj_matrix`) uses the complete graph — every
+atom pair, N*(N-1) edges. EGNN's entire mechanism is pairwise distances, so
+training on bonds-only made the model blind to most of the geometry. This
+was the real driver of the ~2x MAE gap (and very likely the divergence
+too — confirmed fixed, see below). Added `fully_connected_edge_index()` in
+`data.py`, wired into the QM9 transform. See git history for the fix
+commit; `docs/reference-index.md` / this file's edge-construction row
+updated to stop claiming "fully-connected" when it wasn't.
+
+**Rerun with fully-connected edges (2026-07-15 evening, run
+`20260715-191930`): no divergence, best val 0.0640 (64.0 meV) at epoch
+124**, early-stopped at 174 (patience 50, LR still ~93% of max — a
+high-LR plateau, not real convergence). **Evaluated on the real held-out
+test split (not val): 63.77 meV** — confirms val_loss was a reliable
+proxy here. 63.77 / 48.39 = 1.32x off, inside striking distance for the
+first time.
+
+**Resume-at-lower-LR (2026-07-16, run off `ap-wdyESp2VrgLk5hJrFYc3WD`):**
+loaded the epoch-124 checkpoint (weights only, Adam state not preserved)
+and continued at lr=1e-4 (down from 1e-3), 300-epoch cosine anneal to 0,
+via new `train(resume_from=...)` + per-epoch LR logging in metrics.jsonl.
+**One epoch: val_loss 0.0640 → 0.0535 (53.5 meV).** Confirms the plateau
+was a high-LR noise floor, not a real local minimum — dropping the LR
+immediately unstuck it. By epoch 15: **val ~49.4 meV**, still descending,
+285 epochs of anneal left. This is currently the best-tracking run; get
+its test-set MAE via `evaluate.py` once it settles, don't trust val alone
+(see the 63.77-vs-64.0 check above for why that's usually fine here, but
+verify per the current run before reporting a final number).
 
 ### Data (`papers/01-EGNN/src/data.py`)
 
@@ -109,12 +141,15 @@ decides Table-1 match.
 
 ### Next step
 
-Launch the full paper-faithful config on Modal, **detached** (`modal run
---detach modal_train.py`), T4, batch 96 — recipe + attention + charge-power
-all in. This is the run that decides whether we match Table 1's 48.39 meV on
-`gap`. If it lands in range, sweep the other 6 targets (mu, alpha, homo,
-lumo, U0, Cv). If still off, remaining suspects are narrow (coordinate
-updates are intentionally skipped per QM9 convention, matching reference).
+Let the resume-at-lower-LR run (off `20260715-191930`, currently ~49 meV
+val at epoch 15) finish or plateau, then run `evaluate.py` on its checkpoint
+for the real test-set MAE (don't report val_loss as final — see above).
+If test MAE lands at/under ~50.8-53.2 meV (5-10% of paper's 48.39), `gap`
+is matched — sweep the other 6 targets next (mu, alpha, homo, lumo, U0,
+Cv), each its own from-scratch faithful run (fully-connected edges +
+attention + charge-power + lr 1e-3 cosine over 1000 epochs, no early
+stop — resume-at-lower-LR was a diagnostic/shortcut for `gap` specifically,
+not yet established as the standard recipe for every target).
 
 ---
 

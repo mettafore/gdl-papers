@@ -92,11 +92,15 @@ QM9 contains ~130K small molecules with up to 9 heavy atoms (C, N, O, F) plus hy
 - SiLU (Swish) activation
 
 ### Training
-- Optimizer: Adam, lr=5e-4 with ReduceLROnPlateau (patience 10, factor 0.5, min_lr 1e-7)
+- Optimizer: Adam, lr=1e-3, weight_decay=1e-16, with CosineAnnealingLR over
+  the full epoch schedule (CORRECTED 2026-07-15 — originally scaffolded as
+  lr=5e-4 + ReduceLROnPlateau, which caused an early plateau; see progress.md)
 - Batch size: 96
-- Epochs: ~1000 (with early stopping, patience ~50)
+- Epochs: ~1000 (with early stopping, patience ~50 — though see progress.md:
+  a plateau under cosine annealing can be a high-LR noise floor, not real
+  convergence; resuming at a lower LR broke one such plateau)
 - Loss: L1 (MAE) on normalized targets
-- Target normalization: subtract mean, divide by std (computed on training set)
+- Target normalization: subtract mean, divide by MAD (computed on training set)
 
 ---
 
@@ -105,7 +109,11 @@ QM9 contains ~130K small molecules with up to 9 heavy atoms (C, N, O, F) plus hy
 ### Stage 1: Data Pipeline
 - [x] Load QM9 via `torch_geometric.datasets.QM9`
 - [x] Implement standard train/val/test split (100K/18K/13K, seeded)
-- [x] Fully connected edges (QM9 molecules are small; PyG's default `edge_index`)
+- [x] Fully connected edges — built explicitly via `fully_connected_edge_index()`
+  in `data.py` (all i≠j pairs). CORRECTION (2026-07-16): PyG's default
+  `edge_index` is molecular BONDS, not fully connected — this line originally
+  claimed otherwise, which meant the model trained on bonds for two full
+  benchmark runs before the bug was caught (~2x MAE gap). See `docs/progress.md`.
 - [x] Normalize targets (NormStats: mean/MAD, fit on train only)
 - [x] DataLoader with batching
 
@@ -126,13 +134,20 @@ QM9 contains ~130K small molecules with up to 9 heavy atoms (C, N, O, F) plus hy
 - [x] Attention mechanism (sigmoid gate on messages, eq. 8 — reference Table-1 default, `attention=True`)
 
 ### Stage 4: Training Loop
-- [x] Training script with Adam + ReduceLROnPlateau
-- [x] Logging (this repo's own JSONL `log_metrics`, not wandb/tensorboard)
+- [x] Training script with Adam + CosineAnnealingLR (switched from
+  ReduceLROnPlateau 2026-07-15 — see progress.md, matches reference recipe)
+- [x] Logging (this repo's own JSONL `log_metrics`, not wandb/tensorboard;
+  now also logs per-epoch LR)
 - [x] Checkpointing best model (on val-loss improvement)
-- [ ] Evaluation on test set (belongs in `evaluate.py`, not yet built)
+- [x] Evaluation on test set (`evaluate.py`, built Stage 5) — used
+  2026-07-16, test MAE 63.77 meV vs val's 64.0 (val is a reliable proxy
+  here, verified rather than assumed)
+- [x] Resume/warm-start (`train(resume_from=...)`) — continue a checkpoint
+  at a different (lower) LR, added 2026-07-16 to break a high-LR plateau
 
 ### Stage 5: Benchmarking
-- [ ] Run on mu, alpha, HOMO, LUMO, gap, U0, Cv
+- [ ] Run on mu, alpha, HOMO, LUMO, gap, U0, Cv — `gap` in progress
+  (63.77 meV test, resume-at-lower-LR run tracking toward paper's 48.39)
 - [ ] Compare MAE against paper numbers
 - [ ] Ablation: with/without coordinate updates, with/without attention
 
@@ -141,7 +156,7 @@ QM9 contains ~130K small molecules with up to 9 heavy atoms (C, N, O, F) plus hy
 ## Common Pitfalls
 
 1. **Forgetting to detach coordinates** from the computation graph if you don't want to backprop through coordinate updates (for property prediction, you typically DO want gradients through coords)
-2. **Edge index construction**: QM9 molecules are small, so fully connected is fine. For larger molecules, use a cutoff.
+2. **Edge index construction**: QM9 molecules are small, so fully connected is fine — but PyG's `QM9(...)` does NOT hand you that by default; its `edge_index` is molecular bonds (methane = 8 edges, not 20). Build the complete graph yourself (see `fully_connected_edge_index()` in `data.py`). Got this wrong here for two benchmark runs before catching it via a line-by-line diff against `vgsatorras/egnn`.
 3. **Target normalization**: Must normalize targets to zero mean, unit variance. Without this, training is unstable.
 4. **Numerical equivariance test**: Use `torch.allclose` with reasonable `atol` (~1e-5). Exact equality won't hold due to floating point.
 5. **Batch handling**: `torch_geometric` batches graphs by concatenating — make sure sum pooling respects batch boundaries (use `scatter` or `global_add_pool`).
