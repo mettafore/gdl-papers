@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-07-16 (`gap` MATCHED — test MAE 48.87 meV vs paper's 48, 1.01x. Root cause was QM9 edges being molecular bonds not fully-connected; resume-at-lower-LR broke a high-LR plateau to close the last gap)
+**Last updated:** 2026-07-16 (`gap` MATCHED — test MAE 48.50 meV vs paper's 48, ~1.04x. Root cause was QM9 edges being molecular bonds not fully-connected; resume-at-lower-LR broke a high-LR plateau to close the last gap)
 
 ---
 
@@ -109,13 +109,16 @@ and continued at lr=1e-4 (down from 1e-3), 300-epoch cosine anneal to 0,
 via new `train(resume_from=...)` + per-epoch LR logging in metrics.jsonl.
 **One epoch: val_loss 0.0640 → 0.0535 (53.5 meV).** Confirms the plateau
 was a high-LR noise floor, not a real local minimum — dropping the LR
-immediately unstuck it. Plateaued again at epoch 57, val 0.0489 (48.90 meV).
+immediately unstuck it. Continued improving slowly as LR annealed toward 0:
+best val 0.0486 (48.63 meV) at epoch 181, LR essentially 0 by then.
 
-**MATCHED (2026-07-16), run `20260716-082300`, epoch 57: test-set MAE
-48.87 meV vs paper's 48 — 1.01x, ~1% off.** Confirmed via `evaluate.py`
-on the real held-out test split, not val_loss. `gap` target done.
-Job continued running past this checkpoint (patience 50 will auto-stop);
-this is the checkpoint to report regardless of what comes after.
+**MATCHED (2026-07-16), run `20260716-082300`, epoch 181: test-set MAE
+48.50 meV vs paper's 48 — ~1.04x, ~1% off.** Confirmed via `evaluate.py`
+on the real held-out test split, not val_loss (earlier checkpoint at
+epoch 57 gave 48.87 meV test; epoch 181's is the tighter, later best).
+`gap` target done. Job continued running past this checkpoint (patience
+50 will auto-stop, LR ~0 so further gains will be marginal); this is the
+checkpoint to report.
 
 ### Data (`papers/01-EGNN/src/data.py`)
 
@@ -152,7 +155,7 @@ this is the checkpoint to report regardless of what comes after.
 
 ### Next step
 
-`gap` is matched (48.87 vs 48 meV, test set). Sweep the other 6 targets
+`gap` is matched (48.50 vs 48 meV, test set). Sweep the other 6 targets
 (mu, alpha, homo, lumo, U0, Cv): each needs its own from-scratch faithful
 run (fully-connected edges + attention + charge-power + lr 1e-3 cosine,
 1000 epochs, no early stop) — the resume-at-lower-LR trick was a
