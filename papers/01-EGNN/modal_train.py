@@ -59,6 +59,7 @@ def run_train(
     n_layers=7,
     seed=42,
     batch_size=96,
+    resume_from=None,
 ):
     import sys
 
@@ -73,6 +74,9 @@ def run_train(
         n_layers=n_layers,
         seed=seed,
         batch_size=batch_size,
+        # Path to a prior run dir ON THE VOLUME (e.g. /vol/runs/<id>) whose
+        # checkpoint.pt seeds the model weights (warm start at a lower lr).
+        resume_from=resume_from,
         runs_base=f"{VOLUME_PATH}/runs",
         # new_run_dir() does Path(paper_dir) / runs_base / run_id — pathlib
         # discards the left side when the right side is absolute, so any
@@ -99,6 +103,7 @@ def main(
     n_layers: int = 7,
     seed: int = 42,
     batch_size: int = 96,
+    resume_from: str = None,
 ):
     # spawn (not remote): dispatch the training call server-side and return a
     # handle immediately instead of blocking for the full run. Combined with
@@ -114,6 +119,7 @@ def main(
         n_layers=n_layers,
         seed=seed,
         batch_size=batch_size,
+        resume_from=resume_from,
     )
     print(f"spawned function call: {call.object_id}")
     print("Detached — poll `modal app logs` or the egnn-qm9 volume for progress.")

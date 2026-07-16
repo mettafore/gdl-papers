@@ -51,7 +51,7 @@ from model import EGNN
 from torch import nn
 
 import data
-from gdl import log_metrics, new_run_dir, save_checkpoint, set_seed
+from gdl import load_checkpoint, log_metrics, new_run_dir, save_checkpoint, set_seed
 
 PAPER_DIR = Path(__file__).parent
 METRIC = "mae"
@@ -81,6 +81,7 @@ def train(
     weight_decay=1e-16,
     early_stop_patience=50,
     attention=True,
+    resume_from=None,
 ):
     """Train and persist a run. Returns (run_id, run_dir, best_val).
 
@@ -115,6 +116,7 @@ def train(
         },
         "seed": seed,
         "metric": METRIC,
+        "resume_from": str(resume_from) if resume_from is not None else None,
     }
 
     run_id, run_dir = new_run_dir(paper_dir, config, runs_base)
@@ -126,6 +128,13 @@ def train(
         n_layers=n_layers,
         attention=attention,
     ).to(device)
+    # Warm start: load weights from a prior run's checkpoint before training.
+    # Used to continue the best checkpoint at a lower LR (test whether the
+    # high-LR plateau breaks once steps shrink). Weights only — optimizer
+    # (Adam) moment buffers are NOT restored, so expect a small transient
+    # bump for a few epochs. config records resume_from for provenance.
+    if resume_from is not None:
+        load_checkpoint(egnn, resume_from)
     optimizer = torch.optim.Adam(egnn.parameters(), lr=lr, weight_decay=weight_decay)
     # CosineAnnealingLR (not ReduceLROnPlateau): matches the reference repo's
     # recipe. ReduceLROnPlateau halves LR on every 10-epoch stall, which on a
@@ -159,9 +168,12 @@ def train(
                 target = raw_target_for(b, dims["target_col"])
                 val_losses.append(loss(pred, target).item())
         val_loss = sum(val_losses) / len(val_losses)
+        # Log the LR *before* stepping, so it's the rate this epoch actually
+        # trained at (lets us see whether val drops as cosine anneals it down).
+        current_lr = optimizer.param_groups[0]["lr"]
         # CosineAnnealingLR steps on a schedule, not on val_loss (no arg).
         scheduler.step()
-        log_metrics({"val_loss": val_loss}, epoch, run_dir)
+        log_metrics({"val_loss": val_loss, "lr": current_lr}, epoch, run_dir)
         if val_loss < best_val:
             best_val = val_loss
             epochs_since_improve = 0
