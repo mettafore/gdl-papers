@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-07-16 (found + fixed the real bug: QM9 edges were molecular bonds, not fully-connected — test MAE dropped 93→63.77 meV; resume-at-lower-LR run in progress, val already at ~49 meV, closing in on paper's 48.39)
+**Last updated:** 2026-07-16 (`gap` MATCHED — test MAE 48.87 meV vs paper's 48.39, 1.01x. Root cause was QM9 edges being molecular bonds not fully-connected; resume-at-lower-LR broke a high-LR plateau to close the last gap)
 
 ---
 
@@ -100,11 +100,13 @@ and continued at lr=1e-4 (down from 1e-3), 300-epoch cosine anneal to 0,
 via new `train(resume_from=...)` + per-epoch LR logging in metrics.jsonl.
 **One epoch: val_loss 0.0640 → 0.0535 (53.5 meV).** Confirms the plateau
 was a high-LR noise floor, not a real local minimum — dropping the LR
-immediately unstuck it. By epoch 15: **val ~49.4 meV**, still descending,
-285 epochs of anneal left. This is currently the best-tracking run; get
-its test-set MAE via `evaluate.py` once it settles, don't trust val alone
-(see the 63.77-vs-64.0 check above for why that's usually fine here, but
-verify per the current run before reporting a final number).
+immediately unstuck it. Plateaued again at epoch 57, val 0.0489 (48.90 meV).
+
+**MATCHED (2026-07-16), run `20260716-082300`, epoch 57: test-set MAE
+48.87 meV vs paper's 48.39 — 1.01x, ~1% off.** Confirmed via `evaluate.py`
+on the real held-out test split, not val_loss. `gap` target done.
+Job continued running past this checkpoint (patience 50 will auto-stop);
+this is the checkpoint to report regardless of what comes after.
 
 ### Data (`papers/01-EGNN/src/data.py`)
 
@@ -141,15 +143,15 @@ verify per the current run before reporting a final number).
 
 ### Next step
 
-Let the resume-at-lower-LR run (off `20260715-191930`, currently ~49 meV
-val at epoch 15) finish or plateau, then run `evaluate.py` on its checkpoint
-for the real test-set MAE (don't report val_loss as final — see above).
-If test MAE lands at/under ~50.8-53.2 meV (5-10% of paper's 48.39), `gap`
-is matched — sweep the other 6 targets next (mu, alpha, homo, lumo, U0,
-Cv), each its own from-scratch faithful run (fully-connected edges +
-attention + charge-power + lr 1e-3 cosine over 1000 epochs, no early
-stop — resume-at-lower-LR was a diagnostic/shortcut for `gap` specifically,
-not yet established as the standard recipe for every target).
+`gap` is matched (48.87 vs 48.39 meV, test set). Sweep the other 6 targets
+(mu, alpha, homo, lumo, U0, Cv): each needs its own from-scratch faithful
+run (fully-connected edges + attention + charge-power + lr 1e-3 cosine,
+1000 epochs, no early stop) — the resume-at-lower-LR trick was a
+diagnostic/shortcut discovered for `gap`, not yet validated as the
+standard recipe. Worth trying it again on one more target to see if the
+same high-LR-plateau pattern recurs before assuming it's universal.
+Also worth updating the paper README's `## Results` table (once it
+exists) with the `gap` number + methodology (edges bug, resume trick).
 
 ---
 
