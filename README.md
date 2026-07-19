@@ -10,13 +10,13 @@ self-contained paper per folder, sharing a small train/evaluate scaffold.
 uv sync                                               # install deps + the gdl package
 
 # train with defaults
-uv run python papers/00-template/train.py             # prints a run_id
+uv run python papers/00-template/src/train.py             # prints a run_id
 
 # train with hyperparameter overrides
-uv run python papers/00-template/train.py --lr 1e-3 --epochs 50 --hidden 32
+uv run python papers/00-template/src/train.py --lr 1e-3 --epochs 50 --hidden 32
 
 # evaluate a specific run
-uv run python papers/00-template/evaluate.py --run <run_id>
+uv run python papers/00-template/src/evaluate.py --run <run_id>
 
 # tests
 uv run pytest papers/00-template/

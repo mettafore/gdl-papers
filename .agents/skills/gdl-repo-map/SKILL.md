@@ -13,8 +13,9 @@ description: >
 - `src/gdl/` — shared, paper-agnostic helpers (`seed`, `metrics` + `METRICS`
   registry, `run_log`, `run`, `checkpoint`). Installed package → `from gdl import ...`.
   Pulled BY papers; never calls into them.
-- `papers/NN-name/` — one self-contained paper each: `model.py`, `data.py`,
-  `train.py`, `evaluate.py`, `README.md`.
+- `papers/NN-name/` — one self-contained paper each: code in `src/`
+  (`model.py`, `data.py`, `train.py`, `evaluate.py`), tests (`test_*.py`) and
+  `README.md` at the paper root.
 - `papers/NN-name/runs/<run_id>/` — per run: `config.json`, `metrics.jsonl`,
   `checkpoint.pt` (gitignored). `evaluate.py --run <id>` reads it.
 

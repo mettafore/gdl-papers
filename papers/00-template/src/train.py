@@ -1,6 +1,6 @@
 """Train the template MLP on Iris.
 
-Run by path:  uv run python papers/00-template/train.py [--lr ... --epochs ...]
+Run by path:  uv run python papers/00-template/src/train.py [--lr ... --epochs ...]
 Creates a run folder first (records the full recipe), trains, logs per epoch,
 saves a checkpoint, and prints the run_id to pass to evaluate.py.
 """
@@ -15,7 +15,7 @@ import data
 from model import MLP
 from gdl import set_seed, log_metrics, new_run_dir, save_checkpoint
 
-PAPER_DIR = Path(__file__).parent
+PAPER_DIR = Path(__file__).parent.parent  # runs/ lives at the paper root, not in src/
 TEST_SIZE = 0.2
 METRIC = "accuracy"
 

@@ -21,8 +21,8 @@ language the user writes in.
 |------|---------|
 | Install / sync deps | `uv sync` |
 | Add a dependency | `uv add <pkg>` (`--dev` for test/tooling) |
-| Run training (template) | `uv run python papers/00-template/train.py` (prints a `run_id`) |
-| Run evaluation (template) | `uv run python papers/00-template/evaluate.py --run <run_id>` |
+| Run training (template) | `uv run python papers/00-template/src/train.py` (prints a `run_id`) |
+| Run evaluation (template) | `uv run python papers/00-template/src/evaluate.py --run <run_id>` |
 | Run tests | `uv run pytest papers/00-template/` |
 | Run a paper via skill | say "train <paper> [overrides]" / "evaluate <paper> run <id>" (the `run-paper` skill) |
 
@@ -35,9 +35,10 @@ language the user writes in.
   (`metrics`), `run_log` (console + JSONL), `run` (run folders + config),
   `checkpoint`. Pulled by papers; never calls them. Installed package — see Setup
   in `docs/spec.md` (`from gdl import ...`).
-- `papers/NN-name/` — one self-contained paper each. Owns its `model.py`,
-  `data.py`, `train.py`, `evaluate.py`, `README.md`. Each `evaluate.py` is the
-  driver (no central dispatcher).
+- `papers/NN-name/` — one self-contained paper each. Code lives in `src/`
+  (`model.py`, `data.py`, `train.py`, `evaluate.py`); tests (`test_*.py`) and
+  `README.md` sit at the paper root. Each `evaluate.py` is the driver (no
+  central dispatcher).
 - `papers/NN-name/runs/<run_id>/` — per run: `config.json` (full recipe),
   `metrics.jsonl`, `checkpoint.pt`. Gitignored. `evaluate.py --run <id>` reads it.
 - `papers/00-template/` — reference scaffold (trivial MLP on Iris). Copy to start a

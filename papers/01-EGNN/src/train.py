@@ -1,6 +1,6 @@
 """Train EGNN on QM9.  [SCAFFOLD — you fill bodies]
 
-Contract to match (same shape as papers/00-template/train.py):
+Contract to match (same shape as papers/00-template/src/train.py):
   build config -> new_run_dir -> build model from data.dims -> train loop ->
   log_metrics periodically -> save_checkpoint -> return (run_id, run_dir, ...).
 
@@ -155,7 +155,7 @@ def train(target="gap", lr=1e-3, epochs=1000, hidden_nf=128, n_layers=7,
 
 
 def main():
-    """CLI entrypoint. Mirrors papers/00-template/train.py's main().
+    """CLI entrypoint. Mirrors papers/00-template/src/train.py's main().
 
     # TODO:
     #   - argparse: --target, --lr, --epochs, --hidden-nf, --n-layers, --seed,

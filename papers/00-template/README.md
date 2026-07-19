@@ -6,11 +6,12 @@ start a new paper: copy this folder, swap `model.py` (and `data.py`), keep the
 same file layout and this README structure.
 
 ## Files
-- `model.py`     — the model (the swappable slot); here a small MLP
-- `data.py`      — dataset loading + the shared seeded split
-- `train.py`     — training entry point (CLI hyperparams)
-- `evaluate.py`  — load a run, print the metric
-- `test_scaffold.py` — smoke + unit + split-determinism tests
+- `src/model.py`     — the model (the swappable slot); here a small MLP
+- `src/data.py`      — dataset loading + the shared seeded split
+- `src/train.py`     — training entry point (CLI hyperparams)
+- `src/evaluate.py`  — load a run, print the metric
+- `test_scaffold.py` — smoke + unit + split-determinism tests (tests live at
+  the paper root, code lives in `src/`)
 
 ## Data
 - dataset: Iris (scikit-learn, bundled — no download)
@@ -26,8 +27,8 @@ same file layout and this README structure.
 - `--seed`    (default 42)     RNG seed
 
 ## Run
-- train:    `uv run python papers/00-template/train.py`
-- evaluate: `uv run python papers/00-template/evaluate.py --run <run_id>`
+- train:    `uv run python papers/00-template/src/train.py`
+- evaluate: `uv run python papers/00-template/src/evaluate.py --run <run_id>`
 
 `train.py` prints a `run_id` and writes `runs/<run_id>/` (config.json,
 metrics.jsonl, checkpoint.pt). Pass that id to `evaluate.py`.

@@ -1,6 +1,6 @@
 """Evaluate a saved run.
 
-Run by path:  uv run python papers/00-template/evaluate.py --run <run_id>
+Run by path:  uv run python papers/00-template/src/evaluate.py --run <run_id>
 Reads the run's config.json, rebuilds the model, loads the checkpoint, and
 reports the metric on the SAME held-out split training used.
 """
@@ -14,7 +14,7 @@ import data
 from model import MLP
 from gdl import load_run_config, load_checkpoint, METRICS, run_dir
 
-PAPER_DIR = Path(__file__).parent
+PAPER_DIR = Path(__file__).parent.parent  # runs/ lives at the paper root, not in src/
 
 
 def evaluate(run_id, runs_base="runs", paper_dir=PAPER_DIR):

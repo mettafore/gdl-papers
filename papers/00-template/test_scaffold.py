@@ -1,8 +1,13 @@
 """Scaffold tests: smoke (train runs + loss drops), unit (metrics), split
 (train/test deterministic and identical across train & evaluate)."""
 
+import sys
+from pathlib import Path
+
 import pytest
 import torch
+
+sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 import data
 import train as train_mod
