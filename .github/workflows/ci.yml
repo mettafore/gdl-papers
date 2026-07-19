@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Sync dependencies (locked)
+        run: uv sync --frozen
+
+      - name: ruff format --check
+        run: uv run ruff format --check src/ papers/
+
+      - name: ruff check
+        run: uv run ruff check src/ papers/
+
+      - name: Run tests (per paper — module names collide across papers)
+        run: |
+          set -e
+          for dir in papers/*/; do
+            if ls "$dir"test_*.py >/dev/null 2>&1; then
+              echo "=== pytest $dir ==="
+              uv run pytest "$dir" -q -m "not needs_data"
+            fi
+          done
+
+  claude-review:
+    # Code review via the Claude Code CLI on every PR.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Review the PR
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          claude -p --allowedTools "Bash(git diff:*),Bash(git log:*),Bash(gh pr comment:*),Read,Grep,Glob" \
+            "Review pull request #${PR_NUMBER} in this repo. The diff vs the base branch is: git diff origin/${BASE_REF}...HEAD. Review it for correctness, code quality, and adherence to AGENTS.md (papers are independent; src/gdl stays paper-agnostic; papers follow the 00-template src/ layout). Then post ONE summary comment with: gh pr comment ${PR_NUMBER} --body '<review>'. The comment must contain an overall verdict (approve / minor / needs-changes), the top findings (file:line + why), and anything you checked that looked good."

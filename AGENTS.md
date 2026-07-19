@@ -23,7 +23,8 @@ language the user writes in.
 | Add a dependency | `uv add <pkg>` (`--dev` for test/tooling) |
 | Run training (template) | `uv run python papers/00-template/src/train.py` (prints a `run_id`) |
 | Run evaluation (template) | `uv run python papers/00-template/src/evaluate.py --run <run_id>` |
-| Run tests | `uv run pytest papers/00-template/` |
+| Run tests | `uv run pytest papers/00-template/` (per-paper; module names collide across papers) |
+| Fetch paper PDFs | `./papers/fetch-papers.sh` (PDFs are not in git) |
 | Run a paper via skill | say "train <paper> [overrides]" / "evaluate <paper> run <id>" (the `run-paper` skill) |
 
 > Run scripts **by path**, not `-m` — folder names like `00-template` aren't valid
