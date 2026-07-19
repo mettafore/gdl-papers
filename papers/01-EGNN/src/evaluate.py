@@ -10,11 +10,11 @@ import argparse
 from pathlib import Path
 
 import torch
-
-import data
 from model import EGNN
 from train import raw_target_for
-from gdl import load_run_config, load_checkpoint, METRICS, run_dir
+
+import data
+from gdl import METRICS, load_checkpoint, load_run_config, run_dir
 
 PAPER_DIR = Path(__file__).parent
 
@@ -66,11 +66,15 @@ def main():
     cfg = load_run_config(PAPER_DIR, args.run, base=args.runs_base)
     target = cfg["data"]["target"]
     metric_name, score = evaluate(
-        args.run, runs_base=args.runs_base, data_root=args.data_root,
+        args.run,
+        runs_base=args.runs_base,
+        data_root=args.data_root,
     )
     print(f"{metric_name} ({target}): {score:.4f}")
     if target in EV_TO_MEV_TARGETS:
-        print(f"{metric_name} ({target}, meV, matches paper Table 1 units): {score * 1000:.2f}")
+        print(
+            f"{metric_name} ({target}, meV, matches paper Table 1 units): {score * 1000:.2f}"
+        )
 
 
 if __name__ == "__main__":

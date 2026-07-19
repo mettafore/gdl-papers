@@ -9,13 +9,14 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-import data
-import train as train_mod
 import evaluate as eval_mod
+import train as train_mod
+
+import data
 from gdl import accuracy, mae, rmse
 
-
 # --- unit: metrics ---
+
 
 def test_accuracy_perfect_and_partial():
     logits = torch.tensor([[2.0, 1.0, 0.0], [0.0, 1.0, 2.0]])  # argmax: 0, 2
@@ -31,6 +32,7 @@ def test_mae_rmse_known_values():
 
 
 # --- split: determinism + no leakage ---
+
 
 def test_split_deterministic():
     a = data.load_split(seed=42)
@@ -54,6 +56,7 @@ def test_train_eval_use_same_split():
 
 
 # --- smoke: train runs + loss drops, artifacts written ---
+
 
 def test_train_smoke_loss_drops(tmp_path):
     run_id, run_dir, losses = train_mod.train(

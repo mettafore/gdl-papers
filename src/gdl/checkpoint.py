@@ -22,6 +22,8 @@ def load_checkpoint(model, run_dir) -> None:
     live on, so this is safe regardless of where the model itself was built.
     """
     state = torch.load(
-        Path(run_dir) / "checkpoint.pt", map_location="cpu", weights_only=True,
+        Path(run_dir) / "checkpoint.pt",
+        map_location="cpu",
+        weights_only=True,
     )
     model.load_state_dict(state)

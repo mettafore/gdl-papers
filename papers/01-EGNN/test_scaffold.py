@@ -1,8 +1,7 @@
 """Scaffold tests for EGNN model pieces, filled in alongside src/model.py."""
 
 import torch
-
-from src.model import unsorted_segment_sum, EGCL, EGNN
+from src.model import EGCL, EGNN, unsorted_segment_sum
 
 
 def test_unsorted_segment_sum_known_values():
@@ -37,6 +36,7 @@ def test_unsorted_segment_sum_dtype_device_match_data():
 
 # --- edge_model ---
 
+
 def test_edge_model_output_shape():
     egcl = EGCL(input_nf=4, hidden_nf=4, edges_in_d=0)
     num_edges = 5
@@ -60,6 +60,7 @@ def test_edge_model_with_edge_attr():
 
 
 # --- node_model ---
+
 
 def _zeroed_egcl(hidden_nf=4):
     """EGCL with node_mlp weights/biases zeroed so node_mlp(x) == 0 for any x,
@@ -168,6 +169,7 @@ def test_node_model_matches_manual_aggregate_and_mlp():
 
 
 # --- EGNN (full model) ---
+
 
 def _small_egnn():
     return EGNN(in_node_nf=5, hidden_nf=8, n_layers=3, edges_in_d=0)

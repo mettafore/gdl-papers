@@ -26,7 +26,9 @@ image = (
     # — not the whole repo (add_local_dir(".", ...) also pulled in .git,
     # .venv, other papers, and any cached QM9 data, and broke once because a
     # background git fetch mutated .git/FETCH_HEAD mid-snapshot).
-    .add_local_file("pyproject.toml", remote_path="/root/gdl-papers/pyproject.toml", copy=True)
+    .add_local_file(
+        "pyproject.toml", remote_path="/root/gdl-papers/pyproject.toml", copy=True
+    )
     # pyproject.toml declares readme = "README.md" — hatchling's build
     # requires the file to actually exist, even though we don't need its
     # contents for anything here.
@@ -46,10 +48,20 @@ volume = modal.Volume.from_name("egnn-qm9", create_if_missing=True)
 VOLUME_PATH = "/vol"
 
 
-@app.function(image=image, gpu="T4", cpu=4, volumes={VOLUME_PATH: volume}, timeout=60 * 60 * 12)
-def run_train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
-              seed=42, batch_size=96):
+@app.function(
+    image=image, gpu="T4", cpu=4, volumes={VOLUME_PATH: volume}, timeout=60 * 60 * 12
+)
+def run_train(
+    target="gap",
+    lr=5e-4,
+    epochs=1000,
+    hidden_nf=128,
+    n_layers=7,
+    seed=42,
+    batch_size=96,
+):
     import sys
+
     sys.path.insert(0, "/root/gdl-papers/papers/01-EGNN/src")
     from train import train
 
@@ -79,12 +91,23 @@ def run_train(target="gap", lr=5e-4, epochs=1000, hidden_nf=128, n_layers=7,
 
 
 @app.local_entrypoint()
-def main(target: str = "gap", lr: float = 5e-4, epochs: int = 1000,
-         hidden_nf: int = 128, n_layers: int = 7, seed: int = 42,
-         batch_size: int = 96):
+def main(
+    target: str = "gap",
+    lr: float = 5e-4,
+    epochs: int = 1000,
+    hidden_nf: int = 128,
+    n_layers: int = 7,
+    seed: int = 42,
+    batch_size: int = 96,
+):
     run_id, run_dir, best_val = run_train.remote(
-        target=target, lr=lr, epochs=epochs, hidden_nf=hidden_nf,
-        n_layers=n_layers, seed=seed, batch_size=batch_size,
+        target=target,
+        lr=lr,
+        epochs=epochs,
+        hidden_nf=hidden_nf,
+        n_layers=n_layers,
+        seed=seed,
+        batch_size=batch_size,
     )
     print(f"run_id: {run_id}")
     print(f"run_dir (in Modal volume): {run_dir}")

@@ -9,19 +9,20 @@ import argparse
 from pathlib import Path
 
 import torch
+from model import MLP
 from torch import nn
 
 import data
-from model import MLP
-from gdl import set_seed, log_metrics, new_run_dir, save_checkpoint
+from gdl import log_metrics, new_run_dir, save_checkpoint, set_seed
 
 PAPER_DIR = Path(__file__).parent.parent  # runs/ lives at the paper root, not in src/
 TEST_SIZE = 0.2
 METRIC = "accuracy"
 
 
-def train(lr=1e-2, epochs=100, hidden=16, seed=42, runs_base="runs",
-          paper_dir=PAPER_DIR):
+def train(
+    lr=1e-2, epochs=100, hidden=16, seed=42, runs_base="runs", paper_dir=PAPER_DIR
+):
     """Train and persist a run. Returns (run_id, run_dir, losses)."""
     set_seed(seed)
 
@@ -30,8 +31,12 @@ def train(lr=1e-2, epochs=100, hidden=16, seed=42, runs_base="runs",
     )
 
     config = {
-        "data": {"dataset": "iris", "in_dim": in_dim, "out_dim": out_dim,
-                 "test_size": TEST_SIZE},
+        "data": {
+            "dataset": "iris",
+            "in_dim": in_dim,
+            "out_dim": out_dim,
+            "test_size": TEST_SIZE,
+        },
         "model": {"hidden": hidden},
         "hyperparams": {"lr": lr, "epochs": epochs},
         "seed": seed,
@@ -64,12 +69,21 @@ def main():
     p.add_argument("--epochs", type=int, default=100)
     p.add_argument("--hidden", type=int, default=16)
     p.add_argument("--seed", type=int, default=42)
-    p.add_argument("--runs-base", type=str, default="runs",
-                   help="base dir for run folders (tests redirect to tmp)")
+    p.add_argument(
+        "--runs-base",
+        type=str,
+        default="runs",
+        help="base dir for run folders (tests redirect to tmp)",
+    )
     args = p.parse_args()
 
-    run_id, _, _ = train(lr=args.lr, epochs=args.epochs, hidden=args.hidden,
-                         seed=args.seed, runs_base=args.runs_base)
+    run_id, _, _ = train(
+        lr=args.lr,
+        epochs=args.epochs,
+        hidden=args.hidden,
+        seed=args.seed,
+        runs_base=args.runs_base,
+    )
     print(f"run_id: {run_id}")
 
 

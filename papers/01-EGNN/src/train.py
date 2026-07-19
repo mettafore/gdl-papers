@@ -47,11 +47,11 @@ import argparse
 from pathlib import Path
 
 import torch
+from model import EGNN
 from torch import nn
 
 import data
-from model import EGNN
-from gdl import set_seed, log_metrics, new_run_dir, save_checkpoint
+from gdl import log_metrics, new_run_dir, save_checkpoint, set_seed
 
 PAPER_DIR = Path(__file__).parent
 METRIC = "mae"
@@ -61,14 +61,26 @@ def target_for(batch, norm, col):
     """Normalized target column for one PyG batch, shaped (num_graphs, 1)."""
     return norm.normalize(batch.y[:, col : col + 1])
 
+
 def raw_target_for(batch, col):
-  return batch.y[:, col:col+1]
+    return batch.y[:, col : col + 1]
 
 
-def train(target="gap", lr=1e-3, epochs=1000, hidden_nf=128, n_layers=7,
-          seed=42, batch_size=96, runs_base="runs", paper_dir=PAPER_DIR,
-          data_root="data/qm9", num_workers=0, weight_decay=1e-16,
-          early_stop_patience=50):
+def train(
+    target="gap",
+    lr=1e-3,
+    epochs=1000,
+    hidden_nf=128,
+    n_layers=7,
+    seed=42,
+    batch_size=96,
+    runs_base="runs",
+    paper_dir=PAPER_DIR,
+    data_root="data/qm9",
+    num_workers=0,
+    weight_decay=1e-16,
+    early_stop_patience=50,
+):
     """Train and persist a run. Returns (run_id, run_dir, best_val).
 
     Recipe matches vgsatorras/egnn's main_qm9.py: Adam(lr=1e-3,
@@ -81,31 +93,31 @@ def train(target="gap", lr=1e-3, epochs=1000, hidden_nf=128, n_layers=7,
     """
     set_seed(seed)
     train_loader, val_loader, test_loader, norm, dims = data.load_split(
-                target=target,
-                seed=seed,
-                batch_size=batch_size,
-                root=data_root,
-                num_workers=num_workers,
-                )
+        target=target,
+        seed=seed,
+        batch_size=batch_size,
+        root=data_root,
+        num_workers=num_workers,
+    )
     config = {
-      "data":{"target": target,"dims": dims},
-      "model": {"hidden_nf": hidden_nf,
-      "n_layers": n_layers},
-      "hyperparams": {"lr": lr, "epochs": epochs, "weight_decay": weight_decay,
-                      "early_stop_patience": early_stop_patience},
-      "seed": seed,
-      "metric":METRIC
-      
+        "data": {"target": target, "dims": dims},
+        "model": {"hidden_nf": hidden_nf, "n_layers": n_layers},
+        "hyperparams": {
+            "lr": lr,
+            "epochs": epochs,
+            "weight_decay": weight_decay,
+            "early_stop_patience": early_stop_patience,
+        },
+        "seed": seed,
+        "metric": METRIC,
     }
 
     run_id, run_dir = new_run_dir(paper_dir, config, runs_base)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     egnn = EGNN(
-      in_node_nf=dims["in_node_dim"],
-      hidden_nf=hidden_nf,
-      n_layers=n_layers
-                ).to(device)
+        in_node_nf=dims["in_node_dim"], hidden_nf=hidden_nf, n_layers=n_layers
+    ).to(device)
     optimizer = torch.optim.Adam(egnn.parameters(), lr=lr, weight_decay=weight_decay)
     # CosineAnnealingLR (not ReduceLROnPlateau): matches the reference repo's
     # recipe. ReduceLROnPlateau halves LR on every 10-epoch stall, which on a
@@ -119,38 +131,40 @@ def train(target="gap", lr=1e-3, epochs=1000, hidden_nf=128, n_layers=7,
     best_val = float("inf")
     epochs_since_improve = 0
     for epoch in range(epochs):
-      egnn.train()
-      for b in train_loader:
-        b = b.to(device)
-        optimizer.zero_grad()
-        out = egnn(b.x, b.pos, b.edge_index, batch=b.batch)
-        target = target_for(b, norm, dims["target_col"])
-        loss_value = loss(out, target)
-        loss_value.backward()
-        optimizer.step()
-    
-      egnn.eval()
-      val_losses = []
-      with torch.no_grad():
-        for b in val_loader:
-          b = b.to(device)
-          out = egnn(b.x, b.pos, b.edge_index, batch=b.batch)
-          pred = norm.denormalize(out)
-          target = raw_target_for(b, dims["target_col"])
-          val_losses.append(loss(pred, target).item())
-      val_loss = sum(val_losses) / len(val_losses)
-      # CosineAnnealingLR steps on a schedule, not on val_loss (no arg).
-      scheduler.step()
-      log_metrics({"val_loss": val_loss}, epoch, run_dir)
-      if val_loss < best_val:
-        best_val = val_loss
-        epochs_since_improve = 0
-        save_checkpoint(egnn, run_dir)
-      else:
-        epochs_since_improve += 1
-        if epochs_since_improve >= early_stop_patience:
-          print(f"early stop: no val_loss improvement in {early_stop_patience} epochs")
-          break
+        egnn.train()
+        for b in train_loader:
+            b = b.to(device)
+            optimizer.zero_grad()
+            out = egnn(b.x, b.pos, b.edge_index, batch=b.batch)
+            target = target_for(b, norm, dims["target_col"])
+            loss_value = loss(out, target)
+            loss_value.backward()
+            optimizer.step()
+
+        egnn.eval()
+        val_losses = []
+        with torch.no_grad():
+            for b in val_loader:
+                b = b.to(device)
+                out = egnn(b.x, b.pos, b.edge_index, batch=b.batch)
+                pred = norm.denormalize(out)
+                target = raw_target_for(b, dims["target_col"])
+                val_losses.append(loss(pred, target).item())
+        val_loss = sum(val_losses) / len(val_losses)
+        # CosineAnnealingLR steps on a schedule, not on val_loss (no arg).
+        scheduler.step()
+        log_metrics({"val_loss": val_loss}, epoch, run_dir)
+        if val_loss < best_val:
+            best_val = val_loss
+            epochs_since_improve = 0
+            save_checkpoint(egnn, run_dir)
+        else:
+            epochs_since_improve += 1
+            if epochs_since_improve >= early_stop_patience:
+                print(
+                    f"early stop: no val_loss improvement in {early_stop_patience} epochs"
+                )
+                break
     return run_id, run_dir, best_val
 
 
@@ -175,20 +189,19 @@ def main():
 
     args = p.parse_args()
     run_id, run_dir, best_val = train(
-      target= args.target,
-      lr = args.lr,
-      epochs = args.epochs,
-      hidden_nf = args.hidden_nf,
-      n_layers = args.n_layers,
-      seed = args.seed,
-      batch_size = args.batch_size,
-      runs_base = args.runs_base,
-      paper_dir = PAPER_DIR
+        target=args.target,
+        lr=args.lr,
+        epochs=args.epochs,
+        hidden_nf=args.hidden_nf,
+        n_layers=args.n_layers,
+        seed=args.seed,
+        batch_size=args.batch_size,
+        runs_base=args.runs_base,
+        paper_dir=PAPER_DIR,
     )
 
     print(f"run_id: {run_id}")
 
-    
 
 if __name__ == "__main__":
     main()

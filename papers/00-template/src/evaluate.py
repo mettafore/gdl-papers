@@ -9,10 +9,10 @@ import argparse
 from pathlib import Path
 
 import torch
+from model import MLP
 
 import data
-from model import MLP
-from gdl import load_run_config, load_checkpoint, METRICS, run_dir
+from gdl import METRICS, load_checkpoint, load_run_config, run_dir
 
 PAPER_DIR = Path(__file__).parent.parent  # runs/ lives at the paper root, not in src/
 
