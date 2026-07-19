@@ -3,7 +3,7 @@ compute (GPU forward+backward+step), and whether DataLoader num_workers
 helps. Diagnostic only — doesn't touch train.py or the live training run.
 
 Usage:
-    uv run modal run modal_profile.py
+    uv run modal run papers/01-EGNN/modal_profile.py
 """
 
 import modal

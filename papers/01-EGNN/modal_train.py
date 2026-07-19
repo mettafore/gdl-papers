@@ -1,8 +1,8 @@
 """Run papers/01-EGNN/src/train.py on a Modal GPU container.
 
 Usage:
-    uv run modal run modal_train.py --epochs 2 --hidden-nf 8 --n-layers 2   # cheap smoke test
-    uv run modal run modal_train.py --epochs 1000                          # real run (defaults)
+    uv run modal run papers/01-EGNN/modal_train.py --epochs 2 --hidden-nf 8 --n-layers 2   # cheap smoke test
+    uv run modal run papers/01-EGNN/modal_train.py --epochs 1000                          # real run (defaults)
 
 QM9 data and run checkpoints persist in a Modal Volume across invocations,
 so the ~130K-molecule download only happens once.
