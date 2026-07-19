@@ -76,3 +76,15 @@ def test_train_then_evaluate_roundtrip(tmp_path):
     assert metric == "accuracy"
     assert 0.0 <= score <= 1.0
     assert score > 0.8  # Iris MLP should learn easily
+
+
+# --- provenance: config.json records the code identity of the run ---
+
+
+def test_config_records_provenance(tmp_path):
+    from gdl import load_run_config, new_run_dir
+
+    run_id, _ = new_run_dir(tmp_path, {"lr": 0.1}, base="runs")
+    cfg = load_run_config(tmp_path, run_id, base="runs")
+    assert set(cfg["provenance"]) == {"git_commit", "git_dirty", "uv_lock_sha256"}
+    assert cfg["lr"] == 0.1  # user config untouched
