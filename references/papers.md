@@ -28,13 +28,13 @@
 - **arXiv:** 2312.07511
 - **Authors:** Duval, Bronstein et al. (2024)
 - **Why:** Survey — maps the entire equivariant GNN landscape.
-- **Repo path:** `papers/02-Hitchikers.pdf`
+- **Repo path:** `papers/02-Hitchhikers/`
 
 ### MPNN — Neural Message Passing for Quantum Chemistry
 - **arXiv:** 1704.01212
 - **Authors:** Gilmer et al. (ICML 2017)
 - **Why:** Grandfather of all molecular GNNs. Establishes message passing framework.
-- **Repo path:** `papers/03-MPNN.pdf`
+- **Repo path:** `papers/03-MPNN/`
 
 ### SchNet — A Continuous-Filter CNN for Modeling Quantum Interactions
 - **arXiv:** 1706.08566
@@ -52,7 +52,7 @@
 - **arXiv:** 2006.10503
 - **Authors:** Fuchs et al. (NeurIPS 2020)
 - **Why:** Full spherical harmonics + irreps + attention. The expensive version of what EGNN simplified.
-- **Repo path:** `papers/07-SE(3) Transformer/`
+- **Repo path:** `papers/07-SE3-Transformer/`
 
 ### Equiformer
 - **arXiv:** 2206.11990
@@ -89,4 +89,4 @@
 - **arXiv:** 2511.16828
 - **Authors:** Fu et al. (2025)
 - **Why:** Riemannian VAE + geodesic attention + neural ODEs on EEG. Consciousness breadth slot.
-- **Repo path:** `papers/10-ManifoldFormer.pdf`
+- **Repo path:** `papers/10-ManifoldFormer/`

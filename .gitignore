@@ -23,6 +23,12 @@ references/course-reader.md
 *.synctex.gz
 *Notes.bib
 
+# Paper reading materials — not versioned (fetch with papers/fetch-papers.sh).
+# Keeps clones small: code + notes live in git, PDFs/arXiv sources live on disk.
+papers/**/*.pdf
+papers/**/*.png
+papers/*/arXiv-*/
+
 # ML run artifacts (per-run folders, checkpoints)
 runs/
 *.pt
