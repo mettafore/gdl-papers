@@ -33,6 +33,17 @@ to the commands above:
 
 Ask `gdl-repo-map` things like "where does shared code go?" or "how do I add a paper?"
 
+## Commit checks
+
+Enable the versioned Git hook once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+It blocks commits unless Ruff formatting and linting, per-paper type checks, and
+the lightweight test suites pass. Dataset-backed tests remain opt-in.
+
 ## Layout
 
 - `src/gdl/` — shared, paper-agnostic helpers (seed, metrics, logging, run, checkpoint)

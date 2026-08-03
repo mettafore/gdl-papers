@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+set -eu
+
+echo "Checking Ruff formatting..."
+uv run ruff format --check src/ papers/
+
+echo "Checking Ruff lint..."
+uv run ruff check src/ papers/
+
+echo "Checking types..."
+uv run mypy src/gdl
+for paper_dir in papers/*/; do
+    if [ -d "${paper_dir}src" ]; then
+        uv run mypy "${paper_dir}src"
+    fi
+done
+
+echo "Running tests..."
+for paper_dir in papers/*/; do
+    if ls "${paper_dir}"test_*.py >/dev/null 2>&1; then
+        uv run pytest "${paper_dir}" -q -m "not needs_data"
+    fi
+done
