@@ -53,7 +53,7 @@ from torch import nn
 import data
 from gdl import load_checkpoint, log_metrics, new_run_dir, save_checkpoint, set_seed
 
-PAPER_DIR = Path(__file__).parent
+PAPER_DIR = Path(__file__).parent.parent
 METRIC = "mae"
 
 

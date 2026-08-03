@@ -10,13 +10,13 @@ import argparse
 from pathlib import Path
 
 import torch
-
-import data
-from gdl import METRICS, load_checkpoint, load_run_config, run_dir
 from model import EGNN
 from train import raw_target_for
 
-PAPER_DIR = Path(__file__).parent
+import data
+from gdl import METRICS, load_checkpoint, load_run_config, run_dir
+
+PAPER_DIR = Path(__file__).parent.parent
 
 # QM9 stores homo/lumo/gap/U0 in eV; the paper's Table 1 reports them in meV
 # (eV * 1000). mu/alpha/Cv are already in the paper's units (D, a0^3,
