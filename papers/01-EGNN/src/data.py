@@ -6,8 +6,8 @@ Contract to match (same as template `data.py`):
   TRAIN split only and are returned, so train/evaluate normalize identically.
 
 Backend: torch_geometric.datasets.QM9 (small molecules, 3D coords, 19 targets).
-NOTE: torch_geometric is not yet a project dependency. Add it before running:
-    uv add torch_geometric
+``torch-geometric`` is a project dependency; run ``uv sync`` before using this
+module in a fresh checkout.
 
 Paper: Satorras et al., "E(n) Equivariant Graph Neural Networks", ICML 2021.
 Standard split: 100K train / 18K val / 13K test.
