@@ -69,10 +69,7 @@ class EGCL(nn.Module):
         #   Question worth answering: why (0,1) and not unbounded — what does
         #   the gate mean, and which activation guarantees that range?
         if self.attention:
-            self.att_mlp = nn.Sequential(
-                nn.Linear(self.hidden_nf, 1),
-                nn.Sigmoid()
-            )
+            self.att_mlp = nn.Sequential(nn.Linear(self.hidden_nf, 1), nn.Sigmoid())
 
         self.edge_mlp = nn.Sequential(
             nn.Linear(2 * self.input_nf + self.edges_in_d + 1, self.hidden_nf),

@@ -216,6 +216,7 @@ def test_egnn_is_e3_invariant():
 
 # --- attention (sigmoid message gate; reference Table-1 config) ---
 
+
 def test_attention_off_has_no_att_mlp():
     egcl = EGCL(input_nf=4, hidden_nf=4, attention=False)
     assert not hasattr(egcl, "att_mlp") or egcl.att_mlp is None

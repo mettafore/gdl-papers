@@ -110,6 +110,7 @@ def charge_power_features(z: torch.Tensor) -> torch.Tensor:
     combined = one_hot[:, :, None] * powers[:, None, :]
     return combined.reshape(z.size(0), -1)
 
+
 # TODO(wiring): once charge_power_features works, apply it in load_split so
 #   batches carry 15-dim x. Two options — pick one and be able to say why:
 #     (a) QM9(root, transform=...) with a small transform fn that replaces
@@ -158,6 +159,7 @@ def _to_charge_power(data):
     data.edge_index = fully_connected_edge_index(data.z.shape[0])
     data.edge_attr = None
     return data
+
 
 @dataclass
 class NormStats:
