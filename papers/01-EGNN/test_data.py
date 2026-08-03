@@ -1,8 +1,19 @@
+import sys
+from pathlib import Path
+
 import pytest
+import torch
+
+sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 pytest.importorskip("torch_geometric")
 
-from src.data import QM9_TARGETS, load_split
+from data import (
+    QM9_TARGETS,
+    charge_power_features,
+    fully_connected_edge_index,
+    load_split,
+)
 
 
 @pytest.mark.needs_data
@@ -18,10 +29,6 @@ def test_load_split_dims_target_col_tracks_target():
 
 
 # --- charge-power node features (reference Table-1 config) ---
-
-import torch
-
-from src.data import charge_power_features
 
 
 def test_charge_power_shape():
@@ -55,6 +62,7 @@ def test_charge_power_fluorine_powers_all_one():
     assert torch.allclose(out[0, 4], torch.ones(3))
 
 
+@pytest.mark.needs_data
 def test_load_split_reports_15_dim_nodes():
     # Wiring test: once the transform is applied, dims must reflect the REAL
     # batch width (15), not dataset.num_features' stale 11.
@@ -65,8 +73,6 @@ def test_load_split_reports_15_dim_nodes():
 
 
 # --- fully-connected edges (reference uses complete graphs, not bonds) ---
-
-from src.data import fully_connected_edge_index
 
 
 def test_fc_edge_count_methane():
@@ -95,6 +101,7 @@ def test_fc_dtype_long():
     assert ei.dtype == torch.long
 
 
+@pytest.mark.needs_data
 def test_load_split_batches_are_fully_connected():
     # Wiring: after the transform, a single-molecule's edge count must be
     # N*(N-1), not the bond count. Uses the first val molecule (no shuffle).
