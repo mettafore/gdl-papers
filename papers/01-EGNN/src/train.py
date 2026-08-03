@@ -102,7 +102,7 @@ def train(
         num_workers=num_workers,
     )
     config = {
-        "data": {"target": target, "dims": dims},
+        "data": {"target": target, "root": str(data_root), "dims": dims},
         "model": {
             "hidden_nf": hidden_nf,
             "n_layers": n_layers,
@@ -111,6 +111,8 @@ def train(
         "hyperparams": {
             "lr": lr,
             "epochs": epochs,
+            "batch_size": batch_size,
+            "num_workers": num_workers,
             "weight_decay": weight_decay,
             "early_stop_patience": early_stop_patience,
         },
