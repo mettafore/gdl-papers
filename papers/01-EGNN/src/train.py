@@ -159,15 +159,17 @@ def train(
             optimizer.step()
 
         egnn.eval()
-        val_losses = []
+        val_loss_sum = 0.0
+        val_num_graphs = 0
         with torch.no_grad():
             for b in val_loader:
                 b = b.to(device)
                 out = egnn(b.x, b.pos, b.edge_index, batch=b.batch)
                 pred = norm.denormalize(out)
                 target = raw_target_for(b, dims["target_col"])
-                val_losses.append(loss(pred, target).item())
-        val_loss = sum(val_losses) / len(val_losses)
+                val_loss_sum += loss(pred, target).item() * b.num_graphs
+                val_num_graphs += b.num_graphs
+        val_loss = val_loss_sum / val_num_graphs
         # Log the LR *before* stepping, so it's the rate this epoch actually
         # trained at (lets us see whether val drops as cosine anneals it down).
         current_lr = optimizer.param_groups[0]["lr"]
