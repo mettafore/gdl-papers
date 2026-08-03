@@ -4,7 +4,6 @@ Paper: Satorras et al., "E(n) Equivariant Graph Neural Networks", ICML 2021.
 QM9 config: 7 EGCL layers, 128 hidden features, Swish activation.
 """
 
-from typing import Any
 import torch
 import torch.nn as nn
 
@@ -29,13 +28,16 @@ def unsorted_segment_sum(data, segment_ids, num_segments):
     #     same dtype/device as data
     #   - expand segment_ids to match data's shape so it can index every column
     #     (hint: unsqueeze + expand_as)
-    
+
     #   - use Tensor.scatter_add_ along dim 0
     #   - (equivalent alt: torch_scatter.scatter or torch_geometric.utils.scatter)
     """
-    output = torch.zeros(num_segments, data.size(1), dtype=data.dtype, device=data.device)
+    output = torch.zeros(
+        num_segments, data.size(1), dtype=data.dtype, device=data.device
+    )
     segment_id_exp = torch.unsqueeze(segment_ids, 1).expand_as(data)
     return output.scatter_add_(0, segment_id_exp, data)
+
 
 class EGCL(nn.Module):
     """Equivariant Graph Convolutional Layer (equations 3-6).
@@ -44,7 +46,9 @@ class EGCL(nn.Module):
     """
 
     # TODO: __init__
-    def __init__(self, input_nf, hidden_nf, edges_in_d=0, residual=True, act_fn=nn.SiLU()):
+    def __init__(
+        self, input_nf, hidden_nf, edges_in_d=0, residual=True, act_fn=nn.SiLU()
+    ):
         super().__init__()
         self.input_nf = input_nf
         self.hidden_nf = hidden_nf
@@ -121,7 +125,6 @@ class EGCL(nn.Module):
         else:
             return self.node_mlp(concat_input)
 
-
     def forward(self, h, x, edge_index, edge_attr=None):
         """One EGCL layer (eq. 3, 5-6); coord update (eq. 4) skipped for QM9.
 
@@ -154,7 +157,9 @@ class EGNN(nn.Module):
     QM9: 7 layers, 128 features, sum pooling.
     """
 
-    def __init__(self, in_node_nf, hidden_nf, n_layers=7, edges_in_d=0, act_fn=nn.SiLU()):
+    def __init__(
+        self, in_node_nf, hidden_nf, n_layers=7, edges_in_d=0, act_fn=nn.SiLU()
+    ):
         """
         Args:
             in_node_nf: input node feature dim (e.g. 5 for one-hot H/C/N/O/F).
@@ -169,22 +174,17 @@ class EGNN(nn.Module):
         """
         super().__init__()
         self.emb = nn.Linear(in_node_nf, hidden_nf)
-        self.layers = nn.ModuleList([EGCL(input_nf=hidden_nf,
-                                            hidden_nf=hidden_nf,
-                                            edges_in_d=edges_in_d
-                                            ) for _ in range(n_layers)
-        ]
-                                        )
+        self.layers = nn.ModuleList(
+            [
+                EGCL(input_nf=hidden_nf, hidden_nf=hidden_nf, edges_in_d=edges_in_d)
+                for _ in range(n_layers)
+            ]
+        )
         self.node_dec = nn.Sequential(
-                                        nn.Linear(hidden_nf, hidden_nf),
-                                        act_fn,
-                                        nn.Linear(hidden_nf, hidden_nf)
-
+            nn.Linear(hidden_nf, hidden_nf), act_fn, nn.Linear(hidden_nf, hidden_nf)
         )
         self.graph_dec = nn.Sequential(
-                                        nn.Linear(hidden_nf, hidden_nf),
-                                        act_fn,
-                                        nn.Linear(hidden_nf, 1)
+            nn.Linear(hidden_nf, hidden_nf), act_fn, nn.Linear(hidden_nf, 1)
         )
 
     def forward(self, h, x, edge_index, edge_attr=None, batch=None):
@@ -223,5 +223,3 @@ class EGNN(nn.Module):
         out = self.node_dec(h)
         out = unsorted_segment_sum(out, batch, int(batch.max().item()) + 1)
         return self.graph_dec(out)
-            
-

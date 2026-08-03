@@ -3,11 +3,11 @@
 Pulled BY papers; never calls into them. See docs/spec.md.
 """
 
-from gdl.seed import set_seed
-from gdl.metrics import accuracy, mae, rmse, METRICS
+from gdl.checkpoint import load_checkpoint, save_checkpoint
+from gdl.metrics import METRICS, accuracy, mae, rmse
+from gdl.run import load_run_config, new_run_dir, run_dir
 from gdl.run_log import log_metrics
-from gdl.run import run_dir, new_run_dir, load_run_config
-from gdl.checkpoint import save_checkpoint, load_checkpoint
+from gdl.seed import set_seed
 
 __all__ = [
     "set_seed",

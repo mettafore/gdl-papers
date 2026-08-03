@@ -5,9 +5,48 @@ metrics.jsonl, and checkpoint.pt. A run records everything needed to reproduce
 and evaluate it.
 """
 
+import hashlib
 import json
+import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
+
+
+def _provenance() -> dict:
+    """Best-effort code identity for a run: git commit, dirty flag, uv.lock hash.
+
+    Makes any benchmark number traceable to the exact code that produced it.
+    Every field degrades to None outside a git checkout (e.g. a Modal
+    container) rather than failing the run.
+    """
+    commit, dirty, lock_sha = None, None, None
+    try:
+        root = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        commit = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        dirty = bool(
+            subprocess.run(
+                ["git", "status", "--porcelain"],
+                capture_output=True,
+                text=True,
+                check=True,
+            ).stdout.strip()
+        )
+        lock = Path(root) / "uv.lock"
+        if lock.exists():
+            lock_sha = hashlib.sha256(lock.read_bytes()).hexdigest()[:16]
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        pass
+    return {"git_commit": commit, "git_dirty": dirty, "uv_lock_sha256": lock_sha}
 
 
 def run_dir(paper_dir, run_id: str, base: str = "runs") -> Path:
@@ -29,7 +68,7 @@ def new_run_dir(paper_dir, config: dict, base: str = "runs"):
     rdir = run_dir(paper_dir, run_id, base)
     rdir.mkdir(parents=True, exist_ok=True)
     with (rdir / "config.json").open("w") as f:
-        json.dump(config, f, indent=2)
+        json.dump({**config, "provenance": _provenance()}, f, indent=2)
     return run_id, rdir
 
 

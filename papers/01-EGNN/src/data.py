@@ -61,12 +61,11 @@ QM9_TARGETS: dict[str, int] = {
     "gap": 4,  # HOMO-LUMO gap (eV)
     "U0": 7,  # internal energy at 0K (eV)
     "Cv": 11,  # heat capacity (cal/mol/K)
-    "R2": 5,   # electronic spatial extent (bohr^2)
+    "R2": 5,  # electronic spatial extent (bohr^2)
     "ZPVE": 6,  # zero-point vibrational energy (eV)
-    "U": 8,    # internal energy at 298K (eV)
-    "H": 9,    # enthalpy at 298K (eV)
-    "G": 10,   # free energy at 298K (eV)
-
+    "U": 8,  # internal energy at 298K (eV)
+    "H": 9,  # enthalpy at 298K (eV)
+    "G": 10,  # free energy at 298K (eV)
 }
 
 # Standard QM9 split sizes (Satorras et al.).
@@ -121,8 +120,8 @@ def load_split(
     perm = torch.randperm(len(dataset), generator=gen)
     # TODO c: slice perm -> train_idx / val_idx / test_idx (use N_TRAIN, N_VAL)
     train_idx = perm[:N_TRAIN]
-    val_idx = perm[N_TRAIN:N_TRAIN + N_VAL]
-    test_idx = perm[N_TRAIN + N_VAL:]
+    val_idx = perm[N_TRAIN : N_TRAIN + N_VAL]
+    test_idx = perm[N_TRAIN + N_VAL :]
     # TODO d: fit NormStats on train targets at column `col` (train ONLY)
     train_data = dataset[train_idx]
     train_y = torch.cat([i.y[:, col] for i in train_data], dim=0)
@@ -131,13 +130,20 @@ def load_split(
     normalizer = NormStats(mean=mean, mad=mad)
     # TODO e: wrap each split in PyGDataLoader (shuffle train, not val/test)
     train_loader = PyGDataLoader(
-        dataset[train_idx], shuffle=True, batch_size=batch_size, num_workers=num_workers,
+        dataset[train_idx],
+        shuffle=True,
+        batch_size=batch_size,
+        num_workers=num_workers,
     )
     val_loader = PyGDataLoader(
-        dataset[val_idx], batch_size=batch_size, num_workers=num_workers,
+        dataset[val_idx],
+        batch_size=batch_size,
+        num_workers=num_workers,
     )
     test_loader = PyGDataLoader(
-        dataset[test_idx], batch_size=batch_size, num_workers=num_workers,
+        dataset[test_idx],
+        batch_size=batch_size,
+        num_workers=num_workers,
     )
     # TODO f: build dims
     dims = {"in_node_dim": dataset.num_features, "out_dim": 1, "target_col": col}

@@ -12,8 +12,10 @@ def log_metrics(metrics: dict, step: int, run_dir) -> None:
     """Print metrics to console and append one JSON line to run_dir/metrics.jsonl."""
     record = {"step": step, **metrics}
 
-    pretty = "  ".join(f"{k}={v:.4f}" if isinstance(v, float) else f"{k}={v}"
-                       for k, v in record.items())
+    pretty = "  ".join(
+        f"{k}={v:.4f}" if isinstance(v, float) else f"{k}={v}"
+        for k, v in record.items()
+    )
     print(pretty)
 
     path = Path(run_dir) / "metrics.jsonl"

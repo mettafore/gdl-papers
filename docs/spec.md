@@ -85,16 +85,16 @@ src/gdl/                       # shared, paper-agnostic — pulled BY papers, ne
                  load_run_config(paper_dir, run_id) -> dict
   checkpoint.py  save_checkpoint(model, run_dir) ; load_checkpoint(model, run_dir)
 papers/00-template/
-  model.py       MLP(in_dim, hidden, out_dim) — small nn.Module
-  data.py        load_split(seed=42) -> (X_train, y_train, X_test, y_test, in_dim, out_dim).
+  src/model.py   MLP(in_dim, hidden, out_dim) — small nn.Module
+  src/data.py    load_split(seed=42) -> (X_train, y_train, X_test, y_test, in_dim, out_dim).
                  X float32, y long (CE). ONE shared seeded split (explicit random_state)
                  imported by both train.py and evaluate.py — identical split, no leakage.
                  data REPORTS its own in_dim/out_dim (train never hardcodes shapes).
                  Iris-only here; --data is a forward-looking README convention, not implemented.
-  train.py       argparse(--lr,--epochs,--hidden,--seed) -> set_seed -> load_split ->
+  src/train.py   argparse(--lr,--epochs,--hidden,--seed) -> set_seed -> load_split ->
                  new_run_dir FIRST (writes config.json) -> build MLP -> Adam -> CE loss ->
                  log_metrics(..., run_dir) per epoch -> save_checkpoint. Prints run_id at end.
-  evaluate.py    --run <id> -> load_run_config -> rebuild MLP from cfg -> load_checkpoint ->
+  src/evaluate.py  --run <id> -> load_run_config -> rebuild MLP from cfg -> load_checkpoint ->
                  load_split(cfg.seed) -> metric = METRICS[cfg.metric] -> print.
   test_scaffold.py   smoke + unit + split-determinism tests
   README.md      the canonical README contract (below)
@@ -149,10 +149,10 @@ doc and runs it.
   <2–3 sentences: what the model does, what task it solves>
 
   ## Files
-  - model.py     — the model (the swappable slot)
-  - data.py      — dataset loading + the shared seeded split
-  - train.py     — training entry point (CLI hyperparams)
-  - evaluate.py  — load a run, print the metric
+  - src/model.py     — the model (the swappable slot)
+  - src/data.py      — dataset loading + the shared seeded split
+  - src/train.py     — training entry point (CLI hyperparams)
+  - src/evaluate.py  — load a run, print the metric
 
   ## Data
   - dataset: Iris (sklearn, bundled — no download)

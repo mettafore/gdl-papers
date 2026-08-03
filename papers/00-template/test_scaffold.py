@@ -1,16 +1,22 @@
 """Scaffold tests: smoke (train runs + loss drops), unit (metrics), split
 (train/test deterministic and identical across train & evaluate)."""
 
+import sys
+from pathlib import Path
+
 import pytest
 import torch
 
-import data
-import train as train_mod
+sys.path.insert(0, str(Path(__file__).parent / "src"))
+
 import evaluate as eval_mod
+import train as train_mod
+
+import data
 from gdl import accuracy, mae, rmse
 
-
 # --- unit: metrics ---
+
 
 def test_accuracy_perfect_and_partial():
     logits = torch.tensor([[2.0, 1.0, 0.0], [0.0, 1.0, 2.0]])  # argmax: 0, 2
@@ -26,6 +32,7 @@ def test_mae_rmse_known_values():
 
 
 # --- split: determinism + no leakage ---
+
 
 def test_split_deterministic():
     a = data.load_split(seed=42)
@@ -50,6 +57,7 @@ def test_train_eval_use_same_split():
 
 # --- smoke: train runs + loss drops, artifacts written ---
 
+
 def test_train_smoke_loss_drops(tmp_path):
     run_id, run_dir, losses = train_mod.train(
         epochs=50, seed=42, runs_base="runs", paper_dir=tmp_path
@@ -68,3 +76,15 @@ def test_train_then_evaluate_roundtrip(tmp_path):
     assert metric == "accuracy"
     assert 0.0 <= score <= 1.0
     assert score > 0.8  # Iris MLP should learn easily
+
+
+# --- provenance: config.json records the code identity of the run ---
+
+
+def test_config_records_provenance(tmp_path):
+    from gdl import load_run_config, new_run_dir
+
+    run_id, _ = new_run_dir(tmp_path, {"lr": 0.1}, base="runs")
+    cfg = load_run_config(tmp_path, run_id, base="runs")
+    assert set(cfg["provenance"]) == {"git_commit", "git_dirty", "uv_lock_sha256"}
+    assert cfg["lr"] == 0.1  # user config untouched

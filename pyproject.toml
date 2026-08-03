@@ -16,6 +16,22 @@ dev = [
     "modal>=1.5.2",
     "mypy>=2.2.0",
     "pytest>=8.0",
+    "ruff>=0.15.22",
+]
+
+[tool.ruff]
+# Notebooks are scratch space — not linted (matches the AGENTS.md commit rule).
+extend-exclude = ["*.ipynb"]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+# Defaults (E4/E7/E9 + F) plus import sorting.
+extend-select = ["I"]
+
+[tool.pytest.ini_options]
+markers = [
+    "needs_data: needs a real dataset download (QM9 etc.) — deselected in CI with -m 'not needs_data'",
 ]
 
 [tool.mypy]
