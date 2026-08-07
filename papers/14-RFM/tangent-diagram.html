@@ -888,97 +888,172 @@ svg.lucide {
 html&gt;body{padding:0}&lt;/style&gt;
 &lt;/head&gt;
 &lt;body&gt;
-&lt;div id=&quot;rfm-tangent-diagram&quot;&gt;
+&lt;div id=&quot;rfm-logmap-geometry&quot;&gt;
   &lt;style&gt;
-    #rfm-tangent-diagram {
-      color: var(--foreground, #202124);
+    #rfm-logmap-geometry {
+      color: var(--foreground);
       font-family: system-ui, sans-serif;
-      max-width: 736px;
+      max-width: 900px;
       margin: 0 auto;
     }
-    #rfm-tangent-diagram svg {
+    #rfm-logmap-geometry .diagram-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+    #rfm-logmap-geometry .panel {
+      min-width: 0;
+    }
+    #rfm-logmap-geometry h3 {
+      margin: 0 0 6px;
+      font-weight: 500;
+    }
+    #rfm-logmap-geometry svg {
       display: block;
       width: 100%;
       height: auto;
     }
-    #rfm-tangent-diagram .sphere {
-      fill: color-mix(in srgb, var(--blue, #4f8cff) 10%, transparent);
-      stroke: var(--blue, #4f8cff);
-      stroke-width: 2;
-    }
-    #rfm-tangent-diagram .radial {
-      stroke: var(--muted-foreground, #6b7280);
-      stroke-width: 2;
-      stroke-dasharray: 6 6;
-    }
-    #rfm-tangent-diagram .tangent {
-      stroke: var(--orange, #e58a2b);
-      stroke-width: 3;
-    }
-    #rfm-tangent-diagram .arc {
-      fill: none;
-      stroke: var(--green, #29966f);
-      stroke-width: 3;
-    }
-    #rfm-tangent-diagram .point {
-      fill: var(--primary, #2457d6);
-      stroke: var(--background, #fff);
-      stroke-width: 2;
-    }
-    #rfm-tangent-diagram .origin {
-      fill: var(--foreground, #202124);
-    }
-    #rfm-tangent-diagram text {
-      fill: currentColor;
-      font-size: 15px;
-    }
-    #rfm-tangent-diagram .small {
+    #rfm-logmap-geometry text {
+      fill: var(--foreground);
       font-size: 13px;
-      fill: var(--muted-foreground, #6b7280);
+      font-weight: 400;
+    }
+    #rfm-logmap-geometry .muted-label {
+      fill: var(--muted-foreground);
+    }
+    #rfm-logmap-geometry .sphere {
+      fill: color-mix(in srgb, var(--viz-series-1) 8%, transparent);
+      stroke: var(--viz-series-1);
+      stroke-width: 2;
+    }
+    #rfm-logmap-geometry .neutral-line {
+      fill: none;
+      stroke: var(--muted-foreground);
+      stroke-width: 2;
+    }
+    #rfm-logmap-geometry .dashed {
+      stroke-dasharray: 6 5;
+    }
+    #rfm-logmap-geometry .geodesic {
+      fill: none;
+      stroke: var(--viz-series-2);
+      stroke-width: 4;
+    }
+    #rfm-logmap-geometry .tangent {
+      fill: none;
+      stroke: var(--viz-series-3);
+      stroke-width: 3;
+    }
+    #rfm-logmap-geometry .destination {
+      fill: none;
+      stroke: var(--viz-series-2);
+      stroke-width: 3;
+    }
+    #rfm-logmap-geometry .point {
+      fill: var(--foreground);
+      stroke: var(--background);
+      stroke-width: 2;
+    }
+    #rfm-logmap-geometry .right-angle {
+      fill: none;
+      stroke: var(--foreground);
+      stroke-width: 1.5;
+    }
+    #rfm-logmap-geometry .formula {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    @media (max-width: 580px) {
+      #rfm-logmap-geometry .diagram-grid {
+        grid-template-columns: 1fr;
+      }
     }
   &lt;/style&gt;
 
-  &lt;svg viewBox=&quot;0 0 720 430&quot; role=&quot;img&quot; aria-labelledby=&quot;rfm-title rfm-desc&quot;&gt;
-    &lt;title id=&quot;rfm-title&quot;&gt;Log map: tangent direction at x toward y&lt;/title&gt;
-    &lt;desc id=&quot;rfm-desc&quot;&gt;A cross-section of the unit sphere showing radial direction at x, the tangent line at x, and the tangent vector toward y.&lt;/desc&gt;
+  &lt;div class=&quot;diagram-grid&quot;&gt;
+    &lt;section class=&quot;panel&quot; aria-labelledby=&quot;rfm-sphere-heading&quot;&gt;
+      &lt;h3 id=&quot;rfm-sphere-heading&quot;&gt;1. Direction at x&lt;/h3&gt;
+      &lt;svg viewBox=&quot;0 0 430 380&quot; role=&quot;img&quot; aria-labelledby=&quot;rfm-sphere-title rfm-sphere-desc&quot;&gt;
+        &lt;title id=&quot;rfm-sphere-title&quot;&gt;Correct tangent direction at x toward y&lt;/title&gt;
+        &lt;desc id=&quot;rfm-sphere-desc&quot;&gt;A sphere cross-section with a radial line from the origin to x, a perpendicular tangent at x, and the shortest great-circle arc to y.&lt;/desc&gt;
+        &lt;defs&gt;
+          &lt;marker id=&quot;rfm-arrow-green-v2&quot; viewBox=&quot;0 0 10 10&quot; refX=&quot;8&quot; refY=&quot;5&quot; markerWidth=&quot;7&quot; markerHeight=&quot;7&quot; orient=&quot;auto&quot;&gt;
+            &lt;path d=&quot;M0,0 L10,5 L0,10 Z&quot; fill=&quot;var(--viz-series-2)&quot; /&gt;
+          &lt;/marker&gt;
+          &lt;marker id=&quot;rfm-arrow-orange-v2&quot; viewBox=&quot;0 0 10 10&quot; refX=&quot;8&quot; refY=&quot;5&quot; markerWidth=&quot;7&quot; markerHeight=&quot;7&quot; orient=&quot;auto&quot;&gt;
+            &lt;path d=&quot;M0,0 L10,5 L0,10 Z&quot; fill=&quot;var(--viz-series-3)&quot; /&gt;
+          &lt;/marker&gt;
+          &lt;marker id=&quot;rfm-arrow-neutral-v2&quot; viewBox=&quot;0 0 10 10&quot; refX=&quot;8&quot; refY=&quot;5&quot; markerWidth=&quot;7&quot; markerHeight=&quot;7&quot; orient=&quot;auto&quot;&gt;
+            &lt;path d=&quot;M0,0 L10,5 L0,10 Z&quot; fill=&quot;var(--muted-foreground)&quot; /&gt;
+          &lt;/marker&gt;
+        &lt;/defs&gt;
 
-    &lt;defs&gt;
-      &lt;marker id=&quot;rfm-arrow-green&quot; viewBox=&quot;0 0 10 10&quot; refX=&quot;8&quot; refY=&quot;5&quot; markerWidth=&quot;7&quot; markerHeight=&quot;7&quot; orient=&quot;auto-start-reverse&quot;&gt;
-        &lt;path d=&quot;M 0 0 L 10 5 L 0 10 z&quot; fill=&quot;var(--green, #29966f)&quot; /&gt;
-      &lt;/marker&gt;
-      &lt;marker id=&quot;rfm-arrow-orange&quot; viewBox=&quot;0 0 10 10&quot; refX=&quot;8&quot; refY=&quot;5&quot; markerWidth=&quot;7&quot; markerHeight=&quot;7&quot; orient=&quot;auto-start-reverse&quot;&gt;
-        &lt;path d=&quot;M 0 0 L 10 5 L 0 10 z&quot; fill=&quot;var(--orange, #e58a2b)&quot; /&gt;
-      &lt;/marker&gt;
-      &lt;marker id=&quot;rfm-arrow-gray&quot; viewBox=&quot;0 0 10 10&quot; refX=&quot;8&quot; refY=&quot;5&quot; markerWidth=&quot;7&quot; markerHeight=&quot;7&quot; orient=&quot;auto-start-reverse&quot;&gt;
-        &lt;path d=&quot;M 0 0 L 10 5 L 0 10 z&quot; fill=&quot;var(--muted-foreground, #6b7280)&quot; /&gt;
-      &lt;/marker&gt;
-    &lt;/defs&gt;
+        &lt;circle class=&quot;sphere&quot; cx=&quot;190&quot; cy=&quot;205&quot; r=&quot;130&quot; /&gt;
 
-    &lt;circle class=&quot;sphere&quot; cx=&quot;300&quot; cy=&quot;220&quot; r=&quot;150&quot; /&gt;
-    &lt;circle class=&quot;origin&quot; cx=&quot;300&quot; cy=&quot;220&quot; r=&quot;5&quot; /&gt;
-    &lt;text x=&quot;285&quot; y=&quot;244&quot;&gt;O&lt;/text&gt;
+        &lt;line class=&quot;neutral-line dashed&quot; x1=&quot;190&quot; y1=&quot;205&quot; x2=&quot;296.5&quot; y2=&quot;130.5&quot; marker-end=&quot;url(#rfm-arrow-neutral-v2)&quot; /&gt;
+        &lt;text class=&quot;muted-label&quot; x=&quot;221&quot; y=&quot;178&quot;&gt;radial direction x&lt;/text&gt;
 
-    &lt;line class=&quot;radial&quot; x1=&quot;300&quot; y1=&quot;220&quot; x2=&quot;423&quot; y2=&quot;135&quot; marker-end=&quot;url(#rfm-arrow-gray)&quot; /&gt;
-    &lt;text class=&quot;small&quot; x=&quot;352&quot; y=&quot;166&quot;&gt;radial at x&lt;/text&gt;
+        &lt;line class=&quot;neutral-line&quot; x1=&quot;216.2&quot; y1=&quot;15.8&quot; x2=&quot;377.0&quot; y2=&quot;245.2&quot; /&gt;
+        &lt;text class=&quot;muted-label&quot; x=&quot;323&quot; y=&quot;46&quot;&gt;TₓS²&lt;/text&gt;
 
-    &lt;line class=&quot;radial&quot; x1=&quot;300&quot; y1=&quot;220&quot; x2=&quot;181&quot; y2=&quot;128&quot; marker-end=&quot;url(#rfm-arrow-gray)&quot; /&gt;
-    &lt;text class=&quot;small&quot; x=&quot;174&quot; y=&quot;164&quot;&gt;radial at y&lt;/text&gt;
+        &lt;path class=&quot;geodesic&quot; d=&quot;M296.5,130.5 A130,130 0 0 0 90.4,121.4&quot; marker-end=&quot;url(#rfm-arrow-green-v2)&quot; /&gt;
+        &lt;text x=&quot;149&quot; y=&quot;61&quot;&gt;shortest geodesic&lt;/text&gt;
 
-    &lt;line class=&quot;tangent&quot; x1=&quot;360&quot; y1=&quot;48&quot; x2=&quot;490&quot; y2=&quot;238&quot; /&gt;
-    &lt;text x=&quot;462&quot; y=&quot;78&quot;&gt;tangent plane at x&lt;/text&gt;
+        &lt;line class=&quot;tangent&quot; x1=&quot;296.5&quot; y1=&quot;130.5&quot; x2=&quot;256.3&quot; y2=&quot;73.2&quot; marker-end=&quot;url(#rfm-arrow-orange-v2)&quot; /&gt;
+        &lt;text x=&quot;276&quot; y=&quot;70&quot;&gt;v = logₓ(y)&lt;/text&gt;
 
-    &lt;path class=&quot;arc&quot; d=&quot;M 423 135 A 150 150 0 0 1 181 128&quot; marker-end=&quot;url(#rfm-arrow-green)&quot; /&gt;
-    &lt;text x=&quot;276&quot; y=&quot;92&quot;&gt;great-circle arc&lt;/text&gt;
+        &lt;path class=&quot;right-angle&quot; d=&quot;M285.0,138.5 L277.0,127.0 L288.5,119.0&quot; /&gt;
+        &lt;text class=&quot;formula&quot; x=&quot;270&quot; y=&quot;168&quot;&gt;x · v = 0&lt;/text&gt;
 
-    &lt;line class=&quot;tangent&quot; x1=&quot;423&quot; y1=&quot;135&quot; x2=&quot;462&quot; y2=&quot;191&quot; marker-end=&quot;url(#rfm-arrow-orange)&quot; /&gt;
-    &lt;text x=&quot;438&quot; y=&quot;207&quot;&gt;v = logₓ(y)&lt;/text&gt;
+        &lt;circle class=&quot;point&quot; cx=&quot;190&quot; cy=&quot;205&quot; r=&quot;5&quot; /&gt;
+        &lt;circle class=&quot;point&quot; cx=&quot;296.5&quot; cy=&quot;130.5&quot; r=&quot;7&quot; /&gt;
+        &lt;circle class=&quot;point&quot; cx=&quot;90.4&quot; cy=&quot;121.4&quot; r=&quot;7&quot; /&gt;
+        &lt;text x=&quot;176&quot; y=&quot;226&quot;&gt;O&lt;/text&gt;
+        &lt;text x=&quot;306&quot; y=&quot;128&quot;&gt;x&lt;/text&gt;
+        &lt;text x=&quot;68&quot; y=&quot;113&quot;&gt;y&lt;/text&gt;
+      &lt;/svg&gt;
+    &lt;/section&gt;
 
-    &lt;circle class=&quot;point&quot; cx=&quot;423&quot; cy=&quot;135&quot; r=&quot;8&quot; /&gt;
-    &lt;circle class=&quot;point&quot; cx=&quot;181&quot; cy=&quot;128&quot; r=&quot;8&quot; /&gt;
-    &lt;text x=&quot;434&quot; y=&quot;128&quot;&gt;x&lt;/text&gt;
-    &lt;text x=&quot;160&quot; y=&quot;119&quot;&gt;y&lt;/text&gt;
-    &lt;text class=&quot;small&quot; x=&quot;515&quot; y=&quot;276&quot;&gt;‖v‖ = θ = geodesic distance&lt;/text&gt;
-  &lt;/svg&gt;
+    &lt;section class=&quot;panel&quot; aria-labelledby=&quot;rfm-projection-heading&quot;&gt;
+      &lt;h3 id=&quot;rfm-projection-heading&quot;&gt;2. Split y into two components&lt;/h3&gt;
+      &lt;svg viewBox=&quot;0 0 430 380&quot; role=&quot;img&quot; aria-labelledby=&quot;rfm-projection-title rfm-projection-desc&quot;&gt;
+        &lt;title id=&quot;rfm-projection-title&quot;&gt;Projection of y into radial and tangent components relative to x&lt;/title&gt;
+        &lt;desc id=&quot;rfm-projection-desc&quot;&gt;The vector y equals its component parallel to x plus its component perpendicular to x. The perpendicular component supplies the tangent direction.&lt;/desc&gt;
+        &lt;defs&gt;
+          &lt;marker id=&quot;rfm-arrow-green-proj&quot; viewBox=&quot;0 0 10 10&quot; refX=&quot;8&quot; refY=&quot;5&quot; markerWidth=&quot;7&quot; markerHeight=&quot;7&quot; orient=&quot;auto&quot;&gt;
+            &lt;path d=&quot;M0,0 L10,5 L0,10 Z&quot; fill=&quot;var(--viz-series-2)&quot; /&gt;
+          &lt;/marker&gt;
+          &lt;marker id=&quot;rfm-arrow-orange-proj&quot; viewBox=&quot;0 0 10 10&quot; refX=&quot;8&quot; refY=&quot;5&quot; markerWidth=&quot;7&quot; markerHeight=&quot;7&quot; orient=&quot;auto&quot;&gt;
+            &lt;path d=&quot;M0,0 L10,5 L0,10 Z&quot; fill=&quot;var(--viz-series-3)&quot; /&gt;
+          &lt;/marker&gt;
+          &lt;marker id=&quot;rfm-arrow-neutral-proj&quot; viewBox=&quot;0 0 10 10&quot; refX=&quot;8&quot; refY=&quot;5&quot; markerWidth=&quot;7&quot; markerHeight=&quot;7&quot; orient=&quot;auto&quot;&gt;
+            &lt;path d=&quot;M0,0 L10,5 L0,10 Z&quot; fill=&quot;var(--muted-foreground)&quot; /&gt;
+          &lt;/marker&gt;
+        &lt;/defs&gt;
+
+        &lt;line class=&quot;neutral-line dashed&quot; x1=&quot;70&quot; y1=&quot;280&quot; x2=&quot;332&quot; y2=&quot;96&quot; /&gt;
+        &lt;text class=&quot;muted-label&quot; x=&quot;323&quot; y=&quot;86&quot;&gt;direction x&lt;/text&gt;
+
+        &lt;line class=&quot;destination&quot; x1=&quot;70&quot; y1=&quot;280&quot; x2=&quot;140&quot; y2=&quot;70&quot; marker-end=&quot;url(#rfm-arrow-green-proj)&quot; /&gt;
+        &lt;text x=&quot;118&quot; y=&quot;67&quot;&gt;y&lt;/text&gt;
+
+        &lt;line class=&quot;neutral-line&quot; x1=&quot;70&quot; y1=&quot;280&quot; x2=&quot;215.6&quot; y2=&quot;177.9&quot; marker-end=&quot;url(#rfm-arrow-neutral-proj)&quot; /&gt;
+        &lt;text class=&quot;muted-label&quot; x=&quot;86&quot; y=&quot;232&quot;&gt;radial part&lt;/text&gt;
+        &lt;text class=&quot;muted-label&quot; x=&quot;81&quot; y=&quot;249&quot;&gt;(parallel to x)&lt;/text&gt;
+
+        &lt;line class=&quot;tangent&quot; x1=&quot;215.6&quot; y1=&quot;177.9&quot; x2=&quot;140&quot; y2=&quot;70&quot; marker-end=&quot;url(#rfm-arrow-orange-proj)&quot; /&gt;
+        &lt;text x=&quot;222&quot; y=&quot;111&quot;&gt;tangent part&lt;/text&gt;
+        &lt;text x=&quot;222&quot; y=&quot;129&quot;&gt;(perpendicular to x)&lt;/text&gt;
+
+        &lt;path class=&quot;right-angle&quot; d=&quot;M204.1,185.9 L196.1,174.4 L207.6,166.4&quot; /&gt;
+
+        &lt;circle class=&quot;point&quot; cx=&quot;70&quot; cy=&quot;280&quot; r=&quot;5&quot; /&gt;
+        &lt;text x=&quot;54&quot; y=&quot;303&quot;&gt;O&lt;/text&gt;
+
+        &lt;text class=&quot;formula&quot; x=&quot;85&quot; y=&quot;340&quot;&gt;y = radial part + tangent part&lt;/text&gt;
+      &lt;/svg&gt;
+    &lt;/section&gt;
+  &lt;/div&gt;
 &lt;/div&gt;
 
 &lt;script src=&quot;https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js&quot;&gt;&lt;/script&gt;
