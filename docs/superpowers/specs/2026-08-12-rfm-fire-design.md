@@ -18,13 +18,17 @@ The implementation covers only the Fire dataset on `S^2`. Bunny meshes,
 spectral premetrics, Hydra, Lightning, multi-dataset abstractions, and general
 manifold interfaces are excluded.
 
-Exploration and reproducible training are separate:
+Exploration and reproducible training are separate. The first scaffold is
+deliberately limited to the data slice:
 
 - `papers/14-RFM/nbs/fire_eda.ipynb` explores the raw Fire data and its sphere
   representation.
-- Python files under `papers/14-RFM/src/` implement the reproducible experiment.
-- `papers/14-RFM/test_scaffold.py` provides red/green contracts while Luv fills
-  the learning-critical bodies.
+- `papers/14-RFM/src/data.py` begins the reproducible pipeline.
+- `papers/14-RFM/test_data.py` provides AI-authored red/green contracts while
+  Luv fills the learning-critical data bodies.
+
+Geometry, model, training, and evaluation files are scaffolded only after the
+data slice passes. This avoids empty-file clutter and premature interfaces.
 
 ## Files and responsibilities
 
@@ -34,16 +38,8 @@ Exploration and reproducible training are separate:
   split counts, unit-sphere conversion check, and a geographic scatter plot.
 - `src/data.py`: load the official `fire.csv`, validate it, convert latitude and
   longitude to Cartesian unit vectors, and create deterministic 80/10/10 splits.
-- `src/geometry.py`: move the already validated sphere primitives from
-  `spherical.ipynb` into importable functions without changing their mathematics.
-- `src/model.py`: a time-conditioned ambient MLP whose output is projected into
-  `T_x S^2`.
-- `src/train.py`: sample `x0`, `x1`, and `t`; construct `x_t` and the conditional
-  velocity target; compute Eq. 10; optimize; and write the standard run artifacts.
-- `src/evaluate.py`: load a run, integrate the learned field outside the training
-  autograd graph, verify samples remain on `S^2`, and report evaluation outputs.
-- `test_scaffold.py`: data, geometry, model, loss, split, and train/evaluate
-  contracts.
+- Later slices add `geometry.py`, `model.py`, `train.py`, `evaluate.py`, and their
+  tests one at a time after the preceding contract passes.
 
 ## Data flow
 
@@ -74,18 +70,24 @@ For each training batch:
 - Evaluation reconstructs the model from `config.json` and uses the same seeded
   data split as training.
 
-## Tests
+## Test ownership
 
-The initial scaffold tests intentionally fail until Luv implements each TODO.
+AI owns the test harness, invariants, edge cases, tolerances, execution, and
+failure triage. Luv owns correctness-determining implementation bodies,
+including coordinate conversion, geometry, tangent projection, the RCFM loss,
+and training logic. Tests may state expected behavior directly but must not
+encode the implementation method.
+
+The first data-scaffold tests intentionally fail until Luv implements each TODO.
 They check:
 
 - deterministic 80/10/10 splits with no overlap;
 - latitude/longitude conversion returns `(n, 3)` unit vectors;
-- sphere primitives retain the notebook invariants;
-- model output has shape `(n, 3)` and is tangent at `x`;
-- one RCFM loss call returns a finite scalar and supports backpropagation;
-- a short training smoke test lowers loss and writes standard run artifacts;
-- evaluation loads a run and generated samples remain on the sphere.
+- known landmark coordinates map to the expected sphere axes;
+- malformed, non-finite, or out-of-range rows fail clearly.
+
+Later test slices cover sphere primitives, tangent model output, RCFM loss,
+training artifacts, and evaluation samples.
 
 ## Completion criteria
 
