@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-07-16 (`gap` MATCHED — test MAE 48.50 meV vs paper's 48, ~1.04x. Root cause was QM9 edges being molecular bonds not fully-connected; resume-at-lower-LR broke a high-LR plateau to close the last gap)
+**Last updated:** 2026-08-12 (RFM Fire experiment selected; data scaffold is red by design)
 
 ---
 
@@ -26,6 +26,7 @@ Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 | 08 | EquiFormer | study | 📄 PDF + sources | — |
 | 09 | NequIP | study | 📄 PDF + sources | — |
 | 10 | ManifoldFormer | breadth | 📄 PDF only | — |
+| 14 | Riemannian Flow Matching | implement | 🟡 in progress | 2026-08-12 |
 
 Tier definitions → [`references/papers.md`](../references/papers.md).
 
@@ -174,12 +175,29 @@ See [`papers/00-template/README.md`](../papers/00-template/README.md).
 
 ---
 
+## Active: 14-RFM
+
+**Goal:** Reproduce RFM on the Fire location dataset over `S^2`, then decide
+separately whether to begin the Bunny general-geometry experiment.
+
+The closed-form sphere notebook is complete. Fire is the only dataset in the
+current three-day experiment. The first Python slice now contains
+`src/data.py` TODO contracts and AI-owned tests for coordinate conversion, CSV
+loading, and deterministic 80/10/10 splitting.
+
+**Current state:** deliberately red — 15 focused tests fail only at the three
+`NotImplementedError` stubs.
+
+**Next action:** implement `latlon_degrees_to_cartesian` until its focused
+conversion tests pass. Do not start model or training scaffolding yet.
+
+---
+
 ## Not started (implement tier)
 
 | Paper | Repo path | Notes |
 |-------|-----------|-------|
 | MACE | — | folder not created |
-| Riemannian Flow Matching | — | folder not created |
 
 ---
 
