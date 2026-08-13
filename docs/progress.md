@@ -181,15 +181,15 @@ See [`papers/00-template/README.md`](../papers/00-template/README.md).
 separately whether to begin the Bunny general-geometry experiment.
 
 The closed-form sphere notebook is complete. Fire is the only dataset in the
-current three-day experiment. The first Python slice now contains
-`src/data.py` TODO contracts and AI-owned tests for coordinate conversion, CSV
-loading, and deterministic 80/10/10 splitting.
+current three-day experiment. The first Python data slice now implements
+coordinate conversion, CSV loading, and deterministic 80/10/10 splitting,
+with AI-owned tests.
 
-**Current state:** deliberately red — 15 focused tests fail only at the three
-`NotImplementedError` stubs.
+**Current state:** green — the focused data suite passes 15 tests.
 
-**Next action:** implement `latlon_degrees_to_cartesian` until its focused
-conversion tests pass. Do not start model or training scaffolding yet.
+**Next action:** move the validated sphere primitives from the notebook into a
+paper-local geometry module and give them Python test contracts. Do not start
+model or training scaffolding until that slice passes.
 
 ---
 

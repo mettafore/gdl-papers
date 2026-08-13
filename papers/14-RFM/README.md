@@ -8,7 +8,7 @@ fits the **Fire** location distribution on the unit sphere `S^2`.
 - `nbs/spherical.ipynb` — validated closed-form sphere geometry and Eq. 13.
 - `nbs/fire_eda.ipynb` — Fire dataset exploration scaffold.
 - `src/data.py` — Fire loading, coordinate conversion, and seeded splits.
-- `test_data.py` — AI-owned data contracts; initially red by design.
+- `test_data.py` — AI-owned data contracts; currently green (`15 passed`).
 
 Geometry, model, training, and evaluation modules are added only after the data
 contracts pass.
