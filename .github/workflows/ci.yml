@@ -25,6 +25,15 @@ jobs:
       - name: ruff check
         run: uv run ruff check src/ papers/
 
+      - name: mypy
+        run: |
+          uv run mypy src/gdl
+          for dir in papers/*/; do
+            if [ -d "${dir}src" ]; then
+              uv run mypy "${dir}src"
+            fi
+          done
+
       - name: Run tests (per paper — module names collide across papers)
         run: |
           set -e
