@@ -32,10 +32,15 @@ def sample_sphere(n: int) -> torch.Tensor:
     """
     if n <= 0:
         raise ValueError("n must be positive")
-
-    # TODO(luv): sample z and azimuth so the surface measure is uniform.
-    # Target: z ~ Uniform[-1, 1], phi ~ Uniform[0, 2*pi].
-    raise NotImplementedError
+    # Sampling z from -1 to 1
+    z = 2 * torch.rand(n, 1) - 1
+    # Getting radius of circle at coord z
+    r = torch.sqrt(1 - torch.square(z))
+    # Getting theta to get x and y
+    theta = 2 * torch.pi * torch.rand(n, 1) - 1
+    x = (r * torch.cos(theta)).reshape(-1, 1)
+    y = (r * torch.sin(theta)).reshape(-1, 1)
+    return torch.concat([x, y, z], dim=1)
 
 
 def exp_map(x: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
@@ -47,9 +52,10 @@ def exp_map(x: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
     """
     _check_point_pair(x, v)
 
-    # TODO(luv): implement the sphere exponential map.
-    # Target equation: exp_x(v) = cos(||v||) x + sin(||v||) v/||v||.
-    raise NotImplementedError
+    v_normalized = torch.nn.functional.normalize(v, dim=-1)
+    v_norm = torch.linalg.vector_norm(v, dim=-1, keepdim=True)
+    exp_x = torch.cos(v_norm) * x + torch.sin(v_norm) * v_normalized
+    return exp_x
 
 
 def log_map(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
@@ -61,10 +67,13 @@ def log_map(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     """
     _check_point_pair(x, y)
 
-    # TODO(luv): project y onto the tangent plane at x, choose the minor arc,
-    # normalize its direction, and scale it by the arc angle.
-    # Target relation: exp_map(x, log_map(x, y)) == y up to tolerance.
-    raise NotImplementedError
+    dot_prod = (x * y).sum(dim=1, keepdim=True)
+    theta = torch.arccos(torch.clamp(dot_prod, -1, 1))
+    y_parallel = dot_prod * x
+    y_perp = y - y_parallel
+    v_normalized = torch.nn.functional.normalize(y_perp, dim=-1)
+    v = theta * v_normalized
+    return v
 
 
 def premetric_d(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
@@ -74,8 +83,7 @@ def premetric_d(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     """
     _check_point_pair(x, y)
 
-    # TODO(luv): implement the clipped dot-product premetric.
-    raise NotImplementedError
+    return torch.arccos(torch.clamp((x * y).sum(dim=1), -1, 1))
 
 
 def grad_d(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
@@ -86,9 +94,9 @@ def grad_d(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     """
     _check_point_pair(x, y)
 
-    # TODO(luv): implement grad_x d(x, y) and keep the result tangent at x.
-    # Target equation: grad_d(x, y) = -log_map(x, y) / ||log_map(x, y)||.
-    raise NotImplementedError
+    v = log_map(x, y)
+    v_norm = torch.linalg.vector_norm(v, dim=-1, keepdim=True)
+    return -v / v_norm
 
 
 def kappa(t: torch.Tensor) -> torch.Tensor:
@@ -97,10 +105,7 @@ def kappa(t: torch.Tensor) -> torch.Tensor:
         raise ValueError("t must have shape (n,)")
     if not torch.isfinite(t).all() or not torch.all((0 <= t) & (t <= 1)):
         raise ValueError("t must be finite and lie in [0, 1]")
-
-    # TODO(luv): implement Eq. 12's schedule.
-    # Target equation: kappa(t) = 1 - t.
-    raise NotImplementedError
+    return 1 - t
 
 
 def dlog_kappa_dt(t: torch.Tensor) -> torch.Tensor:
@@ -109,10 +114,7 @@ def dlog_kappa_dt(t: torch.Tensor) -> torch.Tensor:
         raise ValueError("t must have shape (n,)")
     if not torch.isfinite(t).all() or not torch.all((0 <= t) & (t < 1)):
         raise ValueError("t must be finite and lie in [0, 1)")
-
-    # TODO(luv): differentiate the schedule; t=1 is singular for Eq. 13.
-    # Target equation: d/dt log(kappa(t)) = -1 / (1 - t).
-    raise NotImplementedError
+    return -torch.reciprocal(1 - t)
 
 
 def conditional_vf(x: torch.Tensor, x1: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
@@ -126,11 +128,11 @@ def conditional_vf(x: torch.Tensor, x1: torch.Tensor, t: torch.Tensor) -> torch.
         raise ValueError("t must have shape (n,) matching x")
     if not torch.isfinite(t).all() or not torch.all((0 <= t) & (t < 1)):
         raise ValueError("t must be finite and lie in [0, 1)")
-
-    # TODO(luv): combine the schedule derivative, premetric, and distance
-    # gradient using row-scalar shapes that broadcast over the 3 coordinates.
-    # Target equation: u_t = dlog(kappa)/dt * d * grad_d / ||grad_d||^2.
-    raise NotImplementedError
+    logk_deriv = dlog_kappa_dt(t).reshape(-1, 1)
+    d = premetric_d(x, x1).reshape(-1, 1)
+    grad = grad_d(x, x1)
+    grad_norm_sq = torch.square(torch.linalg.vector_norm(grad, dim=1, keepdim=True))
+    return logk_deriv * d * grad * torch.reciprocal(grad_norm_sq)
 
 
 def geodesic_path(x0: torch.Tensor, x1: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
@@ -145,6 +147,4 @@ def geodesic_path(x0: torch.Tensor, x1: torch.Tensor, t: torch.Tensor) -> torch.
     if not torch.isfinite(t).all() or not torch.all((0 <= t) & (t <= 1)):
         raise ValueError("t must be finite and lie in [0, 1]")
 
-    # TODO(luv): compose the sphere maps along the scaled tangent vector.
-    # Target equation: x_t = exp_map(x0, t * log_map(x0, x1)).
-    raise NotImplementedError
+    return exp_map(x0, t.reshape(-1, 1) * log_map(x0, x1))
