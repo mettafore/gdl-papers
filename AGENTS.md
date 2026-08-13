@@ -71,6 +71,17 @@ invent a new layout — 00-template is the canonical shape every paper copies.
 - **MCP: context7** — use for live PyTorch / torch_geometric / library docs.
   Prefer it over training-data recall for API questions.
 
+## Learning-stage scaffolds
+
+When the user asks to commit only a completed module:
+
+- Stage and commit only the explicitly named files.
+- Leave unrelated scaffolds present locally as untracked files.
+- Never delete, commit, or push those scaffolds unless the user explicitly asks.
+- If the full test suite is blocked by unfinished scaffold tests, mark only
+  implementation-dependent tests as strict expected failures; input-validation
+  tests must continue to pass normally.
+
 ## Always / Ask first / Never
 
 **Always**
