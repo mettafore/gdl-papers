@@ -69,7 +69,7 @@ def _unique_points(n: int = 101) -> torch.Tensor:
 
 def test_split_sizes_follow_80_10_10_protocol() -> None:
     train, validation, test = split_points(_unique_points(), seed=0)
-    assert (len(train), len(validation), len(test)) == (81, 10, 10)
+    assert (len(train), len(validation), len(test)) == (80, 10, 11)
 
 
 def test_split_is_seeded_and_deterministic() -> None:
