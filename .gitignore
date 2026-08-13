@@ -34,8 +34,8 @@ runs/
 *.pt
 *.ckpt
 
-# Local RFM dataset
-papers/14-RFM/data/fire.csv
+# Local datasets
+*.csv
 
 # macOS
 .DS_Store
