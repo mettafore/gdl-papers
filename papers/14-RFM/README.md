@@ -8,10 +8,13 @@ fits the **Fire** location distribution on the unit sphere `S^2`.
 - `nbs/spherical.ipynb` — validated closed-form sphere geometry and Eq. 13.
 - `nbs/fire_eda.ipynb` — Fire dataset exploration scaffold.
 - `src/data.py` — Fire loading, coordinate conversion, and seeded splits.
-- `test_data.py` — AI-owned data contracts; currently green (`15 passed`).
-
-Geometry, model, training, and evaluation modules are added only after the data
-contracts pass.
+- `src/geometry.py` — closed-form sphere geometry and conditional flow.
+- `src/model.py` — time-conditioned tangent velocity field.
+- `src/loss.py` — RCFM regression objective.
+- `src/train.py` — training CLI and canonical run persistence.
+- `src/evaluate.py` — sampling API and exact held-out NLL CLI.
+- `test_*.py` — AI-owned contracts for data, geometry, model, loss, training,
+  sampling, and evaluation.
 
 ## Data
 
@@ -36,9 +39,25 @@ The defaults are:
 
 - `--epochs 3`
 - `--lr 0.001`
+- `--hidden-dim 64`
+- `--n-layers 10`
 - `--device cpu`
 - `--data-path papers/14-RFM/data/fire.csv`
 - `--seed 42`
+- `--runs-base runs`
+
+Training prints a `run_id` and writes
+`papers/14-RFM/runs/<run_id>/{config.json,metrics.jsonl,checkpoint.pt}`. Evaluate
+that exact run with:
+
+```bash
+uv run python papers/14-RFM/src/evaluate.py --run <run_id>
+```
+
+Evaluation recreates the seeded 80/10/10 split and reports exact NLL on the
+held-out test points. It uses batches of 64 by default because exact Jacobian
+traces are memory intensive. Override this with `--batch-size`; use
+`--data-path` if the CSV has moved since training.
 
 Suggested first Fire run:
 
@@ -50,20 +69,21 @@ uv run python papers/14-RFM/src/train.py \
   --seed 42
 ```
 
-Focused data tests:
+Full paper tests:
 
 ```bash
-uv run pytest papers/14-RFM/test_data.py -q
+uv run pytest papers/14-RFM/ -q
 ```
 
 Open `papers/14-RFM/nbs/fire_eda.ipynb` for exploration after downloading the
-CSV. Evaluation commands will be added when `evaluate.py` is complete.
+CSV.
 
 ## Hyperparameters
 
-The training CLI accepts `--epochs`, `--lr`, `--device`, `--data-path`, and
-`--seed`. See the defaults above; the data path is optional when using the
-standard local `fire.csv` location.
+The training CLI accepts `--epochs`, `--lr`, `--hidden-dim`, `--n-layers`,
+`--device`, `--data-path`, `--seed`, and `--runs-base`. Evaluation accepts
+`--run`, `--batch-size` (default 64), `--device` (default CPU), `--rtol` and
+`--atol` (both default `1e-7`), `--data-path`, and `--runs-base`.
 
 ## Completion
 

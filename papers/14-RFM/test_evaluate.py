@@ -10,6 +10,7 @@ from torch import nn
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
+import evaluate as evaluate_module
 from evaluate import (
     divergence,
     integrate_ode,
@@ -17,6 +18,9 @@ from evaluate import (
     sample,
 )
 from model import TimeConditionedVectorField
+
+import data as data_module
+from gdl import new_run_dir, save_checkpoint
 
 
 def _initial_state() -> torch.Tensor:
@@ -161,3 +165,80 @@ def test_nll_applies_reverse_flow_divergence_correction() -> None:
         math.log(4.0 * math.pi) - 0.5,
         rel_tol=1e-5,
     )
+
+
+def test_evaluate_run_rebuilds_checkpoint_and_weights_unequal_batches(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    data_path = tmp_path / "fire.csv"
+    rows = [
+        f"{latitude},{longitude}"
+        for latitude, longitude in zip(range(-15, 15), range(-150, 150, 10))
+    ]
+    data_path.write_text("LATITUDE,LONGITUDE\n" + "\n".join(rows) + "\n")
+    config = {
+        "data": {
+            "dataset": "fire",
+            "path": str(data_path.resolve()),
+            "split": [0.8, 0.1, 0.1],
+        },
+        "model": {"hidden_dim": 8, "n_layers": 1},
+        "hyperparams": {"lr": 1e-3, "epochs": 1},
+        "seed": 7,
+        "metric": "nll",
+    }
+    run_id, run_dir = new_run_dir(tmp_path, config, base="runs")
+    saved_model = TimeConditionedVectorField(hidden_dim=8, n_layers=1)
+    with torch.no_grad():
+        for parameter in saved_model.parameters():
+            parameter.fill_(0.25)
+    save_checkpoint(saved_model, run_dir)
+
+    observed_batches: list[torch.Tensor] = []
+
+    def batch_mean_x(
+        model: nn.Module,
+        samples: torch.Tensor,
+        *,
+        rtol: float,
+        atol: float,
+    ) -> float:
+        del rtol, atol
+        assert all(
+            torch.allclose(parameter, torch.full_like(parameter, 0.25))
+            for parameter in model.parameters()
+        )
+        observed_batches.append(samples.detach().cpu())
+        return float(samples[:, 0].mean())
+
+    monkeypatch.setattr(evaluate_module, "negative_log_likelihood", batch_mean_x)
+
+    metric, score = evaluate_module.evaluate_run(
+        run_id,
+        runs_base="runs",
+        paper_dir=tmp_path,
+        batch_size=2,
+        device="cpu",
+    )
+
+    expected_test = data_module.split_points(
+        data_module.load_fire_csv(data_path), seed=7
+    )[2]
+    assert metric == "nll"
+    assert [len(batch) for batch in observed_batches] == [2, 1]
+    assert torch.equal(torch.cat(observed_batches), expected_test)
+    assert score == pytest.approx(float(expected_test[:, 0].mean()))
+
+
+@pytest.mark.parametrize("batch_size", [0, -1, True])
+def test_evaluate_run_rejects_invalid_batch_size(
+    batch_size: int,
+    tmp_path: Path,
+) -> None:
+    with pytest.raises(ValueError, match="batch_size must be a positive integer"):
+        evaluate_module.evaluate_run(
+            "unused",
+            paper_dir=tmp_path,
+            batch_size=batch_size,
+        )

@@ -1,5 +1,6 @@
 """Tests for the lightweight RFM training harness."""
 
+import json
 import math
 import sys
 from pathlib import Path
@@ -200,3 +201,50 @@ def test_train_keeps_losses_finite_near_endpoint_times(
 
     assert all(math.isfinite(value) for value in result.train_loss)
     assert all(math.isfinite(value) for value in result.validation_loss)
+
+
+def test_train_run_persists_config_metrics_and_checkpoint(tmp_path: Path) -> None:
+    data_path = tmp_path / "fire.csv"
+    data_path.write_text(
+        "LATITUDE,LONGITUDE\n"
+        "0,0\n10,20\n-10,-20\n20,40\n-20,-40\n"
+        "30,60\n-30,-60\n40,80\n-40,-80\n50,100\n"
+    )
+
+    run_id, run_dir, result = train_module.train_run(
+        data_path=data_path,
+        epochs=2,
+        lr=1e-3,
+        hidden_dim=8,
+        n_layers=1,
+        seed=7,
+        device="cpu",
+        runs_base="runs",
+        paper_dir=tmp_path,
+    )
+
+    assert run_dir == tmp_path / "runs" / run_id
+    config = json.loads((run_dir / "config.json").read_text())
+    assert config["data"] == {
+        "dataset": "fire",
+        "path": str(data_path.resolve()),
+        "split": [0.8, 0.1, 0.1],
+    }
+    assert config["model"] == {"hidden_dim": 8, "n_layers": 1}
+    assert config["hyperparams"] == {"lr": 1e-3, "epochs": 2}
+    assert config["seed"] == 7
+    assert config["metric"] == "nll"
+
+    metrics = [
+        json.loads(line)
+        for line in (run_dir / "metrics.jsonl").read_text().splitlines()
+    ]
+    assert metrics == [
+        {
+            "step": epoch,
+            "train_loss": result.train_loss[epoch],
+            "validation_loss": result.validation_loss[epoch],
+        }
+        for epoch in range(2)
+    ]
+    assert (run_dir / "checkpoint.pt").is_file()

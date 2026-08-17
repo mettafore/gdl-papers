@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-08-12 (RFM Fire experiment selected; data scaffold is red by design)
+**Last updated:** 2026-08-17 (RFM Fire train/evaluate run wiring complete)
 
 ---
 
@@ -26,7 +26,7 @@ Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 | 08 | EquiFormer | study | 📄 PDF + sources | — |
 | 09 | NequIP | study | 📄 PDF + sources | — |
 | 10 | ManifoldFormer | breadth | 📄 PDF only | — |
-| 14 | Riemannian Flow Matching | implement | 🟡 in progress | 2026-08-12 |
+| 14 | Riemannian Flow Matching | implement | 🟡 in progress | 2026-08-17 |
 
 Tier definitions → [`references/papers.md`](../references/papers.md).
 
@@ -180,16 +180,18 @@ See [`papers/00-template/README.md`](../papers/00-template/README.md).
 **Goal:** Reproduce RFM on the Fire location dataset over `S^2`, then decide
 separately whether to begin the Bunny general-geometry experiment.
 
-The closed-form sphere notebook is complete. Fire is the only dataset in the
-current three-day experiment. The first Python data slice now implements
-coordinate conversion, CSV loading, and deterministic 80/10/10 splitting,
-with AI-owned tests.
+The closed-form sphere notebook and paper-local geometry, model, loss, training,
+sampling, divergence, and exact NLL implementations are complete. Fire remains
+the only dataset in the current experiment.
 
-**Current state:** green — the focused data suite passes 15 tests.
+**Current state:** green — training now persists canonical run folders
+(`config.json`, per-epoch `metrics.jsonl`, `checkpoint.pt`), and evaluation
+rebuilds the saved model and reports sample-weighted exact NLL on the
+deterministic held-out split. The full paper suite passes 54 tests.
 
-**Next action:** move the validated sphere primitives from the notebook into a
-paper-local geometry module and give them Python test contracts. Do not start
-model or training scaffolding until that slice passes.
+**Next action:** run a one-epoch Fire CLI smoke, evaluate its saved run, then
+start the real Fire training run and compare held-out NLL with the paper's
+`-1.86 +/- 0.11` reference.
 
 ---
 

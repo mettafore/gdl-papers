@@ -1,15 +1,22 @@
 """Sampling and exact likelihood evaluation for the RFM reproduction."""
 
+import argparse
 import math
 from collections.abc import Callable
+from pathlib import Path
 from typing import TypeAlias
 
+import model as m
 import torch
 from torch import nn
 from torch.func import jacrev, vmap
 from torchdiffeq import odeint
 
+import data as d
+from gdl import load_checkpoint, load_run_config, run_dir
+
 VelocityField: TypeAlias = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+PAPER_DIR = Path(__file__).resolve().parent.parent
 
 
 def _check_points(points: torch.Tensor, name: str) -> None:
@@ -201,3 +208,92 @@ def negative_log_likelihood(
     uniform_log_density = -samples.new_tensor(4.0 * math.pi).log()
 
     return -float(uniform_log_density - log_density_correction.mean())
+
+
+def evaluate_run(
+    run_id: str,
+    *,
+    runs_base: str = "runs",
+    paper_dir: str | Path = PAPER_DIR,
+    data_path: str | Path | None = None,
+    batch_size: int = 64,
+    device: str | torch.device = "cpu",
+    rtol: float = 1e-7,
+    atol: float = 1e-7,
+) -> tuple[str, float]:
+    """Load one persisted run and compute weighted test NLL in batches."""
+    if (
+        isinstance(batch_size, bool)
+        or not isinstance(batch_size, int)
+        or batch_size <= 0
+    ):
+        raise ValueError("batch_size must be a positive integer")
+    try:
+        resolved_device = torch.device(device)
+    except (RuntimeError, TypeError) as exc:
+        raise ValueError(f"invalid device: {device!r}") from exc
+
+    config = load_run_config(paper_dir, run_id, base=runs_base)
+    metric_name = str(config["metric"])
+    if metric_name != "nll":
+        raise ValueError(f"unsupported RFM metric: {metric_name!r}")
+
+    model_config = config["model"]
+    trained_model = m.TimeConditionedVectorField(
+        hidden_dim=int(model_config["hidden_dim"]),
+        n_layers=int(model_config["n_layers"]),
+    )
+    run_directory = run_dir(paper_dir, run_id, base=runs_base)
+    load_checkpoint(trained_model, run_directory)
+    trained_model = trained_model.to(resolved_device)
+    trained_model.eval()
+
+    configured_data_path = config["data"]["path"]
+    resolved_data_path = Path(
+        configured_data_path if data_path is None else data_path
+    ).resolve()
+    points = d.load_fire_csv(resolved_data_path)
+    _, _, test_data = d.split_points(points, seed=int(config["seed"]))
+    if len(test_data) == 0:
+        raise ValueError("held-out test split must contain at least one point")
+
+    weighted_nll = 0.0
+    for start in range(0, len(test_data), batch_size):
+        batch = test_data[start : start + batch_size].to(resolved_device)
+        batch_nll = negative_log_likelihood(
+            trained_model,
+            batch,
+            rtol=rtol,
+            atol=atol,
+        )
+        weighted_nll += batch_nll * len(batch)
+
+    return metric_name, weighted_nll / len(test_data)
+
+
+def main() -> None:
+    """Evaluate a saved Fire run on its deterministic held-out split."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--run", required=True, help="run_id under runs/")
+    parser.add_argument("--runs-base", type=str, default="runs")
+    parser.add_argument("--data-path", type=Path, default=None)
+    parser.add_argument("--batch-size", type=int, default=64)
+    parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument("--rtol", type=float, default=1e-7)
+    parser.add_argument("--atol", type=float, default=1e-7)
+    args = parser.parse_args()
+
+    metric_name, score = evaluate_run(
+        args.run,
+        runs_base=args.runs_base,
+        data_path=args.data_path,
+        batch_size=args.batch_size,
+        device=args.device,
+        rtol=args.rtol,
+        atol=args.atol,
+    )
+    print(f"{metric_name}: {score:.4f}")
+
+
+if __name__ == "__main__":
+    main()

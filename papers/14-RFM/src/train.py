@@ -13,9 +13,12 @@ import torch
 from torch import nn
 
 import data as d
+from gdl import log_metrics, new_run_dir, save_checkpoint, set_seed
 
 DataSource: TypeAlias = torch.Tensor
 LossCallable: TypeAlias = Callable[..., torch.Tensor]
+PAPER_DIR = Path(__file__).resolve().parent.parent
+METRIC = "nll"
 
 
 class AdamSettings(TypedDict, total=False):
@@ -171,45 +174,93 @@ def train(
     )
 
 
+def train_run(
+    data_path: str | Path,
+    *,
+    epochs: int = 3,
+    lr: float = 1e-3,
+    hidden_dim: int = 64,
+    n_layers: int = 10,
+    seed: int = 42,
+    device: str | torch.device = "cpu",
+    runs_base: str = "runs",
+    paper_dir: str | Path = PAPER_DIR,
+) -> tuple[str, Path, TrainingResult]:
+    """Train Fire RFM and persist its reproducible run artifacts."""
+    resolved_data_path = Path(data_path).resolve()
+    points = d.load_fire_csv(resolved_data_path)
+    train_data, validation_data, _ = d.split_points(points, seed)
+
+    set_seed(seed)
+    model = m.TimeConditionedVectorField(
+        hidden_dim=hidden_dim,
+        n_layers=n_layers,
+    )
+    config = {
+        "data": {
+            "dataset": "fire",
+            "path": str(resolved_data_path),
+            "split": [0.8, 0.1, 0.1],
+        },
+        "model": {"hidden_dim": hidden_dim, "n_layers": n_layers},
+        "hyperparams": {"lr": lr, "epochs": epochs},
+        "seed": seed,
+        "metric": METRIC,
+    }
+    run_id, run_directory = new_run_dir(paper_dir, config, base=runs_base)
+
+    result = train(
+        train_data=train_data,
+        validation_data=validation_data,
+        model=model,
+        loss_fn=l.rcfm_loss,
+        optimizer_settings={"lr": lr},
+        epochs=epochs,
+        seed=seed,
+        device=device,
+    )
+    for epoch, (train_loss, validation_loss) in enumerate(
+        zip(result.train_loss, result.validation_loss)
+    ):
+        log_metrics(
+            {
+                "train_loss": train_loss,
+                "validation_loss": validation_loss,
+            },
+            step=epoch,
+            run_dir=run_directory,
+        )
+    save_checkpoint(result.model, run_directory)
+    return run_id, run_directory, result
+
+
 def main():
-    """
-    Main loop for running training.
-    """
-    PAPER_DIR = Path(__file__).resolve().parent.parent
+    """Train Fire RFM from CLI and print the persisted run ID."""
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=3)
     parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument("--hidden-dim", type=int, default=64)
+    parser.add_argument("--n-layers", type=int, default=10)
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument(
         "--data-path", type=Path, default=PAPER_DIR / "data" / "fire.csv"
     )
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--runs-base", type=str, default="runs")
     args = parser.parse_args()
 
-    epochs = args.epochs
-    lr = args.lr
-    device = args.device
-    data_path = args.data_path
-    seed = args.seed
-    data = d.load_fire_csv(data_path)
-    train_data, val_data, test_data = d.split_points(data, seed)
-    torch.manual_seed(seed=seed)
-    model = m.TimeConditionedVectorField()
-    optimizer_settings = {"lr": lr}
-    loss_fn = l.rcfm_loss
-
-    result = train(
-        train_data=train_data,
-        validation_data=val_data,
-        model=model,
-        loss_fn=loss_fn,
-        optimizer_settings=optimizer_settings,
-        epochs=epochs,
-        seed=seed,
-        device=device,
+    run_id, _, _ = train_run(
+        data_path=args.data_path,
+        epochs=args.epochs,
+        lr=args.lr,
+        hidden_dim=args.hidden_dim,
+        n_layers=args.n_layers,
+        seed=args.seed,
+        device=args.device,
+        runs_base=args.runs_base,
     )
-    print(result)
+    print(f"run_id: {run_id}")
 
 
 if __name__ == "__main__":
