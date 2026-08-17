@@ -131,6 +131,29 @@ def compute_metric(samples: torch.Tensor, reference: torch.Tensor) -> float:
     raise NotImplementedError
 
 
+def divergence(
+    model: nn.Module,
+    x: torch.Tensor,
+    t: torch.Tensor,
+) -> torch.Tensor:
+    """Return one spatial-divergence value per point.
+
+    Args:
+        model: Learned time-conditioned velocity field.
+        x: Sphere points with shape ``(n, 3)``.
+        t: Per-point times with shape ``(n,)``.
+
+    Returns:
+        A tensor with shape ``(n,)`` containing the Jacobian trace for each
+        point.
+    """
+    # TODO(luv):
+    # - Evaluate the model with gradients enabled for x.
+    # - Extract the spatial Jacobian diagonal for each point.
+    # - Sum that diagonal and return one divergence value per batch row.
+    raise NotImplementedError
+
+
 def negative_log_likelihood(model: nn.Module, samples: torch.Tensor) -> float:
     """Estimate the model's sample likelihood as a finite scalar NLL."""
     if not isinstance(model, nn.Module):
