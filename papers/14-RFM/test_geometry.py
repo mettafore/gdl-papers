@@ -43,6 +43,21 @@ def test_conditional_vf_matches_path_velocity() -> None:
     assert torch.all(error <= tolerance)
 
 
+def test_conditional_vf_stays_finite_for_small_angles() -> None:
+    """The field remains finite when the path is close to its endpoint."""
+    angle = torch.tensor([0.01])
+    x0 = torch.cat(
+        [torch.cos(angle), torch.sin(angle), torch.zeros_like(angle)]
+    ).reshape(1, 3)
+    x1 = torch.tensor([[1.0, 0.0, 0.0]])
+    t = torch.tensor([0.98])
+
+    xt = geodesic_path(x0, x1, t)
+    field = conditional_vf(xt, x1, t)
+
+    assert torch.isfinite(field).all()
+
+
 def test_euclidean_conditional_field_is_straight_velocity() -> None:
     """Eq. 13 reduces to ``x1 - x0`` under the flat Euclidean metric."""
     torch.manual_seed(1)

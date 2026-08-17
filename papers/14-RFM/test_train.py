@@ -9,6 +9,7 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
+import train as train_module
 from geometry import sample_sphere
 from loss import rcfm_loss
 from model import TimeConditionedVectorField
@@ -171,3 +172,31 @@ def test_train_is_reproducible_when_model_initialization_is_repeated() -> None:
 
     assert first.train_loss == second.train_loss
     assert first.validation_loss == second.validation_loss
+
+
+def test_train_keeps_losses_finite_near_endpoint_times(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    train_data = torch.tensor([[0.0, 1.0, 0.0]]).repeat(4, 1)
+    base_points = torch.tensor([[1.0, 0.0, 0.0]]).repeat(4, 1)
+
+    def near_endpoint_rand(
+        size: int, *, device: torch.device | None = None
+    ) -> torch.Tensor:
+        return torch.full((size,), 0.9999, device=device)
+
+    monkeypatch.setattr(train_module.geom, "sample_sphere", lambda n: base_points[:n])
+    monkeypatch.setattr(train_module.torch, "rand", near_endpoint_rand)
+
+    result = train(
+        train_data,
+        train_data,
+        TimeConditionedVectorField(hidden_dim=8, n_layers=1),
+        rcfm_loss,
+        epochs=1,
+        seed=7,
+        device="cpu",
+    )
+
+    assert all(math.isfinite(value) for value in result.train_loss)
+    assert all(math.isfinite(value) for value in result.validation_loss)

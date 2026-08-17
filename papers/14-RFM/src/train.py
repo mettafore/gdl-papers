@@ -1,12 +1,18 @@
 """Lightweight training harness for the RFM reproduction."""
 
+import argparse
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TypeAlias, TypedDict
 
 import geometry as geom
+import loss as l
+import model as m
 import torch
 from torch import nn
+
+import data as d
 
 DataSource: TypeAlias = torch.Tensor
 LossCallable: TypeAlias = Callable[..., torch.Tensor]
@@ -133,7 +139,7 @@ def train(
     val_losses = []
     for _ in range(epochs):
         x0 = geom.sample_sphere(n).to(_resolved_device)
-        t = torch.rand(n, device=_resolved_device)
+        t = 1e-3 + (1 - 2e-3) * torch.rand(n, device=_resolved_device)
         xt = geom.geodesic_path(x0, x1, t)
         cvf = geom.conditional_vf(xt, x1, t)
         ut = model(xt, t)
@@ -145,7 +151,7 @@ def train(
         with torch.no_grad():
             # Validation Losses
             x0_val = geom.sample_sphere(n_val).to(_resolved_device)
-            t_val = torch.rand(n_val, device=_resolved_device)
+            t_val = 1e-3 + (1 - 2e-3) * torch.rand(n_val, device=_resolved_device)
             xt_val = geom.geodesic_path(x0_val, val, t_val)
             cvf_val = geom.conditional_vf(xt_val, val, t_val)
             ut_val = model(xt_val, t_val)
@@ -163,3 +169,48 @@ def train(
         epochs=epochs,
         seed=seed,
     )
+
+
+def main():
+    """
+    Main loop for running training.
+    """
+    PAPER_DIR = Path(__file__).resolve().parent.parent
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--epochs", type=int, default=3)
+    parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument(
+        "--data-path", type=Path, default=PAPER_DIR / "data" / "fire.csv"
+    )
+    parser.add_argument("--seed", type=int, default=42)
+    args = parser.parse_args()
+
+    epochs = args.epochs
+    lr = args.lr
+    device = args.device
+    data_path = args.data_path
+    seed = args.seed
+    data = d.load_fire_csv(data_path)
+    train_data, val_data, test_data = d.split_points(data, seed)
+    torch.manual_seed(seed=seed)
+    model = m.TimeConditionedVectorField()
+    optimizer_settings = {"lr": lr}
+    loss_fn = l.rcfm_loss
+
+    result = train(
+        train_data=train_data,
+        validation_data=val_data,
+        model=model,
+        loss_fn=loss_fn,
+        optimizer_settings=optimizer_settings,
+        epochs=epochs,
+        seed=seed,
+        device=device,
+    )
+    print(result)
+
+
+if __name__ == "__main__":
+    main()

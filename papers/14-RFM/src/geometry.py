@@ -68,7 +68,10 @@ def log_map(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     _check_point_pair(x, y)
 
     dot_prod = (x * y).sum(dim=1, keepdim=True)
-    theta = torch.arccos(torch.clamp(dot_prod, -1, 1))
+    cross_prod = torch.linalg.vector_norm(
+        torch.cross(x, y, dim=1), dim=-1, keepdim=True
+    )
+    theta = torch.atan2(cross_prod, dot_prod)
     y_parallel = dot_prod * x
     y_perp = y - y_parallel
     v_normalized = torch.nn.functional.normalize(y_perp, dim=-1)
@@ -82,8 +85,11 @@ def premetric_d(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     Target equation: d(x, y) = arccos(clip(x dot y, -1, 1)).
     """
     _check_point_pair(x, y)
-
-    return torch.arccos(torch.clamp((x * y).sum(dim=1), -1, 1))
+    dot_prod = (x * y).sum(dim=1, keepdim=True)
+    cross_prod = torch.linalg.vector_norm(
+        torch.cross(x, y, dim=1), dim=-1, keepdim=True
+    )
+    return torch.atan2(cross_prod, dot_prod).reshape(-1)
 
 
 def grad_d(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
