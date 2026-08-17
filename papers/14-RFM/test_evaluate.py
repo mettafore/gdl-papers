@@ -1,5 +1,6 @@
 """Tests for the RFM sampling and ODE integration contracts."""
 
+import math
 import sys
 from pathlib import Path
 
@@ -9,7 +10,12 @@ from torch import nn
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from evaluate import integrate_ode, sample
+from evaluate import (
+    divergence,
+    integrate_ode,
+    negative_log_likelihood,
+    sample,
+)
 from model import TimeConditionedVectorField
 
 
@@ -77,6 +83,38 @@ class _RecordingConstantModel(nn.Module):
         return torch.ones_like(x) * self.parameter
 
 
+class _DiagonalLinearField(nn.Module):
+    """A field whose divergence can be calculated by hand."""
+
+    def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+        del t
+        return torch.stack(
+            (2.0 * x[:, 0], -3.0 * x[:, 1], 0.5 * x[:, 2]),
+            dim=1,
+        )
+
+
+class _ZeroField(nn.Module):
+    """A stationary flow with no change-of-variables correction."""
+
+    def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
+        del t
+        return torch.zeros_like(x)
+
+
+def test_divergence_returns_per_point_jacobian_trace() -> None:
+    x = torch.tensor(
+        [[1.0, 2.0, 3.0], [-4.0, 5.0, -6.0]],
+        requires_grad=True,
+    )
+    t = torch.tensor([0.2, 0.8])
+
+    result = divergence(_DiagonalLinearField(), x, t)
+
+    assert result.shape == (2,)
+    assert torch.allclose(result, torch.tensor([-0.5, -0.5]))
+
+
 def test_sample_integrates_model_without_gradients() -> None:
     model = _RecordingConstantModel()
     initial_state = _initial_state()
@@ -96,3 +134,30 @@ def test_sample_adapts_scalar_solver_time_to_model_batch_time() -> None:
 
     assert result.shape == (2, 3)
     assert torch.isfinite(result).all()
+
+
+def test_zero_field_nll_matches_uniform_sphere_baseline() -> None:
+    result = negative_log_likelihood(
+        _ZeroField(),
+        _initial_state().detach(),
+        rtol=1e-7,
+        atol=1e-7,
+    )
+
+    assert isinstance(result, float)
+    assert math.isclose(result, math.log(4.0 * math.pi), rel_tol=1e-5)
+
+
+def test_nll_applies_reverse_flow_divergence_correction() -> None:
+    result = negative_log_likelihood(
+        _DiagonalLinearField(),
+        _initial_state().detach(),
+        rtol=1e-7,
+        atol=1e-7,
+    )
+
+    assert math.isclose(
+        result,
+        math.log(4.0 * math.pi) - 0.5,
+        rel_tol=1e-5,
+    )

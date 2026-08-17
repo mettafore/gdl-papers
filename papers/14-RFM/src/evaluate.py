@@ -1,26 +1,15 @@
-"""Sampling and evaluation harness contracts for the RFM reproduction.
+"""Sampling and exact likelihood evaluation for the RFM reproduction."""
 
-The ODE solver, sampling implementation, distribution metric, and likelihood
-calculation are intentionally left for the learner to implement.
-"""
-
+import math
 from collections.abc import Callable
-from dataclasses import dataclass
 from typing import TypeAlias
 
 import torch
 from torch import nn
+from torch.func import jacrev, vmap
+from torchdiffeq import odeint
 
 VelocityField: TypeAlias = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
-
-
-@dataclass(frozen=True, slots=True)
-class EvaluationResult:
-    """Document the values returned by :func:`evaluate`."""
-
-    samples: torch.Tensor
-    metric: float | None
-    nll: float
 
 
 def _check_points(points: torch.Tensor, name: str) -> None:
@@ -85,8 +74,8 @@ def sample(
 ) -> torch.Tensor:
     """Sample from the learned flow starting from ``initial_state``.
 
-    Sampling is explicitly outside autograd.  The future implementation will
-    resolve ``device``, wrap ``model`` as a velocity field, and delegate to
+    Sampling is explicitly outside autograd.  The model is moved to the
+    requested device, wrapped as a velocity field, and passed to
     :func:`integrate_ode`.
     """
     if not isinstance(model, nn.Module):
@@ -99,8 +88,6 @@ def sample(
         raise ValueError(f"invalid device: {device!r}") from exc
 
     with torch.no_grad():
-        # TODO(luv): construct the model-backed velocity field and call
-        # integrate_ode; do not re-enable autograd in this sampling path.
         initial_state = initial_state.to(device=device)
         model = model.to(device=device)
 
@@ -117,18 +104,24 @@ def sample(
         )
 
 
-def compute_metric(samples: torch.Tensor, reference: torch.Tensor) -> float:
-    """Compute the chosen sample-vs-reference metric.
+def model_one_point(
+    model: nn.Module,
+    x_single: torch.Tensor,
+    t_single: torch.Tensor,
+) -> torch.Tensor:
+    """Evaluate a batched velocity model for one spatial point and time."""
+    return model(
+        x_single.unsqueeze(0),
+        t_single.unsqueeze(0),
+    ).reshape(-1)
 
-    The metric contract is a finite scalar; its definition belongs to the RFM
-    experiment rather than this harness.
-    """
-    _check_points(samples, "samples")
-    _check_points(reference, "reference")
 
-    # TODO(luv): implement the selected distribution metric and return a
-    # finite scalar for comparison with the uniform-sphere baseline.
-    raise NotImplementedError
+def div_fn(
+    u: Callable[[torch.Tensor], torch.Tensor],
+) -> Callable[[torch.Tensor], torch.Tensor]:
+    """Build a scalar divergence function from a vector-valued field."""
+    J = jacrev(u)
+    return lambda x: torch.trace(J(x))
 
 
 def divergence(
@@ -147,64 +140,64 @@ def divergence(
         A tensor with shape ``(n,)`` containing the Jacobian trace for each
         point.
     """
-    # TODO(luv):
-    # - Evaluate the model with gradients enabled for x.
-    # - Extract the spatial Jacobian diagonal for each point.
-    # - Sum that diagonal and return one divergence value per batch row.
-    raise NotImplementedError
+
+    def model_helper(x_single, t_single):
+        def u(z):
+            return model_one_point(model, z, t_single)
+
+        J = jacrev(u)(x_single)
+        return torch.trace(J)
+
+    return vmap(model_helper)(x, t)
 
 
-def negative_log_likelihood(model: nn.Module, samples: torch.Tensor) -> float:
-    """Estimate the model's sample likelihood as a finite scalar NLL."""
-    if not isinstance(model, nn.Module):
-        raise TypeError("model must be an instance of torch.nn.Module")
-    _check_points(samples, "samples")
-
-    # TODO(luv): implement the RFM likelihood/NLL calculation for the learned
-    # flow, including any required trace or divergence estimate.
-    raise NotImplementedError
-
-
-def evaluate(
+def negative_log_likelihood(
     model: nn.Module,
-    initial_state: torch.Tensor,
-    reference: torch.Tensor,
+    samples: torch.Tensor,
     *,
-    metric: Callable[[torch.Tensor, torch.Tensor], float] | None = None,
-    t0: float = 0.0,
-    t1: float = 1.0,
-    steps: int = 100,
-    device: str | torch.device | None = None,
-) -> EvaluationResult:
-    """Sample and score a learned flow against reference sphere points.
+    rtol: float = 1e-7,
+    atol: float = 1e-7,
+) -> float:
+    """Compute exact test NLL with the continuous change-of-variables formula.
 
-    Args:
-        model: Learned velocity-field model.
-        initial_state: Base samples with shape ``(n, 3)``.
-        reference: Held-out reference points with shape ``(n, 3)``.
-        metric: Optional metric callable; ``compute_metric`` is the default
-            contract when this is ``None``.
-        t0: Initial ODE time.
-        t1: Final ODE time.
-        steps: Number of solver steps reserved for ODE integration.
-        device: Device on which sampling will run.
-
-    Returns:
-        An :class:`EvaluationResult` containing generated samples, the chosen
-        metric, and the model NLL.
-
-    Raises:
-        NotImplementedError: Until sampling, metric, and NLL bodies are
-        implemented by the learner.
+    The base distribution is the uniform density on the unit sphere, and the
+    divergence accumulator supplies the change-of-variables correction. The
+    augmented state is integrated backward from data time ``1`` to base time
+    ``0`` using the paper's adaptive ``dopri5`` solver.
     """
     if not isinstance(model, nn.Module):
         raise TypeError("model must be an instance of torch.nn.Module")
-    _check_points(initial_state, "initial_state")
-    _check_points(reference, "reference")
-    if metric is not None and not callable(metric):
-        raise TypeError("metric must be callable or None")
-    _check_time_interval(t0, t1, steps)
+    _check_points(samples, "samples")
+    if not math.isfinite(rtol) or rtol <= 0:
+        raise ValueError("rtol must be a positive finite number")
+    if not math.isfinite(atol) or atol <= 0:
+        raise ValueError("atol must be a positive finite number")
 
-    # TODO(luv): call sample(), compute the selected metric, and compute NLL;
-    # return all three values in the documented EvaluationResult structure.
-    raise NotImplementedError
+    accumulator_at_data = torch.zeros_like(samples[:, :1])
+    state_at_data = torch.cat((samples, accumulator_at_data), dim=1)
+
+    def augmented_dynamics(t: torch.Tensor, state: torch.Tensor) -> torch.Tensor:
+        """Return d/dt of the augmented [position, log-density] state."""
+        x = state[:, :3]
+        times = t.expand(x.shape[0])
+        velocity = model(x, times)
+        spatial_divergence = divergence(model, x, times).unsqueeze(1)
+
+        return torch.concat([velocity, -spatial_divergence], dim=1)
+
+    integration_times = samples.new_tensor([1.0, 0.0])
+    trajectory = odeint(
+        augmented_dynamics,
+        state_at_data,
+        integration_times,
+        rtol=rtol,
+        atol=atol,
+        method="dopri5",
+        options={"min_step": 1e-5},
+    )
+
+    state_at_base = trajectory[-1]
+    log_density_correction = state_at_base[:, 3]
+    uniform_log_density = -samples.new_tensor(4.0 * math.pi).log()
+
+    return -float(uniform_log_density - log_density_correction.mean())
