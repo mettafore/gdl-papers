@@ -26,6 +26,30 @@ Data files are local inputs and must not be committed.
 
 ## Run
 
+Run from the repository root with the CLI defaults:
+
+```bash
+uv run python papers/14-RFM/src/train.py
+```
+
+The defaults are:
+
+- `--epochs 3`
+- `--lr 0.001`
+- `--device cpu`
+- `--data-path papers/14-RFM/data/fire.csv`
+- `--seed 42`
+
+Suggested first Fire run:
+
+```bash
+uv run python papers/14-RFM/src/train.py \
+  --epochs 10 \
+  --lr 0.001 \
+  --device cpu \
+  --seed 42
+```
+
 Focused data tests:
 
 ```bash
@@ -33,7 +57,13 @@ uv run pytest papers/14-RFM/test_data.py -q
 ```
 
 Open `papers/14-RFM/nbs/fire_eda.ipynb` for exploration after downloading the
-CSV. Training and evaluation commands will be added with those slices.
+CSV. Evaluation commands will be added when `evaluate.py` is complete.
+
+## Hyperparameters
+
+The training CLI accepts `--epochs`, `--lr`, `--device`, `--data-path`, and
+`--seed`. See the defaults above; the data path is optional when using the
+standard local `fire.csv` location.
 
 ## Completion
 
