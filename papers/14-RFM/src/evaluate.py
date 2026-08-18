@@ -298,6 +298,10 @@ def evaluate_run(
             atol=atol,
         )
         weighted_nll += batch_nll * len(batch)
+        print(
+            f"NLL evaluation: {start + len(batch)}/{len(test_data)} points",
+            flush=True,
+        )
 
     return metric_name, weighted_nll / len(test_data)
 

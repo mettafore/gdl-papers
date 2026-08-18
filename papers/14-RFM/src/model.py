@@ -2,6 +2,7 @@
 
 import torch
 from torch import nn
+from torch.nn import functional as F
 
 
 class TimeConditionedVectorField(nn.Module):
@@ -55,5 +56,6 @@ class TimeConditionedVectorField(nn.Module):
     def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
         """Evaluate the time-conditioned tangent vector field."""
         self._validate_inputs(x, t)
-        ambient = self._ambient_field(x, t)
-        return self._project_to_tangent(x, ambient)
+        x_on_sphere = F.normalize(x, dim=-1)
+        ambient = self._ambient_field(x_on_sphere, t)
+        return self._project_to_tangent(x_on_sphere, ambient)

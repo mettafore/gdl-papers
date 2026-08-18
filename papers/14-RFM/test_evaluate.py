@@ -207,6 +207,7 @@ def test_nll_applies_reverse_flow_divergence_correction() -> None:
 def test_evaluate_run_rebuilds_checkpoint_and_replays_saved_split(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
     configured_split: list[float],
     expected_split: list[float],
     batch_size: int,
@@ -274,6 +275,14 @@ def test_evaluate_run_rebuilds_checkpoint_and_replays_saved_split(
     assert [len(batch) for batch in observed_batches] == expected_batch_sizes
     assert torch.equal(torch.cat(observed_batches), expected_test)
     assert score == pytest.approx(float(expected_test[:, 0].mean()))
+    completed = []
+    total = 0
+    for size in expected_batch_sizes:
+        total += size
+        completed.append(total)
+    assert capsys.readouterr().out.splitlines() == [
+        f"NLL evaluation: {count}/{len(expected_test)} points" for count in completed
+    ]
 
 
 @pytest.mark.parametrize("batch_size", [0, -1, True])
