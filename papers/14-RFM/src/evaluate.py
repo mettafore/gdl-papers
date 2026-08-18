@@ -10,12 +10,14 @@ import model as m
 import torch
 from torch import nn
 from torch.func import jacrev, vmap
+from torch.nn import functional as F
 from torchdiffeq import odeint
 
 import data as d
 from gdl import load_checkpoint, load_run_config, run_dir
 
 VelocityField: TypeAlias = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+StateUpdate: TypeAlias = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
 PAPER_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -47,6 +49,7 @@ def integrate_ode(
     t0: float = 0.0,
     t1: float = 1.0,
     steps: int = 100,
+    state_update: StateUpdate | None = None,
 ) -> torch.Tensor:
     """Integrate an RFM velocity field without constructing an autograd graph.
 
@@ -64,7 +67,11 @@ def integrate_ode(
     current_time = torch.tensor(t0).to(device=state.device, dtype=state.dtype)
     for _ in range(steps):
         velocity = velocity_field(state, current_time)
-        state += dt * velocity
+        increment = dt * velocity
+        if state_update is None:
+            state += increment
+        else:
+            state = state_update(state, increment)
         current_time += dt
     return state
 
@@ -102,12 +109,19 @@ def sample(
             t_series = t.repeat(x.shape[0])
             return model(x, t_series)
 
+        def project_sphere_step(
+            state: torch.Tensor,
+            increment: torch.Tensor,
+        ) -> torch.Tensor:
+            return F.normalize(state + increment, dim=-1)
+
         return integrate_ode(
             velocity_field=velocity_model,
             initial_state=initial_state,
             t0=t0,
             t1=t1,
             steps=steps,
+            state_update=project_sphere_step,
         )
 
 

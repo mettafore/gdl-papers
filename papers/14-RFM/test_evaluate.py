@@ -73,8 +73,8 @@ def test_integrate_ode_rejects_invalid_solver_options(
         )
 
 
-class _RecordingConstantModel(nn.Module):
-    """Return a constant velocity while recording queried times."""
+class _RecordingRotationModel(nn.Module):
+    """Return a tangent rotation while recording queried times."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -84,7 +84,11 @@ class _RecordingConstantModel(nn.Module):
     def forward(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
         assert t.shape == (x.shape[0],)
         self.times.append(float(t[0]))
-        return torch.ones_like(x) * self.parameter
+        rotation = torch.stack(
+            (-x[:, 1], x[:, 0], torch.zeros_like(x[:, 2])),
+            dim=1,
+        )
+        return rotation * self.parameter
 
 
 class _DiagonalLinearField(nn.Module):
@@ -131,12 +135,27 @@ def test_real_model_divergence_is_jacobian_compatible() -> None:
 
 
 def test_sample_integrates_model_without_gradients() -> None:
-    model = _RecordingConstantModel()
+    model = _RecordingRotationModel()
     initial_state = _initial_state()
 
     result = sample(model, initial_state, steps=4, device="cpu")
 
-    assert torch.allclose(result, initial_state.detach() + 1.0)
+    projected_euler_angle = 4 * math.atan(0.25)
+    expected = torch.tensor(
+        [
+            [
+                math.cos(projected_euler_angle),
+                math.sin(projected_euler_angle),
+                0.0,
+            ],
+            [
+                -math.sin(projected_euler_angle),
+                math.cos(projected_euler_angle),
+                0.0,
+            ],
+        ]
+    )
+    assert torch.allclose(result, expected, atol=1e-6)
     assert result.shape == initial_state.shape
     assert not result.requires_grad
     assert model.times == pytest.approx([0.0, 0.25, 0.5, 0.75])

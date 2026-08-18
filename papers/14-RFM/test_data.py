@@ -8,7 +8,12 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from data import latlon_degrees_to_cartesian, load_fire_csv, split_points
+from data import (
+    cartesian_to_latlon_degrees,
+    latlon_degrees_to_cartesian,
+    load_fire_csv,
+    split_points,
+)
 
 
 def test_conversion_reports_shape_dtype_and_unit_norm() -> None:
@@ -33,6 +38,29 @@ def test_conversion_reports_shape_dtype_and_unit_norm() -> None:
 def test_conversion_known_landmarks(latlon: list[float], expected: list[float]) -> None:
     points = latlon_degrees_to_cartesian(torch.tensor([latlon]))
     assert torch.allclose(points[0], torch.tensor(expected), atol=1e-6)
+
+
+def test_cartesian_to_latlon_degrees_inverts_axis_points() -> None:
+    points = torch.tensor(
+        [
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, -1.0],
+        ]
+    )
+
+    latlon = cartesian_to_latlon_degrees(points)
+
+    expected = torch.tensor(
+        [
+            [0.0, 0.0],
+            [0.0, 90.0],
+            [90.0, 0.0],
+            [-90.0, 0.0],
+        ]
+    )
+    assert torch.allclose(latlon, expected, atol=1e-5)
 
 
 @pytest.mark.parametrize(

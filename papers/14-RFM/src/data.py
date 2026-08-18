@@ -7,6 +7,28 @@ import pandas as pd
 import torch
 
 
+def cartesian_to_latlon_degrees(points: torch.Tensor) -> torch.Tensor:
+    """Convert Cartesian points from shape ``(n, 3)`` to latitude/longitude.
+
+    Rows are normalized before conversion so small numerical drift from ODE
+    integration does not distort the geographic coordinates.
+    """
+    if points.ndim != 2 or points.shape[1] != 3:
+        raise ValueError("points must have shape (n, 3)")
+    if points.shape[0] == 0:
+        raise ValueError("points must contain at least one row")
+    if not torch.isfinite(points).all():
+        raise ValueError("points must contain finite values")
+
+    norms = torch.linalg.vector_norm(points, dim=1, keepdim=True)
+    if torch.any(norms == 0):
+        raise ValueError("points must not contain the zero vector")
+    unit_points = points / norms
+    latitude = torch.rad2deg(torch.asin(unit_points[:, 2].clamp(-1.0, 1.0)))
+    longitude = torch.rad2deg(torch.atan2(unit_points[:, 1], unit_points[:, 0]))
+    return torch.stack((latitude, longitude), dim=1)
+
+
 def latlon_degrees_to_cartesian(latlon: torch.Tensor) -> torch.Tensor:
     """Convert latitude/longitude degrees from shape ``(n, 2)`` to ``(n, 3)``.
 
