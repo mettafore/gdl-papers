@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import math
 import sys
 import time
@@ -11,6 +12,7 @@ from typing import Any, cast
 import modal
 
 REMOTE_ROOT = "/root/rfm"
+RESULTS_ROOT = "/root/rfm-results"
 
 if modal.is_local():
     repo_root = Path(__file__).resolve().parents[2]
@@ -40,9 +42,16 @@ else:
     image = modal.Image.debian_slim(python_version="3.12")
 
 app = modal.App("rfm-fire-calibration")
+results_volume = modal.Volume.from_name(
+    "rfm-fire-results",
+    create_if_missing=True,
+)
 
 
-@app.function(image=image)
+@app.function(
+    image=image,
+    volumes={RESULTS_ROOT: results_volume},
+)
 def run_calibration(
     *,
     epochs: int,
@@ -111,7 +120,7 @@ def run_calibration(
         atol=atol,
     )
 
-    return {
+    summary = {
         "run_id": run_id,
         "steps": expected_steps,
         "seconds": elapsed,
@@ -121,6 +130,10 @@ def run_calibration(
         "final_validation_loss": result.validation_loss[-1],
         metric_name: test_nll,
     }
+    summary_path = Path(paper_dir) / "latest_result.json"
+    summary_path.write_text(json.dumps(summary, indent=2, sort_keys=True) + "\n")
+    results_volume.commit()
+    return summary
 
 
 @app.local_entrypoint()
@@ -150,7 +163,7 @@ def main(
         memory=memory,
         timeout=timeout,
     )
-    result = remote_function.remote(
+    function_call = remote_function.spawn(
         epochs=epochs,
         batch_size=batch_size,
         hidden_dim=hidden_dim,
@@ -164,6 +177,6 @@ def main(
         train_pct=train_pct,
         val_pct=val_pct,
         test_pct=test_pct,
-        paper_dir="/tmp/rfm-calibration",
+        paper_dir=f"{RESULTS_ROOT}/calibration",
     )
-    print(result)
+    print(f"function_call_id: {function_call.object_id}")

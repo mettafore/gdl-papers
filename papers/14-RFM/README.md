@@ -96,6 +96,15 @@ the held-out test NLL from the same checkpoint. Override the evaluation
 settings with `--eval-batch-size`, `--rtol`, and `--atol`. It is a bounded
 calibration, not the paper's full million-update training run.
 
+The Modal job uses the persistent Volume `rfm-fire-results` and writes the
+checkpoint, run metadata, and final result to `calibration/`. Retrieve the final
+JSON after completion with:
+
+```bash
+uv run modal volume get rfm-fire-results \
+  calibration/latest_result.json rfm-fire-result.json
+```
+
 Full paper tests:
 
 ```bash
