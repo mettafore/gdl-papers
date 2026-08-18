@@ -21,6 +21,7 @@ if modal.is_local():
             "torch==2.2.2",
             "numpy<2",
             "pandas>=2.3.3",
+            "torchdiffeq>=0.2.5",
         )
         .add_local_dir(
             str(repo_root / "src" / "gdl"),
@@ -50,16 +51,20 @@ def run_calibration(
     n_layers: int,
     lr: float,
     weight_decay: float,
+    eval_batch_size: int,
+    rtol: float,
+    atol: float,
     seed: int,
     train_pct: float,
     val_pct: float,
     test_pct: float,
     paper_dir: str,
 ) -> dict[str, float | int | str]:
-    """Train the Fire model remotely and return timing and loss metrics."""
+    """Train the Fire model and return timing, loss, and test NLL metrics."""
     sys.path.insert(0, f"{REMOTE_ROOT}/paper_src")
     sys.path.insert(0, REMOTE_ROOT)
 
+    from evaluate import evaluate_run
     from train import train_run
 
     import data as d
@@ -96,6 +101,15 @@ def run_calibration(
         paper_dir=paper_dir,
     )
     elapsed = time.perf_counter() - start
+    metric_name, test_nll = evaluate_run(
+        run_id,
+        paper_dir=paper_dir,
+        data_path=data_path,
+        batch_size=eval_batch_size,
+        device="cuda",
+        rtol=rtol,
+        atol=atol,
+    )
 
     return {
         "run_id": run_id,
@@ -105,6 +119,7 @@ def run_calibration(
         "seconds_per_step": elapsed / expected_steps,
         "final_train_loss": result.train_loss[-1],
         "final_validation_loss": result.validation_loss[-1],
+        metric_name: test_nll,
     }
 
 
@@ -120,6 +135,9 @@ def main(
     n_layers: int = 10,
     lr: float = 5e-4,
     weight_decay: float = 0.01,
+    eval_batch_size: int = 64,
+    rtol: float = 1e-7,
+    atol: float = 1e-7,
     seed: int = 42,
     train_pct: float = 80.0,
     val_pct: float = 10.0,
@@ -139,6 +157,9 @@ def main(
         n_layers=n_layers,
         lr=lr,
         weight_decay=weight_decay,
+        eval_batch_size=eval_batch_size,
+        rtol=rtol,
+        atol=atol,
         seed=seed,
         train_pct=train_pct,
         val_pct=val_pct,

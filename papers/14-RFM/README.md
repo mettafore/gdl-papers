@@ -91,8 +91,10 @@ uv run modal run papers/14-RFM/modal_train.py \
 ```
 
 This default calibration performs approximately 1,000 optimizer updates and
-reports elapsed time, updates per second, and final training/validation loss.
-It is a speed check, not the paper's full million-update training run.
+reports elapsed time, updates per second, final training/validation loss, and
+the held-out test NLL from the same checkpoint. Override the evaluation
+settings with `--eval-batch-size`, `--rtol`, and `--atol`. It is a bounded
+calibration, not the paper's full million-update training run.
 
 Full paper tests:
 
