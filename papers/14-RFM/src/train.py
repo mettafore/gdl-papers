@@ -1,6 +1,7 @@
 """Lightweight training harness for the RFM reproduction."""
 
 import argparse
+import math
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,6 +12,7 @@ import loss as l
 import model as m
 import torch
 from torch import nn
+from torch.utils.data import DataLoader, TensorDataset
 
 import data as d
 from gdl import log_metrics, new_run_dir, save_checkpoint, set_seed
@@ -68,6 +70,7 @@ def _check_options(
     loss_fn: LossCallable,
     optimizer_settings: AdamSettings | None,
     epochs: int,
+    batch_size: int,
     seed: int | None,
     device: str | torch.device | None,
 ) -> torch.device:
@@ -80,6 +83,12 @@ def _check_options(
         raise TypeError("optimizer_settings must be a mapping or None")
     if isinstance(epochs, bool) or not isinstance(epochs, int) or epochs <= 0:
         raise ValueError("epochs must be a positive integer")
+    if (
+        isinstance(batch_size, bool)
+        or not isinstance(batch_size, int)
+        or batch_size <= 0
+    ):
+        raise ValueError("batch_size must be a positive integer")
     if seed is not None and (isinstance(seed, bool) or not isinstance(seed, int)):
         raise TypeError("seed must be an integer or None")
     if seed is not None and seed < 0:
@@ -99,6 +108,8 @@ def train(
     *,
     optimizer_settings: AdamSettings | None = None,
     epochs: int = 1,
+    batch_size: int = 1024,
+    weight_decay: float = 0.0,
     seed: int | None = None,
     device: str | torch.device | None = None,
 ) -> TrainingResult:
@@ -126,33 +137,64 @@ def train(
     _check_data_source(train_data, "train_data")
     _check_data_source(validation_data, "validation_data")
     _resolved_device = _check_options(
-        model, loss_fn, optimizer_settings, epochs, seed, device
+        model,
+        loss_fn,
+        optimizer_settings,
+        epochs,
+        batch_size,
+        seed,
+        device,
     )
     if seed is not None:
         torch.manual_seed(seed)
-    x1 = train_data.to(_resolved_device)
     val = validation_data.to(_resolved_device)
     n_val = len(val)
     if optimizer_settings is None:
         optimizer_settings = dict()
     model = model.to(_resolved_device)
-    optim = torch.optim.Adam(model.parameters(), **optimizer_settings)
-    n = len(train_data)
+    optimizer_settings = {
+        **optimizer_settings,
+        "weight_decay": weight_decay,
+    }
+    optim = torch.optim.AdamW(model.parameters(), **optimizer_settings)
+    steps_per_epoch = math.ceil(len(train_data) / batch_size)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optim,
+        T_max=epochs * steps_per_epoch,
+    )
+    train_loader = DataLoader(
+        TensorDataset(train_data),
+        batch_size=batch_size,
+        shuffle=True,
+        drop_last=False,
+    )
     losses = []
     val_losses = []
     for _ in range(epochs):
-        x0 = geom.sample_sphere(n, device=_resolved_device)
-        t = 1e-3 + (1 - 2e-3) * torch.rand(n, device=_resolved_device)
-        xt = geom.geodesic_path(x0, x1, t)
-        cvf = geom.conditional_vf(xt, x1, t)
-        ut = model(xt, t)
-        loss = loss_fn(ut, cvf)
-        optim.zero_grad()
-        loss.backward()
-        optim.step()
-        losses.append(loss.item())
+        model.train()
+        epoch_loss = 0.0
+        n_seen = 0
+        for (x1_batch,) in train_loader:
+            x1_batch = x1_batch.to(_resolved_device)
+            n_batch = len(x1_batch)
+            x0 = geom.sample_sphere(n_batch, device=_resolved_device)
+            t = 1e-3 + (1 - 2e-3) * torch.rand(
+                n_batch,
+                device=_resolved_device,
+            )
+            xt = geom.geodesic_path(x0, x1_batch, t)
+            cvf = geom.conditional_vf(xt, x1_batch, t)
+            ut = model(xt, t)
+            loss = loss_fn(ut, cvf)
+            optim.zero_grad()
+            loss.backward()
+            optim.step()
+            scheduler.step()
+            epoch_loss += loss.item() * n_batch
+            n_seen += n_batch
+        losses.append(epoch_loss / n_seen)
+        model.eval()
         with torch.no_grad():
-            # Validation Losses
             x0_val = geom.sample_sphere(n_val, device=_resolved_device)
             t_val = 1e-3 + (1 - 2e-3) * torch.rand(n_val, device=_resolved_device)
             xt_val = geom.geodesic_path(x0_val, val, t_val)
@@ -178,7 +220,9 @@ def train_run(
     data_path: str | Path,
     *,
     epochs: int = 3,
-    lr: float = 1e-3,
+    batch_size: int = 1024,
+    lr: float = 1e-4,
+    weight_decay: float = 0.0,
     hidden_dim: int = 64,
     n_layers: int = 10,
     seed: int = 42,
@@ -218,7 +262,12 @@ def train_run(
             "split": [train_pct, val_pct, test_pct],
         },
         "model": {"hidden_dim": hidden_dim, "n_layers": n_layers},
-        "hyperparams": {"lr": lr, "epochs": epochs},
+        "hyperparams": {
+            "lr": lr,
+            "epochs": epochs,
+            "batch_size": batch_size,
+            "weight_decay": weight_decay,
+        },
         "seed": seed,
         "metric": METRIC,
     }
@@ -231,6 +280,8 @@ def train_run(
         loss_fn=l.rcfm_loss,
         optimizer_settings={"lr": lr},
         epochs=epochs,
+        batch_size=batch_size,
+        weight_decay=weight_decay,
         seed=seed,
         device=device,
     )
@@ -254,7 +305,9 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", type=int, default=3)
-    parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument("--batch-size", type=int, default=1024)
+    parser.add_argument("--lr", type=float, default=1e-4)
+    parser.add_argument("--weight-decay", type=float, default=0.0)
     parser.add_argument("--hidden-dim", type=int, default=64)
     parser.add_argument("--n-layers", type=int, default=10)
     parser.add_argument("--device", type=str, default="cpu")
@@ -271,7 +324,9 @@ def main():
     run_id, _, _ = train_run(
         data_path=args.data_path,
         epochs=args.epochs,
+        batch_size=args.batch_size,
         lr=args.lr,
+        weight_decay=args.weight_decay,
         hidden_dim=args.hidden_dim,
         n_layers=args.n_layers,
         seed=args.seed,

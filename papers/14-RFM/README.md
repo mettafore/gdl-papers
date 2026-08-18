@@ -39,9 +39,11 @@ uv run python papers/14-RFM/src/train.py
 The defaults are:
 
 - `--epochs 3`
-- `--lr 0.001`
+- `--lr 0.0001`
+- `--batch-size 1024`
 - `--hidden-dim 64`
 - `--n-layers 10`
+- `--weight-decay 0.0`
 - `--device cpu`
 - `--data-path papers/14-RFM/data/fire.csv`
 - `--seed 42`
@@ -68,10 +70,29 @@ Suggested first Fire run:
 ```bash
 uv run python papers/14-RFM/src/train.py \
   --epochs 10 \
-  --lr 0.001 \
+  --lr 0.0001 \
   --device cpu \
   --seed 42
 ```
+
+For a bounded author-scale speed calibration on Modal:
+
+```bash
+uv run modal run papers/14-RFM/modal_train.py \
+  --gpu A100-40GB \
+  --cpu 8 \
+  --memory 32768 \
+  --epochs 500 \
+  --batch-size 8192 \
+  --hidden-dim 2048 \
+  --n-layers 10 \
+  --lr 0.0005 \
+  --weight-decay 0.01
+```
+
+This default calibration performs approximately 1,000 optimizer updates and
+reports elapsed time, updates per second, and final training/validation loss.
+It is a speed check, not the paper's full million-update training run.
 
 Full paper tests:
 
@@ -84,7 +105,7 @@ CSV.
 
 ## Hyperparameters
 
-The training CLI accepts `--epochs`, `--lr`, `--hidden-dim`, `--n-layers`,
+The training CLI accepts `--epochs`, `--lr`, `--batch-size`, `--weight-decay`, `--hidden-dim`, `--n-layers`,
 `--device`, `--data-path`, `--seed`, `--train-pct`, `--val-pct`, `--test-pct`,
 and `--runs-base`. The three percentages are stored as percentage points in the
 run configuration; they must be finite, non-negative, and sum to 100.

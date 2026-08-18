@@ -110,6 +110,128 @@ def test_train_updates_model_parameters() -> None:
     )
 
 
+def test_train_uses_adamw_optimizer(monkeypatch: pytest.MonkeyPatch) -> None:
+    optimizer_types: list[type[torch.optim.Optimizer]] = []
+    original_adamw = train_module.torch.optim.AdamW
+
+    def recording_adamw(*args: object, **kwargs: object) -> torch.optim.Optimizer:
+        optimizer_types.append(original_adamw)
+        return original_adamw(*args, **kwargs)
+
+    monkeypatch.setattr(train_module.torch.optim, "AdamW", recording_adamw)
+
+    train(
+        sample_sphere(4),
+        sample_sphere(4),
+        TimeConditionedVectorField(hidden_dim=8, n_layers=1),
+        rcfm_loss,
+        epochs=1,
+        batch_size=4,
+        seed=7,
+        device="cpu",
+    )
+
+    assert optimizer_types == [original_adamw]
+
+
+def test_train_passes_weight_decay_to_adamw(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+    original_adamw = train_module.torch.optim.AdamW
+
+    def recording_adamw(*args: object, **kwargs: object) -> torch.optim.Optimizer:
+        captured.update(kwargs)
+        return original_adamw(*args, **kwargs)
+
+    monkeypatch.setattr(train_module.torch.optim, "AdamW", recording_adamw)
+
+    train(
+        sample_sphere(4),
+        sample_sphere(4),
+        TimeConditionedVectorField(hidden_dim=8, n_layers=1),
+        rcfm_loss,
+        epochs=1,
+        batch_size=4,
+        weight_decay=0.01,
+        seed=7,
+        device="cpu",
+    )
+
+    assert captured["weight_decay"] == 0.01
+
+
+def test_train_steps_cosine_scheduler_after_each_batch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    schedulers: list[object] = []
+
+    class RecordingScheduler:
+        def __init__(self, optimizer: object, *, T_max: int) -> None:
+            del optimizer
+            self.t_max = T_max
+            self.step_calls = 0
+            schedulers.append(self)
+
+        def step(self) -> None:
+            self.step_calls += 1
+
+    monkeypatch.setattr(
+        train_module.torch.optim.lr_scheduler,
+        "CosineAnnealingLR",
+        RecordingScheduler,
+    )
+
+    train(
+        sample_sphere(8),
+        sample_sphere(4),
+        TimeConditionedVectorField(hidden_dim=8, n_layers=1),
+        rcfm_loss,
+        epochs=2,
+        batch_size=2,
+        seed=7,
+        device="cpu",
+    )
+
+    assert len(schedulers) == 1
+    scheduler = schedulers[0]
+    assert scheduler.t_max == 8
+    assert scheduler.step_calls == 8
+
+
+def test_train_steps_scheduler_once_per_batch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    scheduler_steps = 0
+    original_scheduler = train_module.torch.optim.lr_scheduler.CosineAnnealingLR
+
+    class RecordingScheduler(original_scheduler):
+        def step(self, *args: object, **kwargs: object) -> None:
+            nonlocal scheduler_steps
+            scheduler_steps += 1
+            super().step(*args, **kwargs)
+
+    monkeypatch.setattr(
+        train_module.torch.optim.lr_scheduler,
+        "CosineAnnealingLR",
+        RecordingScheduler,
+    )
+
+    train(
+        sample_sphere(4),
+        sample_sphere(4),
+        TimeConditionedVectorField(hidden_dim=8, n_layers=1),
+        rcfm_loss,
+        epochs=1,
+        batch_size=2,
+        seed=7,
+        device="cpu",
+    )
+
+    # PyTorch performs one scheduler step during initialization.
+    assert scheduler_steps - 1 == 2
+
+
 def test_train_keeps_returned_model_on_resolved_device() -> None:
     result = train(
         sample_sphere(8),
@@ -141,6 +263,23 @@ def test_validation_forward_disables_gradients() -> None:
     )
 
     assert model.grad_enabled == [True, False]
+
+
+def test_train_uses_multiple_batches_per_epoch() -> None:
+    model = _GradRecordingModel()
+
+    train(
+        sample_sphere(8),
+        sample_sphere(4),
+        model,
+        rcfm_loss,
+        epochs=1,
+        batch_size=2,
+        seed=7,
+        device="cpu",
+    )
+
+    assert model.grad_enabled == [True, True, True, True, False]
 
 
 def test_train_is_reproducible_when_model_initialization_is_repeated() -> None:
@@ -239,7 +378,12 @@ def test_train_run_persists_config_metrics_and_checkpoint(tmp_path: Path) -> Non
         "split": [70, 20, 10],
     }
     assert config["model"] == {"hidden_dim": 8, "n_layers": 1}
-    assert config["hyperparams"] == {"lr": 1e-3, "epochs": 2}
+    assert config["hyperparams"] == {
+        "lr": 1e-3,
+        "epochs": 2,
+        "batch_size": 1024,
+        "weight_decay": 0.0,
+    }
     assert config["seed"] == 7
     assert config["metric"] == "nll"
 
