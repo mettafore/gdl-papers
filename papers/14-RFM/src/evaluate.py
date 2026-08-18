@@ -249,11 +249,28 @@ def evaluate_run(
     trained_model.eval()
 
     configured_data_path = config["data"]["path"]
+    configured_split = config["data"]["split"]
+    if not isinstance(configured_split, list) or len(configured_split) != 3:
+        raise ValueError(
+            "saved split must contain train, validation, and test percentages"
+        )
+    if all(
+        isinstance(value, (int, float)) and not isinstance(value, bool)
+        for value in configured_split
+    ) and math.isclose(sum(configured_split), 1.0, rel_tol=0.0, abs_tol=1e-9):
+        configured_split = [100.0 * value for value in configured_split]
+    train_pct, val_pct, test_pct = configured_split
     resolved_data_path = Path(
         configured_data_path if data_path is None else data_path
     ).resolve()
     points = d.load_fire_csv(resolved_data_path)
-    _, _, test_data = d.split_points(points, seed=int(config["seed"]))
+    _, _, test_data = d.split_points(
+        points,
+        seed=int(config["seed"]),
+        train_pct=train_pct,
+        val_pct=val_pct,
+        test_pct=test_pct,
+    )
     if len(test_data) == 0:
         raise ValueError("held-out test split must contain at least one point")
 

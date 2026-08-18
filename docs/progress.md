@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-08-17 (RFM Fire train/evaluate run wiring complete)
+**Last updated:** 2026-08-18 (RFM Fire split recipe made configurable)
 
 ---
 
@@ -187,7 +187,9 @@ the only dataset in the current experiment.
 **Current state:** green — training now persists canonical run folders
 (`config.json`, per-epoch `metrics.jsonl`, `checkpoint.pt`), and evaluation
 rebuilds the saved model and reports sample-weighted exact NLL on the
-deterministic held-out split. The full paper suite passes 54 tests.
+deterministic held-out split. Train/validation/test percentages are stored in
+the run recipe and replayed by evaluation. The full paper suite passes 61
+tests.
 
 **Next action:** run a one-epoch Fire CLI smoke, evaluate its saved run, then
 start the real Fire training run and compare held-out NLL with the paper's

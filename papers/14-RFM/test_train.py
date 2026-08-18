@@ -218,6 +218,9 @@ def test_train_run_persists_config_metrics_and_checkpoint(tmp_path: Path) -> Non
         hidden_dim=8,
         n_layers=1,
         seed=7,
+        train_pct=70,
+        val_pct=20,
+        test_pct=10,
         device="cpu",
         runs_base="runs",
         paper_dir=tmp_path,
@@ -228,7 +231,7 @@ def test_train_run_persists_config_metrics_and_checkpoint(tmp_path: Path) -> Non
     assert config["data"] == {
         "dataset": "fire",
         "path": str(data_path.resolve()),
-        "split": [0.8, 0.1, 0.1],
+        "split": [70, 20, 10],
     }
     assert config["model"] == {"hidden_dim": 8, "n_layers": 1}
     assert config["hyperparams"] == {"lr": 1e-3, "epochs": 2}
@@ -248,3 +251,26 @@ def test_train_run_persists_config_metrics_and_checkpoint(tmp_path: Path) -> Non
         for epoch in range(2)
     ]
     assert (run_dir / "checkpoint.pt").is_file()
+
+
+def test_train_run_rejects_an_empty_partition_before_creating_a_run(
+    tmp_path: Path,
+) -> None:
+    data_path = tmp_path / "fire.csv"
+    data_path.write_text(
+        "LATITUDE,LONGITUDE\n"
+        "0,0\n10,20\n-10,-20\n20,40\n-20,-40\n"
+        "30,60\n-30,-60\n40,80\n-40,-80\n50,100\n"
+    )
+
+    with pytest.raises(ValueError, match="non-empty"):
+        train_module.train_run(
+            data_path=data_path,
+            train_pct=100,
+            val_pct=0,
+            test_pct=0,
+            runs_base="runs",
+            paper_dir=tmp_path,
+        )
+
+    assert not (tmp_path / "runs").exists()

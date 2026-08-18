@@ -182,6 +182,9 @@ def train_run(
     hidden_dim: int = 64,
     n_layers: int = 10,
     seed: int = 42,
+    train_pct: float = 80.0,
+    val_pct: float = 10.0,
+    test_pct: float = 10.0,
     device: str | torch.device = "cpu",
     runs_base: str = "runs",
     paper_dir: str | Path = PAPER_DIR,
@@ -189,7 +192,19 @@ def train_run(
     """Train Fire RFM and persist its reproducible run artifacts."""
     resolved_data_path = Path(data_path).resolve()
     points = d.load_fire_csv(resolved_data_path)
-    train_data, validation_data, _ = d.split_points(points, seed)
+    train_data, validation_data, test_data = d.split_points(
+        points,
+        seed,
+        train_pct=train_pct,
+        val_pct=val_pct,
+        test_pct=test_pct,
+    )
+    if any(
+        len(partition) == 0 for partition in (train_data, validation_data, test_data)
+    ):
+        raise ValueError(
+            "split must produce non-empty train, validation, and test data"
+        )
 
     set_seed(seed)
     model = m.TimeConditionedVectorField(
@@ -200,7 +215,7 @@ def train_run(
         "data": {
             "dataset": "fire",
             "path": str(resolved_data_path),
-            "split": [0.8, 0.1, 0.1],
+            "split": [train_pct, val_pct, test_pct],
         },
         "model": {"hidden_dim": hidden_dim, "n_layers": n_layers},
         "hyperparams": {"lr": lr, "epochs": epochs},
@@ -247,6 +262,9 @@ def main():
         "--data-path", type=Path, default=PAPER_DIR / "data" / "fire.csv"
     )
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--train-pct", type=float, default=80.0)
+    parser.add_argument("--val-pct", type=float, default=10.0)
+    parser.add_argument("--test-pct", type=float, default=10.0)
     parser.add_argument("--runs-base", type=str, default="runs")
     args = parser.parse_args()
 
@@ -257,6 +275,9 @@ def main():
         hidden_dim=args.hidden_dim,
         n_layers=args.n_layers,
         seed=args.seed,
+        train_pct=args.train_pct,
+        val_pct=args.val_pct,
+        test_pct=args.test_pct,
         device=args.device,
         runs_base=args.runs_base,
     )

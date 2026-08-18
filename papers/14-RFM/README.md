@@ -23,7 +23,8 @@ fits the **Fire** location distribution on the unit sphere `S^2`.
 - Source: the authors' [`data.zip`](https://rtqichen.com/manifold_data/data.zip).
 - Expected file: `fire.csv`, with header and rows ordered as latitude, longitude
   in degrees.
-- Split: deterministic 80% train, 10% validation, 10% test.
+- Split: deterministic 80% train, 10% validation, 10% test by default;
+  configurable per run.
 
 Data files are local inputs and must not be committed.
 
@@ -44,6 +45,9 @@ The defaults are:
 - `--device cpu`
 - `--data-path papers/14-RFM/data/fire.csv`
 - `--seed 42`
+- `--train-pct 80`
+- `--val-pct 10`
+- `--test-pct 10`
 - `--runs-base runs`
 
 Training prints a `run_id` and writes
@@ -54,10 +58,10 @@ that exact run with:
 uv run python papers/14-RFM/src/evaluate.py --run <run_id>
 ```
 
-Evaluation recreates the seeded 80/10/10 split and reports exact NLL on the
-held-out test points. It uses batches of 64 by default because exact Jacobian
-traces are memory intensive. Override this with `--batch-size`; use
-`--data-path` if the CSV has moved since training.
+Evaluation recreates the seeded split saved in that run's configuration and
+reports exact NLL on the held-out test points. It uses batches of 64 by default
+because exact Jacobian traces are memory intensive. Override this with
+`--batch-size`; use `--data-path` if the CSV has moved since training.
 
 Suggested first Fire run:
 
@@ -81,9 +85,12 @@ CSV.
 ## Hyperparameters
 
 The training CLI accepts `--epochs`, `--lr`, `--hidden-dim`, `--n-layers`,
-`--device`, `--data-path`, `--seed`, and `--runs-base`. Evaluation accepts
-`--run`, `--batch-size` (default 64), `--device` (default CPU), `--rtol` and
-`--atol` (both default `1e-7`), `--data-path`, and `--runs-base`.
+`--device`, `--data-path`, `--seed`, `--train-pct`, `--val-pct`, `--test-pct`,
+and `--runs-base`. The three percentages are stored as percentage points in the
+run configuration; they must be finite, non-negative, and sum to 100.
+Evaluation accepts `--run`, `--batch-size` (default 64), `--device` (default
+CPU), `--rtol` and `--atol` (both default `1e-7`), `--data-path`, and
+`--runs-base`.
 
 ## Completion
 

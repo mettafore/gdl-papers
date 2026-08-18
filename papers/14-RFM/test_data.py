@@ -72,6 +72,51 @@ def test_split_sizes_follow_80_10_10_protocol() -> None:
     assert (len(train), len(validation), len(test)) == (80, 10, 11)
 
 
+def test_split_sizes_follow_requested_percentages() -> None:
+    train, validation, test = split_points(
+        _unique_points(100),
+        seed=0,
+        train_pct=70,
+        val_pct=20,
+        test_pct=10,
+    )
+
+    assert (len(train), len(validation), len(test)) == (70, 20, 10)
+
+
+def test_split_rejects_percentages_that_do_not_sum_to_100() -> None:
+    with pytest.raises(ValueError, match="sum to 100"):
+        split_points(
+            _unique_points(100),
+            seed=0,
+            train_pct=70,
+            val_pct=20,
+            test_pct=20,
+        )
+
+
+@pytest.mark.parametrize(
+    ("train_pct", "val_pct", "test_pct"),
+    [
+        (-1, 91, 10),
+        (float("nan"), 10, 90),
+        (float("inf"), 10, 90),
+    ],
+)
+def test_split_rejects_negative_or_nonfinite_percentages(
+    train_pct: float,
+    val_pct: float,
+    test_pct: float,
+) -> None:
+    with pytest.raises(ValueError):
+        split_points(
+            _unique_points(100),
+            train_pct=train_pct,
+            val_pct=val_pct,
+            test_pct=test_pct,
+        )
+
+
 def test_split_is_seeded_and_deterministic() -> None:
     points = _unique_points()
     first = split_points(points, seed=7)

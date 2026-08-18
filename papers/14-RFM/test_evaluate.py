@@ -167,9 +167,20 @@ def test_nll_applies_reverse_flow_divergence_correction() -> None:
     )
 
 
-def test_evaluate_run_rebuilds_checkpoint_and_weights_unequal_batches(
+@pytest.mark.parametrize(
+    ("configured_split", "expected_split", "batch_size", "expected_batch_sizes"),
+    [
+        ([60.0, 20.0, 20.0], [60.0, 20.0, 20.0], 4, [4, 2]),
+        ([0.8, 0.1, 0.1], [80.0, 10.0, 10.0], 2, [2, 1]),
+    ],
+)
+def test_evaluate_run_rebuilds_checkpoint_and_replays_saved_split(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
+    configured_split: list[float],
+    expected_split: list[float],
+    batch_size: int,
+    expected_batch_sizes: list[int],
 ) -> None:
     data_path = tmp_path / "fire.csv"
     rows = [
@@ -181,7 +192,7 @@ def test_evaluate_run_rebuilds_checkpoint_and_weights_unequal_batches(
         "data": {
             "dataset": "fire",
             "path": str(data_path.resolve()),
-            "split": [0.8, 0.1, 0.1],
+            "split": configured_split,
         },
         "model": {"hidden_dim": 8, "n_layers": 1},
         "hyperparams": {"lr": 1e-3, "epochs": 1},
@@ -218,15 +229,19 @@ def test_evaluate_run_rebuilds_checkpoint_and_weights_unequal_batches(
         run_id,
         runs_base="runs",
         paper_dir=tmp_path,
-        batch_size=2,
+        batch_size=batch_size,
         device="cpu",
     )
 
     expected_test = data_module.split_points(
-        data_module.load_fire_csv(data_path), seed=7
+        data_module.load_fire_csv(data_path),
+        seed=7,
+        train_pct=expected_split[0],
+        val_pct=expected_split[1],
+        test_pct=expected_split[2],
     )[2]
     assert metric == "nll"
-    assert [len(batch) for batch in observed_batches] == [2, 1]
+    assert [len(batch) for batch in observed_batches] == expected_batch_sizes
     assert torch.equal(torch.cat(observed_batches), expected_test)
     assert score == pytest.approx(float(expected_test[:, 0].mean()))
 

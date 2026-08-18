@@ -1,5 +1,6 @@
 """Fire dataset loading and deterministic splits on the unit sphere."""
 
+import math
 from pathlib import Path
 
 import pandas as pd
@@ -40,14 +41,37 @@ def load_fire_csv(path: str | Path) -> torch.Tensor:
 
 
 def split_points(
-    points: torch.Tensor, seed: int = 0
+    points: torch.Tensor,
+    seed: int = 0,
+    *,
+    train_pct: float = 80.0,
+    val_pct: float = 10.0,
+    test_pct: float = 10.0,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    """Return deterministic train, validation, and test tensors (80/10/10)."""
+    """Return deterministic train, validation, and test tensors by percentage.
+
+    The three percentages must be finite, non-negative, and sum to 100. Any
+    fractional row left after rounding train and validation counts is assigned
+    to the test split, preserving every input row exactly once.
+    """
+    percentages = (train_pct, val_pct, test_pct)
+    if any(
+        isinstance(value, bool)
+        or not isinstance(value, (int, float))
+        or not math.isfinite(value)
+        for value in percentages
+    ):
+        raise ValueError("split percentages must be finite numbers")
+    if any(value < 0 for value in percentages):
+        raise ValueError("split percentages must be non-negative")
+    if not math.isclose(sum(percentages), 100.0, rel_tol=0.0, abs_tol=1e-9):
+        raise ValueError("split percentages must sum to 100")
+
     generator = torch.Generator().manual_seed(seed)
     n = len(points)
     indices = torch.randperm(n, generator=generator)
-    n_train = int(0.8 * n)
-    n_val = int(0.1 * n)
+    n_train = int(train_pct / 100.0 * n)
+    n_val = int(val_pct / 100.0 * n)
     n_test = n - n_train - n_val
     train, val, test = torch.split(points[indices], [n_train, n_val, n_test])
     return train, val, test
