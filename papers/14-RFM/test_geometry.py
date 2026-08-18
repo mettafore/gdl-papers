@@ -10,6 +10,12 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 from geometry import conditional_vf, geodesic_path, sample_sphere
 
 
+def test_sample_sphere_respects_requested_device() -> None:
+    points = sample_sphere(4, device="cpu")
+
+    assert points.device == torch.device("cpu")
+
+
 def _batch_geodesics(
     x0: torch.Tensor, x1: torch.Tensor, times: torch.Tensor
 ) -> torch.Tensor:

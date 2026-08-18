@@ -186,7 +186,12 @@ def test_train_keeps_losses_finite_near_endpoint_times(
     ) -> torch.Tensor:
         return torch.full((size,), 0.9999, device=device)
 
-    monkeypatch.setattr(train_module.geom, "sample_sphere", lambda n: base_points[:n])
+    def fixed_sample_sphere(
+        n: int, *, device: torch.device | str | None = None
+    ) -> torch.Tensor:
+        return base_points[:n].to(device=device)
+
+    monkeypatch.setattr(train_module.geom, "sample_sphere", fixed_sample_sphere)
     monkeypatch.setattr(train_module.torch, "rand", near_endpoint_rand)
 
     result = train(

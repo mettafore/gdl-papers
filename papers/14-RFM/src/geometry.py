@@ -24,20 +24,20 @@ def _check_point_pair(x: torch.Tensor, y: torch.Tensor) -> None:
         raise ValueError("x and y must have the same shape")
 
 
-def sample_sphere(n: int) -> torch.Tensor:
+def sample_sphere(n: int, device: torch.device | str | None = None) -> torch.Tensor:
     """Return ``n`` approximately uniform points on the unit sphere.
 
     Contract: return a float tensor of shape ``(n, 3)`` whose rows have unit
-    Euclidean norm.
+    Euclidean norm, created on ``device`` when provided.
     """
     if n <= 0:
         raise ValueError("n must be positive")
     # Sampling z from -1 to 1
-    z = 2 * torch.rand(n, 1) - 1
+    z = 2 * torch.rand(n, 1, device=device) - 1
     # Getting radius of circle at coord z
     r = torch.sqrt(1 - torch.square(z))
     # Getting theta to get x and y
-    theta = 2 * torch.pi * torch.rand(n, 1) - 1
+    theta = 2 * torch.pi * torch.rand(n, 1, device=device) - 1
     x = (r * torch.cos(theta)).reshape(-1, 1)
     y = (r * torch.sin(theta)).reshape(-1, 1)
     return torch.concat([x, y, z], dim=1)

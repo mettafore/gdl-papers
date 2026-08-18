@@ -141,7 +141,7 @@ def train(
     losses = []
     val_losses = []
     for _ in range(epochs):
-        x0 = geom.sample_sphere(n).to(_resolved_device)
+        x0 = geom.sample_sphere(n, device=_resolved_device)
         t = 1e-3 + (1 - 2e-3) * torch.rand(n, device=_resolved_device)
         xt = geom.geodesic_path(x0, x1, t)
         cvf = geom.conditional_vf(xt, x1, t)
@@ -153,7 +153,7 @@ def train(
         losses.append(loss.item())
         with torch.no_grad():
             # Validation Losses
-            x0_val = geom.sample_sphere(n_val).to(_resolved_device)
+            x0_val = geom.sample_sphere(n_val, device=_resolved_device)
             t_val = 1e-3 + (1 - 2e-3) * torch.rand(n_val, device=_resolved_device)
             xt_val = geom.geodesic_path(x0_val, val, t_val)
             cvf_val = geom.conditional_vf(xt_val, val, t_val)
