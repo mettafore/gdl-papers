@@ -119,6 +119,17 @@ def test_divergence_returns_per_point_jacobian_trace() -> None:
     assert torch.allclose(result, torch.tensor([-0.5, -0.5]))
 
 
+def test_real_model_divergence_is_jacobian_compatible() -> None:
+    model = TimeConditionedVectorField(hidden_dim=8, n_layers=1)
+    x = torch.tensor([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
+    t = torch.tensor([0.2, 0.8])
+
+    result = divergence(model, x, t)
+
+    assert result.shape == (2,)
+    assert torch.isfinite(result).all()
+
+
 def test_sample_integrates_model_without_gradients() -> None:
     model = _RecordingConstantModel()
     initial_state = _initial_state()

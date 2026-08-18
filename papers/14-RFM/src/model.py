@@ -35,8 +35,6 @@ class TimeConditionedVectorField(nn.Module):
             raise ValueError("x must have shape (n, 3)")
         if t.ndim != 1 or t.shape[0] != x.shape[0]:
             raise ValueError("t must have shape (n,) matching x")
-        if not torch.isfinite(x).all() or not torch.isfinite(t).all():
-            raise ValueError("x and t must contain finite values")
 
     def _ambient_field(self, x: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
         """Evaluate the unconstrained ambient ``R^3`` vector field."""
