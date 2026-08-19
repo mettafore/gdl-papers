@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-08-18 (RFM Fire split recipe made configurable)
+**Last updated:** 2026-08-19 (MACE fundamentals-first Pass 3 scaffold)
 
 ---
 
@@ -27,6 +27,7 @@ Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 | 09 | NequIP | study | 📄 PDF + sources | — |
 | 10 | ManifoldFormer | breadth | 📄 PDF only | — |
 | 14 | Riemannian Flow Matching | implement | 🟡 in progress | 2026-08-17 |
+| 15 | MACE | implement | 🟡 fundamentals scaffold | 2026-08-19 |
 
 Tier definitions → [`references/papers.md`](../references/papers.md).
 
@@ -199,9 +200,24 @@ start the real Fire training run and compare held-out NLL with the paper's
 
 ## Not started (implement tier)
 
-| Paper | Repo path | Notes |
-|-------|-----------|-------|
-| MACE | — | folder not created |
+No papers are currently listed here.
+
+---
+
+## Active: 15-MACE
+
+**Goal:** derive the equivariant building blocks from first principles, then
+assemble and implement one minimal MACE message block.
+
+**Current state:** `papers/15-MACE/MACE.ipynb` is a fundamentals-first Pass 3
+scaffold for an ML practitioner new to GDL. It covers atomic geometry,
+rotations, irreps, spherical harmonics, Wigner-D matrices, equivariant channel
+mixing, tensor products, Clebsch-Gordan decomposition, higher-order coupling,
+radial bases, MACE Eqs. 8–11, and symmetry verification. Explanations and
+implementations remain user-owned TODOs.
+
+**Next action:** complete the atomic-geometry and rotation labs, including the
+first plots and translation/permutation checks, before advancing to irreps.
 
 ---
 
