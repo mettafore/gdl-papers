@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-08-19 (MACE fundamentals-first Pass 3 scaffold)
+**Last updated:** 2026-08-20 (MACE Cartesian-to-irrep learning route)
 
 ---
 
@@ -27,7 +27,7 @@ Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 | 09 | NequIP | study | 📄 PDF + sources | — |
 | 10 | ManifoldFormer | breadth | 📄 PDF only | — |
 | 14 | Riemannian Flow Matching | implement | 🟡 in progress | 2026-08-17 |
-| 15 | MACE | implement | 🟡 fundamentals scaffold | 2026-08-19 |
+| 15 | MACE | implement | 🟡 fundamentals scaffold | 2026-08-20 |
 
 Tier definitions → [`references/papers.md`](../references/papers.md).
 
@@ -210,14 +210,18 @@ No papers are currently listed here.
 assemble and implement one minimal MACE message block.
 
 **Current state:** `papers/15-MACE/MACE.ipynb` is a fundamentals-first Pass 3
-scaffold for an ML practitioner new to GDL. It covers atomic geometry,
-rotations, irreps, spherical harmonics, Wigner-D matrices, equivariant channel
-mixing, tensor products, Clebsch-Gordan decomposition, higher-order coupling,
-radial bases, MACE Eqs. 8–11, and symmetry verification. Explanations and
-implementations remain user-owned TODOs.
+scaffold for an ML practitioner new to GDL. Its beginner route now follows the
+Hitchhiker paper's pedagogy: Cartesian outer products first, experimental
+decomposition of `9 = 1 + 3 + 5`, and only then representations, irreps,
+spherical harmonics, Wigner-D matrices, tensor products, and Clebsch-Gordan
+coupling. Claude-derived Fourier and independent-rotational-block analogies are
+included as prompts to test, not supplied explanations. MACE Eqs. 8–11 remain
+later assembly exercises, and explanations and implementations remain
+user-owned TODOs.
 
-**Next action:** complete the atomic-geometry and rotation labs, including the
-first plots and translation/permutation checks, before advancing to irreps.
+**Next action:** begin Lab 4 with two non-parallel vectors, form their 3×3 outer
+product, and verify its `R @ T @ R.T` transformation law before using the word
+"irrep."
 
 ---
 
