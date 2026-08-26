@@ -16,9 +16,6 @@ def test_validate_data_dir_reports_all_missing_files(tmp_path: Path) -> None:
         data.validate_data_dir(tmp_path)
 
 
-@pytest.mark.xfail(
-    raises=NotImplementedError, strict=True, reason="TODO(luv): deterministic split"
-)
 def test_split_is_deterministic_and_has_paper_sizes() -> None:
     frames = list(range(500))
     train_a, valid_a = data.split_train_valid(frames, seed=123)
@@ -30,9 +27,12 @@ def test_split_is_deterministic_and_has_paper_sizes() -> None:
     assert set(train_a).isdisjoint(valid_a)
 
 
-@pytest.mark.xfail(
-    raises=NotImplementedError, strict=True, reason="TODO(luv): neighbour graph"
-)
+def test_split_matches_paper_era_prefix_train_suffix_valid() -> None:
+    train, valid = data.split_train_valid(list(range(10)), valid_size=2, seed=123)
+    assert train == [7, 4, 0, 2, 1, 5, 6, 8]
+    assert valid == [3, 9]
+
+
 def test_neighbor_graph_has_both_directions_and_no_self_edges() -> None:
     configuration = data.AtomicConfiguration(
         atomic_numbers=torch.tensor([1, 6, 8]),
@@ -46,15 +46,17 @@ def test_neighbor_graph_has_both_directions_and_no_self_edges() -> None:
     graph = data.build_neighbor_graph(configuration, cutoff=1.5)
     edges = set(map(tuple, graph.edge_index.T.tolist()))
     assert edges == {(0, 1), (1, 0)}
-    assert graph.edge_vectors.shape == (2, 3)
-    assert torch.allclose(graph.edge_vectors[0], -graph.edge_vectors[1])
+    assert graph.shifts.shape == (2, 3)
+    assert torch.equal(graph.shifts, torch.zeros((2, 3), dtype=torch.float64))
+    assert torch.equal(
+        graph.node_attrs,
+        torch.tensor(
+            [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]],
+            dtype=torch.float64,
+        ),
+    )
 
 
-@pytest.mark.xfail(
-    raises=NotImplementedError,
-    strict=True,
-    reason="TODO(luv): relative geometry must ignore translation",
-)
 def test_neighbor_vectors_are_translation_invariant() -> None:
     positions = torch.tensor([[0.0, 0.0, 0.0], [1.0, 0.5, 0.0]], dtype=torch.float64)
     base = data.AtomicConfiguration(
@@ -72,4 +74,68 @@ def test_neighbor_vectors_are_translation_invariant() -> None:
     graph = data.build_neighbor_graph(base, cutoff=2.0)
     shifted_graph = data.build_neighbor_graph(shifted, cutoff=2.0)
     assert torch.equal(graph.edge_index, shifted_graph.edge_index)
-    assert torch.allclose(graph.edge_vectors, shifted_graph.edge_vectors)
+    assert torch.equal(graph.shifts, shifted_graph.shifts)
+
+
+def test_data_loader_offsets_edges_and_assigns_graph_membership() -> None:
+    first = data.AtomicConfiguration(
+        torch.tensor([1, 6]),
+        torch.tensor([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], dtype=torch.float64),
+        torch.tensor(-1.0, dtype=torch.float64),
+        torch.zeros((2, 3), dtype=torch.float64),
+    )
+    second = data.AtomicConfiguration(
+        torch.tensor([7, 8]),
+        torch.tensor([[0.0, 0.0, 0.0], [0.0, 1.0, 0.0]], dtype=torch.float64),
+        torch.tensor(-2.0, dtype=torch.float64),
+        torch.zeros((2, 3), dtype=torch.float64),
+    )
+
+    batch = next(
+        iter(
+            data.get_data_loader(
+                [
+                    data.build_neighbor_graph(first, cutoff=1.5),
+                    data.build_neighbor_graph(second, cutoff=1.5),
+                ],
+                batch_size=2,
+                shuffle=False,
+            )
+        )
+    )
+
+    assert set(map(tuple, batch.edge_index.T.tolist())) == {
+        (0, 1),
+        (1, 0),
+        (2, 3),
+        (3, 2),
+    }
+    assert batch.batch.tolist() == [0, 0, 1, 1]
+    assert batch.ptr.tolist() == [0, 2, 4]
+    assert batch.energy.tolist() == [-1.0, -2.0]
+    assert batch.node_attrs.shape == (4, 4)
+
+
+def test_isolated_atom_energies_follow_fixed_h_c_n_o_order(tmp_path: Path) -> None:
+    path = tmp_path / "iso_atoms.xyz"
+    path.write_text(
+        """1
+Properties=species:S:1:pos:R:3 energy=-20.0 pbc=\"F F F\"
+C 0.0 0.0 0.0
+1
+Properties=species:S:1:pos:R:3 energy=-10.0 pbc=\"F F F\"
+H 0.0 0.0 0.0
+1
+Properties=species:S:1:pos:R:3 energy=-30.0 pbc=\"F F F\"
+N 0.0 0.0 0.0
+1
+Properties=species:S:1:pos:R:3 energy=-40.0 pbc=\"F F F\"
+O 0.0 0.0 0.0
+""",
+        encoding="utf-8",
+    )
+
+    assert torch.equal(
+        data.load_isolated_atom_energies(path),
+        torch.tensor([-10.0, -20.0, -30.0, -40.0], dtype=torch.float64),
+    )

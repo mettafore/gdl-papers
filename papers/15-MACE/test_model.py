@@ -19,6 +19,49 @@ def test_published_model_defaults_distinguish_output_and_internal_ell() -> None:
     assert config.num_interactions == 2
 
 
+def test_edge_geometry_uses_paper_sender_receiver_direction() -> None:
+    positions = torch.tensor([[0.0, 0.0, 0.0], [2.0, 1.0, 0.0]], dtype=torch.float64)
+    edge_index = torch.tensor([[0, 1], [1, 0]], dtype=torch.long)
+    shifts = torch.zeros((2, 3), dtype=torch.float64)
+
+    vectors, lengths = model.edge_vectors_and_lengths(positions, edge_index, shifts)
+
+    assert torch.equal(
+        vectors,
+        torch.tensor([[2.0, 1.0, 0.0], [-2.0, -1.0, 0.0]], dtype=torch.float64),
+    )
+    assert torch.allclose(lengths, torch.full((2, 1), 5.0**0.5, dtype=torch.float64))
+
+
+def test_force_loss_backpropagates_through_force_derivative() -> None:
+    scale = torch.nn.Parameter(torch.tensor(2.0, dtype=torch.float64))
+    positions = torch.tensor(
+        [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]],
+        dtype=torch.float64,
+        requires_grad=True,
+    )
+    edge_index = torch.tensor([[0], [1]], dtype=torch.long)
+    shifts = torch.zeros((1, 3), dtype=torch.float64)
+    _, lengths = model.edge_vectors_and_lengths(positions, edge_index, shifts)
+    energy = scale * lengths.square().sum()
+
+    forces = model.forces_from_energy(energy.reshape(1), positions, training=True)
+    forces.square().sum().backward()
+
+    assert scale.grad is not None
+    assert torch.isfinite(scale.grad)
+    assert scale.grad.abs() > 0
+
+
+def test_position_independent_energy_has_zero_forces() -> None:
+    scale = torch.nn.Parameter(torch.tensor(2.0, dtype=torch.float64))
+    positions = torch.zeros((1, 3), dtype=torch.float64, requires_grad=True)
+
+    forces = model.forces_from_energy(scale.reshape(1), positions, training=True)
+
+    assert torch.equal(forces, torch.zeros_like(positions))
+
+
 @pytest.mark.xfail(
     raises=NotImplementedError,
     strict=True,
@@ -57,8 +100,9 @@ def test_model_returns_graph_energies_and_atom_forces() -> None:
     edge_index = torch.tensor(
         [[0, 1, 0, 2, 1, 2], [1, 0, 2, 0, 2, 1]], dtype=torch.long
     )
+    shifts = torch.zeros((edge_index.shape[1], 3), dtype=torch.float64)
     graph_index = torch.zeros(3, dtype=torch.long)
-    energy, forces = mace(atomic_numbers, positions, edge_index, graph_index)
+    energy, forces = mace(atomic_numbers, positions, edge_index, shifts, graph_index)
     assert energy.shape == (1,)
     assert forces.shape == (3, 3)
     assert energy.dtype == torch.float64

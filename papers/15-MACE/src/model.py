@@ -19,6 +19,8 @@ class MACEConfig:
     cutoff: float = 5.0
     num_radial_basis: int = 8
     envelope_power: int = 5
+    radial_mlp_widths: tuple[int, ...] = (64, 64, 64, 1024)
+    readout_hidden_width: int = 16
 
     def __post_init__(self) -> None:
         if self.num_elements <= 0 or self.channels <= 0:
@@ -29,6 +31,36 @@ class MACEConfig:
             raise ValueError("internal spherical-harmonic ell must cover output ell")
         if self.cutoff <= 0 or self.num_radial_basis <= 0:
             raise ValueError("cutoff and num_radial_basis must be positive")
+
+    @property
+    def hidden_irreps(self) -> str:
+        """Published even/odd O(3) feature types through ``L=2``."""
+        return f"{self.channels}x0e + {self.channels}x1o + {self.channels}x2e"
+
+
+def edge_vectors_and_lengths(
+    positions: Tensor, edge_index: Tensor, shifts: Tensor
+) -> tuple[Tensor, Tensor]:
+    """Derive live sender-to-receiver geometry from differentiable positions."""
+    sender, receiver = edge_index
+    vectors = positions[receiver] - positions[sender] + shifts
+    lengths = torch.linalg.vector_norm(vectors, dim=-1, keepdim=True)
+    return vectors, lengths
+
+
+def forces_from_energy(energy: Tensor, positions: Tensor, *, training: bool) -> Tensor:
+    """Return ``-dE/dR``, retaining higher derivatives only during training."""
+    gradient = torch.autograd.grad(
+        outputs=energy,
+        inputs=positions,
+        grad_outputs=torch.ones_like(energy),
+        retain_graph=training,
+        create_graph=training,
+        allow_unused=True,
+    )[0]
+    if gradient is None:
+        return torch.zeros_like(positions)
+    return -gradient
 
 
 @dataclass(frozen=True)
@@ -110,8 +142,9 @@ class InteractionBlock(nn.Module):
     ) -> Tensor:
         """Return one updated feature block per node.
 
-        TODO(luv): assemble Eq. 8 -> Eq. 10 -> neighbour aggregation and the
-        interaction-specific residual path described in the supplement.
+        TODO(luv): assemble Eq. 8 -> Eq. 10 -> neighbour aggregation, divide by
+        the training-set average neighbour count, and apply the interaction-
+        specific residual path described in the supplement.
         """
         raise NotImplementedError
 
@@ -130,12 +163,14 @@ class MACE(nn.Module):
         atomic_numbers: Tensor,
         positions: Tensor,
         edge_index: Tensor,
+        shifts: Tensor,
         graph_index: Tensor,
     ) -> tuple[Tensor, Tensor]:
         """Return total energies `[B]` and forces `[N, 3]`.
 
-        TODO(luv): sum invariant atomic readouts by graph and differentiate the
-        total energy with respect to positions using the physical minus sign.
+        TODO(luv): enable position gradients, derive edge vectors and lengths
+        here (never in the data loader), sum invariant atomic readouts by graph,
+        and obtain forces with :func:`forces_from_energy`.
         """
         raise NotImplementedError
 

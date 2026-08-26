@@ -10,7 +10,7 @@ as a stub is replaced by an incorrect implementation.
 
 ## Files
 
-- `src/data.py` — extxyz records, deterministic 450/50 split, neighbour graphs
+- `src/data.py` — extxyz records, exact 450/50 split, neighbour topology, PyG batching
 - `src/model.py` — radial/angular features, coupling routes, Eqs. 8–11, MACE
 - `src/train.py` — energy/force loss and the training driver
 - `src/evaluate.py` — per-subset energy and force RMSE
@@ -25,18 +25,25 @@ Download the official 3BPA supplementary archive and place its extracted
 The relevant extxyz files are:
 
 - `train_300K.xyz` — 500 configurations; seeded split into 450 train / 50 valid
+- `iso_atoms.xyz` — isolated H/C/N/O energies used for the atomic baseline
 - `test_300K.xyz` — in-distribution test
 - `test_600K.xyz` and `test_1200K.xyz` — temperature extrapolation tests
-- `dih_beta120.xyz`, `dih_beta150.xyz`, `dih_beta180.xyz` — pooled dihedral test
+- `test_dih_beta120.xyz`, `test_dih_beta150.xyz`, `test_dih_beta180.xyz` — pooled dihedral test
 
 Each configuration has 27 atoms (H, C, N, O), one total energy, and one force
 vector per atom. Positions are in angstrom, energies in eV, and forces in
 eV/angstrom. The model predicts a scalar total energy and obtains forces as
 `-dE/dR`.
 
-ASE is the approved extxyz reader. It still needs to be added with `uv add ase`;
-the current dependency files already contain unrelated uncommitted changes, so
-this scaffold does not rewrite them.
+ASE reads extxyz and constructs the non-periodic 5-angstrom neighbour topology.
+PyG batches graphs, offsets their atom indices, and assigns each atom to a graph.
+The data pipeline stores positions, sender/receiver indices, and zero image
+shifts—but never precomputed edge vectors.
+
+The model must derive each vector during `forward` as
+`positions[receiver] - positions[sender] + shifts`, after enabling gradients on
+positions. Forces are then `-dE/dR`; force-loss training requires
+`create_graph=True` so that gradient information reaches the model parameters.
 
 ## Hyperparameters
 
@@ -47,14 +54,25 @@ Published `L=2` recipe:
 - 256 channels; 5 angstrom cutoff
 - eight Bessel radial functions; polynomial envelope `p=5`
 - radial MLP `[64, 64, 64, 1024]` with SiLU
+- hidden irreps `256x0e + 256x1o + 256x2e`
+- first interaction non-residual; second interaction residual
+- message aggregation normalized by the training-set average neighbour count
+- first readout linear; final readout MLP with hidden width `16`
 - energy/force loss weights `1 / 1000`
 - AMSGrad Adam, learning rate `0.01`, batch size `5`
 - plateau scheduler: patience `50`, factor `0.8`
 - EMA `0.99`; weight decay `5e-7` on Eq. 10/11 weights
 - per-atom mean energy shift and RMS-force scale; float64
 
+The shift is the mean residual energy per atom after subtracting the isolated
+H/C/N/O baseline. The scale is the RMS over individual force components.
+
 Small-width or one-layer settings are debugging stages only. They are not the
 benchmark model.
+
+This reproduction is deliberately bounded to non-periodic 3BPA. It does not
+implement the original repository's crystal/PBC generality or modern MACE
+foundation-model machinery.
 
 ## Run
 
