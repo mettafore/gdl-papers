@@ -60,7 +60,6 @@ def test_data_statistics_use_residual_energy_per_atom_and_force_components() -> 
         ),
         positions=torch.zeros((2, 3), dtype=torch.float64),
         edge_index=torch.tensor([[0, 1], [1, 0]], dtype=torch.long),
-        shifts=torch.zeros((2, 3), dtype=torch.float64),
         energy=torch.tensor(34.0, dtype=torch.float64),
         forces=torch.ones((2, 3), dtype=torch.float64),
     )
@@ -69,7 +68,6 @@ def test_data_statistics_use_residual_energy_per_atom_and_force_components() -> 
         node_attrs=torch.tensor([[0.0, 0.0, 0.0, 1.0]], dtype=torch.float64),
         positions=torch.zeros((1, 3), dtype=torch.float64),
         edge_index=torch.empty((2, 0), dtype=torch.long),
-        shifts=torch.empty((0, 3), dtype=torch.float64),
         energy=torch.tensor(43.0, dtype=torch.float64),
         forces=torch.full((1, 3), 3.0, dtype=torch.float64),
     )

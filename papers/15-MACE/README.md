@@ -37,11 +37,11 @@ eV/angstrom. The model predicts a scalar total energy and obtains forces as
 
 Use ASE to construct the non-periodic 5-angstrom neighbour topology. Use PyG to
 batch graphs, offset their atom indices, and assign each atom to a graph. Your
-data pipeline should store positions, sender/receiver indices, and zero image
-shifts—but never precomputed edge vectors.
+data pipeline should store positions and sender/receiver indices—but never
+precomputed edge vectors.
 
 The model must derive each vector during `forward` as
-`positions[receiver] - positions[sender] + shifts`, after enabling gradients on
+`positions[receiver] - positions[sender]`, after enabling gradients on
 positions. Forces are then `-dE/dR`; force-loss training requires
 `create_graph=True` so that gradient information reaches the model parameters.
 

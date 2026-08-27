@@ -61,7 +61,6 @@ class AtomicGraph(Data):
         node_attrs: Tensor | None = None,
         positions: Tensor | None = None,
         edge_index: Tensor | None = None,
-        shifts: Tensor | None = None,
         energy: Tensor | None = None,
         forces: Tensor | None = None,
     ) -> None:
@@ -75,8 +74,6 @@ class AtomicGraph(Data):
             self.num_nodes = positions.shape[0]
         if edge_index is not None:
             self.edge_index = edge_index
-        if shifts is not None:
-            self.shifts = shifts
         if energy is not None:
             self.energy = energy
         if forces is not None:
@@ -129,7 +126,7 @@ def build_neighbor_graph(
     differentiable positions on every forward pass.
     """
     # TODO(luv): use the author-style non-periodic ASE neighbour list; keep
-    # sender/receiver topology and shifts, but do not cache edge vectors.
+    # sender/receiver topology, but do not cache edge vectors.
     # Convert the fixed H/C/N/O species table into node attributes and return
     # the AtomicGraph required by the tests.
     raise NotImplementedError

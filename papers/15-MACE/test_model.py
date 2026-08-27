@@ -25,9 +25,8 @@ def test_published_model_defaults_distinguish_output_and_internal_ell() -> None:
 def test_edge_geometry_uses_paper_sender_receiver_direction() -> None:
     positions = torch.tensor([[0.0, 0.0, 0.0], [2.0, 1.0, 0.0]], dtype=torch.float64)
     edge_index = torch.tensor([[0, 1], [1, 0]], dtype=torch.long)
-    shifts = torch.zeros((2, 3), dtype=torch.float64)
 
-    vectors, lengths = model.edge_vectors_and_lengths(positions, edge_index, shifts)
+    vectors, lengths = model.edge_vectors_and_lengths(positions, edge_index)
 
     assert torch.equal(
         vectors,
@@ -47,8 +46,7 @@ def test_force_loss_backpropagates_through_force_derivative() -> None:
         requires_grad=True,
     )
     edge_index = torch.tensor([[0], [1]], dtype=torch.long)
-    shifts = torch.zeros((1, 3), dtype=torch.float64)
-    _, lengths = model.edge_vectors_and_lengths(positions, edge_index, shifts)
+    _, lengths = model.edge_vectors_and_lengths(positions, edge_index)
     energy = scale * lengths.square().sum()
 
     forces = model.forces_from_energy(energy.reshape(1), positions, training=True)
@@ -111,9 +109,8 @@ def test_model_returns_graph_energies_and_atom_forces() -> None:
     edge_index = torch.tensor(
         [[0, 1, 0, 2, 1, 2], [1, 0, 2, 0, 2, 1]], dtype=torch.long
     )
-    shifts = torch.zeros((edge_index.shape[1], 3), dtype=torch.float64)
     graph_index = torch.zeros(3, dtype=torch.long)
-    energy, forces = mace(atomic_numbers, positions, edge_index, shifts, graph_index)
+    energy, forces = mace(atomic_numbers, positions, edge_index, graph_index)
     assert energy.shape == (1,)
     assert forces.shape == (3, 3)
     assert energy.dtype == torch.float64

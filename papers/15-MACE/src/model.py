@@ -39,10 +39,10 @@ class MACEConfig:
 
 
 def edge_vectors_and_lengths(
-    positions: Tensor, edge_index: Tensor, shifts: Tensor
+    positions: Tensor, edge_index: Tensor
 ) -> tuple[Tensor, Tensor]:
     """Derive live sender-to-receiver geometry from differentiable positions."""
-    # TODO(luv): derive vectors from the positions passed into the model, using
+    # TODO(luv): derive vectors from the positions passed into the model using
     # the sender/receiver convention in the data contract; return lengths [E, 1].
     raise NotImplementedError
 
@@ -155,7 +155,6 @@ class MACE(nn.Module):
         atomic_numbers: Tensor,
         positions: Tensor,
         edge_index: Tensor,
-        shifts: Tensor,
         graph_index: Tensor,
     ) -> tuple[Tensor, Tensor]:
         """Return total energies `[B]` and forces `[N, 3]`.

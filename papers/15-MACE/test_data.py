@@ -49,8 +49,6 @@ def test_neighbor_graph_has_both_directions_and_no_self_edges() -> None:
     graph = data.build_neighbor_graph(configuration, cutoff=1.5)
     edges = set(map(tuple, graph.edge_index.T.tolist()))
     assert edges == {(0, 1), (1, 0)}
-    assert graph.shifts.shape == (2, 3)
-    assert torch.equal(graph.shifts, torch.zeros((2, 3), dtype=torch.float64))
     assert torch.equal(
         graph.node_attrs,
         torch.tensor(
@@ -63,7 +61,7 @@ def test_neighbor_graph_has_both_directions_and_no_self_edges() -> None:
 @pytest.mark.xfail(
     raises=NotImplementedError, strict=True, reason="TODO(luv): graph topology"
 )
-def test_neighbor_vectors_are_translation_invariant() -> None:
+def test_neighbor_topology_is_translation_invariant() -> None:
     positions = torch.tensor([[0.0, 0.0, 0.0], [1.0, 0.5, 0.0]], dtype=torch.float64)
     base = data.AtomicConfiguration(
         torch.tensor([1, 6]),
@@ -80,7 +78,6 @@ def test_neighbor_vectors_are_translation_invariant() -> None:
     graph = data.build_neighbor_graph(base, cutoff=2.0)
     shifted_graph = data.build_neighbor_graph(shifted, cutoff=2.0)
     assert torch.equal(graph.edge_index, shifted_graph.edge_index)
-    assert torch.equal(graph.shifts, shifted_graph.shifts)
 
 
 @pytest.mark.xfail(
@@ -92,7 +89,6 @@ def test_data_loader_offsets_edges_and_assigns_graph_membership() -> None:
         node_attrs=torch.tensor([[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]]),
         positions=torch.tensor([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]]),
         edge_index=torch.tensor([[0, 1], [1, 0]], dtype=torch.long),
-        shifts=torch.zeros((2, 3)),
         energy=torch.tensor(-1.0),
         forces=torch.zeros((2, 3)),
     )
@@ -101,7 +97,6 @@ def test_data_loader_offsets_edges_and_assigns_graph_membership() -> None:
         node_attrs=torch.tensor([[0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]),
         positions=torch.tensor([[0.0, 0.0, 0.0], [0.0, 1.0, 0.0]]),
         edge_index=torch.tensor([[0, 1], [1, 0]], dtype=torch.long),
-        shifts=torch.zeros((2, 3)),
         energy=torch.tensor(-2.0),
         forces=torch.zeros((2, 3)),
     )
