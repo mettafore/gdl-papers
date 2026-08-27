@@ -4,12 +4,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence, TypeVar
 
-import ase.neighborlist
 import numpy as np
 import torch
 from ase.io import read
 from torch import Tensor
-from torch.nn import functional as F
 from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader
 
@@ -105,21 +103,9 @@ def load_extxyz(path: Path) -> list[AtomicConfiguration]:
 
 def load_isolated_atom_energies(path: Path) -> Tensor:
     """Return isolated-atom energies in fixed H, C, N, O channel order."""
-    frames = read(path, index=":")
-    energies_by_atomic_number: dict[int, float] = {}
-    for atoms in frames:
-        if len(atoms) != 1:
-            raise ValueError(f"expected one atom per configuration in {path}")
-        atomic_number = int(atoms.get_atomic_numbers()[0])
-        energies_by_atomic_number[atomic_number] = float(atoms.get_potential_energy())
-
-    missing = [z for z in ATOMIC_NUMBERS if z not in energies_by_atomic_number]
-    if missing:
-        raise ValueError(f"missing isolated-atom energies for atomic numbers {missing}")
-    return torch.tensor(
-        [energies_by_atomic_number[z] for z in ATOMIC_NUMBERS],
-        dtype=torch.float64,
-    )
+    # TODO(luv): read one-atom frames, validate that all four elements occur,
+    # and return their energies in the fixed channel order above.
+    raise NotImplementedError
 
 
 def split_train_valid(
@@ -142,44 +128,11 @@ def build_neighbor_graph(
     Edge vectors are deliberately absent: the model derives them from its live,
     differentiable positions on every forward pass.
     """
-    cell = np.identity(3, dtype=float)
-    sender, receiver, unit_shifts = ase.neighborlist.primitive_neighbor_list(
-        quantities="ijS",
-        pbc=(False, False, False),
-        cell=cell,
-        positions=configuration.positions.detach().cpu().numpy(),
-        cutoff=cutoff,
-        self_interaction=True,
-        use_scaled_positions=False,
-    )
-    keep = ~((sender == receiver) & np.all(unit_shifts == 0, axis=1))
-    edge_index = torch.as_tensor(
-        np.stack((sender[keep], receiver[keep])), dtype=torch.long
-    )
-    shifts = torch.as_tensor(
-        unit_shifts[keep] @ cell, dtype=configuration.positions.dtype
-    )
-
-    try:
-        element_indices = [
-            ATOMIC_NUMBERS.index(int(z)) for z in configuration.atomic_numbers
-        ]
-    except ValueError as exc:
-        raise ValueError("3BPA supports only H, C, N, and O") from exc
-    node_attrs = F.one_hot(
-        torch.tensor(element_indices, dtype=torch.long),
-        num_classes=len(ATOMIC_NUMBERS),
-    ).to(dtype=configuration.positions.dtype)
-
-    return AtomicGraph(
-        atomic_numbers=configuration.atomic_numbers,
-        node_attrs=node_attrs,
-        positions=configuration.positions,
-        edge_index=edge_index,
-        shifts=shifts,
-        energy=configuration.energy,
-        forces=configuration.forces,
-    )
+    # TODO(luv): use the author-style non-periodic ASE neighbour list; keep
+    # sender/receiver topology and shifts, but do not cache edge vectors.
+    # Convert the fixed H/C/N/O species table into node attributes and return
+    # the AtomicGraph required by the tests.
+    raise NotImplementedError
 
 
 def get_data_loader(
@@ -190,12 +143,9 @@ def get_data_loader(
     drop_last: bool = False,
 ) -> DataLoader:
     """Batch graphs with PyG's index-offset and graph-membership handling."""
-    return DataLoader(
-        dataset=dataset,
-        batch_size=batch_size,
-        shuffle=shuffle,
-        drop_last=drop_last,
-    )
+    # TODO(luv): construct the PyG loader so a batch offsets edge indices and
+    # supplies its graph-membership arrays.
+    raise NotImplementedError
 
 
 def validate_data_dir(data_dir: Path) -> None:

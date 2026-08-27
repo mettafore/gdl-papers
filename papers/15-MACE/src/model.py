@@ -42,25 +42,17 @@ def edge_vectors_and_lengths(
     positions: Tensor, edge_index: Tensor, shifts: Tensor
 ) -> tuple[Tensor, Tensor]:
     """Derive live sender-to-receiver geometry from differentiable positions."""
-    sender, receiver = edge_index
-    vectors = positions[receiver] - positions[sender] + shifts
-    lengths = torch.linalg.vector_norm(vectors, dim=-1, keepdim=True)
-    return vectors, lengths
+    # TODO(luv): derive vectors from the positions passed into the model, using
+    # the sender/receiver convention in the data contract; return lengths [E, 1].
+    raise NotImplementedError
 
 
 def forces_from_energy(energy: Tensor, positions: Tensor, *, training: bool) -> Tensor:
     """Return ``-dE/dR``, retaining higher derivatives only during training."""
-    gradient = torch.autograd.grad(
-        outputs=energy,
-        inputs=positions,
-        grad_outputs=torch.ones_like(energy),
-        retain_graph=training,
-        create_graph=training,
-        allow_unused=True,
-    )[0]
-    if gradient is None:
-        return torch.zeros_like(positions)
-    return -gradient
+    # TODO(luv): differentiate total energy with respect to positions; preserve
+    # second derivatives during training and give unused-position energies zero
+    # physical forces.
+    raise NotImplementedError
 
 
 @dataclass(frozen=True)

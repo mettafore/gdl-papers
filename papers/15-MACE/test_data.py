@@ -33,6 +33,9 @@ def test_split_matches_paper_era_prefix_train_suffix_valid() -> None:
     assert valid == [3, 9]
 
 
+@pytest.mark.xfail(
+    raises=NotImplementedError, strict=True, reason="TODO(luv): author-style graph"
+)
 def test_neighbor_graph_has_both_directions_and_no_self_edges() -> None:
     configuration = data.AtomicConfiguration(
         atomic_numbers=torch.tensor([1, 6, 8]),
@@ -57,6 +60,9 @@ def test_neighbor_graph_has_both_directions_and_no_self_edges() -> None:
     )
 
 
+@pytest.mark.xfail(
+    raises=NotImplementedError, strict=True, reason="TODO(luv): graph topology"
+)
 def test_neighbor_vectors_are_translation_invariant() -> None:
     positions = torch.tensor([[0.0, 0.0, 0.0], [1.0, 0.5, 0.0]], dtype=torch.float64)
     base = data.AtomicConfiguration(
@@ -77,27 +83,33 @@ def test_neighbor_vectors_are_translation_invariant() -> None:
     assert torch.equal(graph.shifts, shifted_graph.shifts)
 
 
+@pytest.mark.xfail(
+    raises=NotImplementedError, strict=True, reason="TODO(luv): PyG graph batching"
+)
 def test_data_loader_offsets_edges_and_assigns_graph_membership() -> None:
-    first = data.AtomicConfiguration(
-        torch.tensor([1, 6]),
-        torch.tensor([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], dtype=torch.float64),
-        torch.tensor(-1.0, dtype=torch.float64),
-        torch.zeros((2, 3), dtype=torch.float64),
+    first = data.AtomicGraph(
+        atomic_numbers=torch.tensor([1, 6]),
+        node_attrs=torch.tensor([[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]]),
+        positions=torch.tensor([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]]),
+        edge_index=torch.tensor([[0, 1], [1, 0]], dtype=torch.long),
+        shifts=torch.zeros((2, 3)),
+        energy=torch.tensor(-1.0),
+        forces=torch.zeros((2, 3)),
     )
-    second = data.AtomicConfiguration(
-        torch.tensor([7, 8]),
-        torch.tensor([[0.0, 0.0, 0.0], [0.0, 1.0, 0.0]], dtype=torch.float64),
-        torch.tensor(-2.0, dtype=torch.float64),
-        torch.zeros((2, 3), dtype=torch.float64),
+    second = data.AtomicGraph(
+        atomic_numbers=torch.tensor([7, 8]),
+        node_attrs=torch.tensor([[0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]),
+        positions=torch.tensor([[0.0, 0.0, 0.0], [0.0, 1.0, 0.0]]),
+        edge_index=torch.tensor([[0, 1], [1, 0]], dtype=torch.long),
+        shifts=torch.zeros((2, 3)),
+        energy=torch.tensor(-2.0),
+        forces=torch.zeros((2, 3)),
     )
 
     batch = next(
         iter(
             data.get_data_loader(
-                [
-                    data.build_neighbor_graph(first, cutoff=1.5),
-                    data.build_neighbor_graph(second, cutoff=1.5),
-                ],
+                [first, second],
                 batch_size=2,
                 shuffle=False,
             )
@@ -116,6 +128,9 @@ def test_data_loader_offsets_edges_and_assigns_graph_membership() -> None:
     assert batch.node_attrs.shape == (4, 4)
 
 
+@pytest.mark.xfail(
+    raises=NotImplementedError, strict=True, reason="TODO(luv): isolated-atom baseline"
+)
 def test_isolated_atom_energies_follow_fixed_h_c_n_o_order(tmp_path: Path) -> None:
     path = tmp_path / "iso_atoms.xyz"
     path.write_text(

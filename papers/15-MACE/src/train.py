@@ -5,7 +5,6 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-import torch
 from model import MACEConfig
 from torch import Tensor
 from torch_geometric.data import Data
@@ -32,31 +31,16 @@ def compute_mean_rms_energy_forces(
     graphs: Sequence[Data], atomic_energies: Tensor
 ) -> tuple[float, float]:
     """Compute the paper's residual-energy shift and force-component RMS scale."""
-    residual_energy_per_atom = []
-    force_components = []
-    for graph in graphs:
-        reference = atomic_energies.to(
-            dtype=graph.node_attrs.dtype, device=graph.node_attrs.device
-        )
-        graph_reference_energy = (graph.node_attrs @ reference).sum()
-        residual_energy_per_atom.append(
-            (graph.energy - graph_reference_energy) / graph.num_nodes
-        )
-        force_components.append(graph.forces.reshape(-1))
-
-    mean = torch.stack(residual_energy_per_atom).mean()
-    rms = torch.cat(force_components).square().mean().sqrt()
-    return float(mean), float(rms)
+    # TODO(luv): subtract the atomic baseline, average residual energy per atom,
+    # and compute RMS over force components rather than force-vector magnitudes.
+    raise NotImplementedError
 
 
 def compute_average_num_neighbors(graphs: Sequence[Data]) -> float:
     """Return the paper-era mean receiver degree over the training graphs."""
-    receiver_counts = []
-    for graph in graphs:
-        receiver = graph.edge_index[1]
-        _, counts = torch.unique(receiver, return_counts=True)
-        receiver_counts.append(counts)
-    return float(torch.cat(receiver_counts).to(dtype=torch.float64).mean())
+    # TODO(luv): aggregate receiver degrees over training graphs and return the
+    # scalar message-normalization constant.
+    raise NotImplementedError
 
 
 def energy_force_loss(

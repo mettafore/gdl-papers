@@ -35,9 +35,9 @@ vector per atom. Positions are in angstrom, energies in eV, and forces in
 eV/angstrom. The model predicts a scalar total energy and obtains forces as
 `-dE/dR`.
 
-ASE reads extxyz and constructs the non-periodic 5-angstrom neighbour topology.
-PyG batches graphs, offsets their atom indices, and assigns each atom to a graph.
-The data pipeline stores positions, sender/receiver indices, and zero image
+Use ASE to construct the non-periodic 5-angstrom neighbour topology. Use PyG to
+batch graphs, offset their atom indices, and assign each atom to a graph. Your
+data pipeline should store positions, sender/receiver indices, and zero image
 shifts—but never precomputed edge vectors.
 
 The model must derive each vector during `forward` as
