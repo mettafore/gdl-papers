@@ -44,7 +44,17 @@ def edge_vectors_and_lengths(
     """Derive live sender-to-receiver geometry from differentiable positions."""
     # TODO(luv): derive vectors from the positions passed into the model using
     # the sender/receiver convention in the data contract; return lengths [E, 1].
-    raise NotImplementedError
+    edge_vectors = []
+    edge_distances = []
+    for sender, receiver in edge_index.T:
+        edge_vector = positions[receiver] - positions[sender]
+        edge_distance = torch.linalg.vector_norm(edge_vector, 2)
+        edge_vectors.append(edge_vector)
+        edge_distances.append(edge_distance)
+    edge_vectors_tensor = torch.stack(edge_vectors)
+    edge_distances_tensor = torch.stack(edge_distances).reshape(-1, 1)
+
+    return edge_vectors_tensor, edge_distances_tensor
 
 
 def forces_from_energy(energy: Tensor, positions: Tensor, *, training: bool) -> Tensor:

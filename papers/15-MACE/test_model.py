@@ -19,9 +19,6 @@ def test_published_model_defaults_distinguish_output_and_internal_ell() -> None:
     assert config.num_interactions == 2
 
 
-@pytest.mark.xfail(
-    raises=NotImplementedError, strict=True, reason="TODO(luv): live edge geometry"
-)
 def test_edge_geometry_uses_paper_sender_receiver_direction() -> None:
     positions = torch.tensor([[0.0, 0.0, 0.0], [2.0, 1.0, 0.0]], dtype=torch.float64)
     edge_index = torch.tensor([[0, 1], [1, 0]], dtype=torch.long)
