@@ -33,9 +33,6 @@ def test_split_matches_paper_era_prefix_train_suffix_valid() -> None:
     assert valid == [3, 9]
 
 
-@pytest.mark.xfail(
-    raises=NotImplementedError, strict=True, reason="TODO(luv): author-style graph"
-)
 def test_neighbor_graph_has_both_directions_and_no_self_edges() -> None:
     configuration = data.AtomicConfiguration(
         atomic_numbers=torch.tensor([1, 6, 8]),
@@ -49,6 +46,20 @@ def test_neighbor_graph_has_both_directions_and_no_self_edges() -> None:
     graph = data.build_neighbor_graph(configuration, cutoff=1.5)
     edges = set(map(tuple, graph.edge_index.T.tolist()))
     assert edges == {(0, 1), (1, 0)}
+
+
+@pytest.mark.xfail(strict=True, reason="TODO(luv): one-hot node attributes")
+def test_neighbor_graph_has_one_hot_node_attributes() -> None:
+    configuration = data.AtomicConfiguration(
+        atomic_numbers=torch.tensor([1, 6, 8]),
+        positions=torch.tensor(
+            [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [3.0, 0.0, 0.0]],
+            dtype=torch.float64,
+        ),
+        energy=torch.tensor(-1.0, dtype=torch.float64),
+        forces=torch.zeros((3, 3), dtype=torch.float64),
+    )
+    graph = data.build_neighbor_graph(configuration, cutoff=1.5)
     assert torch.equal(
         graph.node_attrs,
         torch.tensor(
@@ -58,9 +69,6 @@ def test_neighbor_graph_has_both_directions_and_no_self_edges() -> None:
     )
 
 
-@pytest.mark.xfail(
-    raises=NotImplementedError, strict=True, reason="TODO(luv): graph topology"
-)
 def test_neighbor_topology_is_translation_invariant() -> None:
     positions = torch.tensor([[0.0, 0.0, 0.0], [1.0, 0.5, 0.0]], dtype=torch.float64)
     base = data.AtomicConfiguration(

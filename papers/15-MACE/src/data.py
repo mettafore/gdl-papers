@@ -125,11 +125,28 @@ def build_neighbor_graph(
     Edge vectors are deliberately absent: the model derives them from its live,
     differentiable positions on every forward pass.
     """
-    # TODO(luv): use the author-style non-periodic ASE neighbour list; keep
-    # sender/receiver topology, but do not cache edge vectors.
-    # Convert the fixed H/C/N/O species table into node attributes and return
-    # the AtomicGraph required by the tests.
-    raise NotImplementedError
+    senders: list[int] = []
+    receivers: list[int] = []
+    for sender in range(configuration.positions.shape[0]):
+        for receiver in range(configuration.positions.shape[0]):
+            if sender == receiver:
+                continue
+            distance = torch.linalg.vector_norm(
+                configuration.positions[receiver] - configuration.positions[sender]
+            )
+            if distance < cutoff:
+                senders.append(sender)
+                receivers.append(receiver)
+
+    edge_index = torch.tensor([senders, receivers], dtype=torch.long)
+    # TODO(luv): convert fixed H/C/N/O species into one-hot node_attrs.
+    return AtomicGraph(
+        atomic_numbers=configuration.atomic_numbers,
+        positions=configuration.positions,
+        edge_index=edge_index,
+        energy=configuration.energy,
+        forces=configuration.forces,
+    )
 
 
 def get_data_loader(
