@@ -127,9 +127,6 @@ def test_data_loader_offsets_edges_and_assigns_graph_membership() -> None:
     assert batch.node_attrs.shape == (4, 4)
 
 
-@pytest.mark.xfail(
-    raises=NotImplementedError, strict=True, reason="TODO(luv): isolated-atom baseline"
-)
 def test_isolated_atom_energies_follow_fixed_h_c_n_o_order(tmp_path: Path) -> None:
     path = tmp_path / "iso_atoms.xyz"
     path.write_text(
@@ -153,3 +150,38 @@ O 0.0 0.0 0.0
         data.load_isolated_atom_energies(path),
         torch.tensor([-10.0, -20.0, -30.0, -40.0], dtype=torch.float64),
     )
+
+
+@pytest.mark.parametrize(
+    ("records", "message"),
+    [
+        (
+            '2\nProperties=species:S:1:pos:R:3 energy=0.0 pbc="F F F"\n'
+            "H 0.0 0.0 0.0\nC 1.0 0.0 0.0\n",
+            "expected 1",
+        ),
+        (
+            '1\nProperties=species:S:1:pos:R:3 energy=0.0 pbc="F F F"\n'
+            "He 0.0 0.0 0.0\n",
+            "unsupported",
+        ),
+        (
+            '1\nProperties=species:S:1:pos:R:3 energy=0.0 pbc="F F F"\n'
+            "H 0.0 0.0 0.0\n"
+            '1\nProperties=species:S:1:pos:R:3 energy=1.0 pbc="F F F"\n'
+            "H 0.0 0.0 0.0\n",
+            "duplicate",
+        ),
+        (
+            '1\nProperties=species:S:1:pos:R:3 energy=0.0 pbc="F F F"\nH 0.0 0.0 0.0\n',
+            "missing",
+        ),
+    ],
+)
+def test_isolated_atom_energies_validate_input(
+    tmp_path: Path, records: str, message: str
+) -> None:
+    path = tmp_path / "iso_atoms.xyz"
+    path.write_text(records, encoding="utf-8")
+    with pytest.raises(ValueError, match=message):
+        data.load_isolated_atom_energies(path)

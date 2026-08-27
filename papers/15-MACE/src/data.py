@@ -101,9 +101,32 @@ def load_extxyz(path: Path) -> list[AtomicConfiguration]:
 
 def load_isolated_atom_energies(path: Path) -> Tensor:
     """Return isolated-atom energies in fixed H, C, N, O channel order."""
-    # TODO(luv): read one-atom frames, validate that all four elements occur,
-    # and return their energies in the fixed channel order above.
-    raise NotImplementedError
+    iso_atoms = read(path, index=":")
+    energy_dict: dict[int, Tensor] = {}
+    for frame_index, atoms in enumerate(iso_atoms):
+        if len(atoms) != 1:
+            raise ValueError(
+                f"isolated-atom frame {frame_index} contains "
+                f"{len(atoms)} atoms; expected 1"
+            )
+        atomic_number = int(atoms.get_atomic_numbers()[0])
+        if atomic_number not in ATOMIC_NUMBER_TO_INDEX:
+            raise ValueError(
+                f"unsupported isolated-atom atomic number {atomic_number} "
+                f"in frame {frame_index}"
+            )
+        if atomic_number in energy_dict:
+            raise ValueError(
+                f"duplicate isolated-atom record for atomic number {atomic_number}"
+            )
+        energy_dict[atomic_number] = torch.tensor(
+            atoms.get_potential_energy(), dtype=torch.float64
+        )
+
+    missing = [z for z in ATOMIC_NUMBERS if z not in energy_dict]
+    if missing:
+        raise ValueError(f"missing isolated-atom records for atomic numbers {missing}")
+    return torch.stack([energy_dict[z] for z in ATOMIC_NUMBERS])
 
 
 def split_train_valid(
