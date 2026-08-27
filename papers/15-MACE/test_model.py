@@ -32,9 +32,6 @@ def test_edge_geometry_uses_paper_sender_receiver_direction() -> None:
     assert torch.allclose(lengths, torch.full((2, 1), 5.0**0.5, dtype=torch.float64))
 
 
-@pytest.mark.xfail(
-    raises=NotImplementedError, strict=True, reason="TODO(luv): force autograd"
-)
 def test_force_loss_backpropagates_through_force_derivative() -> None:
     scale = torch.nn.Parameter(torch.tensor(2.0, dtype=torch.float64))
     positions = torch.tensor(
@@ -54,11 +51,6 @@ def test_force_loss_backpropagates_through_force_derivative() -> None:
     assert scale.grad.abs() > 0
 
 
-@pytest.mark.xfail(
-    raises=NotImplementedError,
-    strict=True,
-    reason="TODO(luv): zero unused-gradient force",
-)
 def test_position_independent_energy_has_zero_forces() -> None:
     scale = torch.nn.Parameter(torch.tensor(2.0, dtype=torch.float64))
     positions = torch.zeros((1, 3), dtype=torch.float64, requires_grad=True)

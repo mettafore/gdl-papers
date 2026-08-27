@@ -62,7 +62,12 @@ def forces_from_energy(energy: Tensor, positions: Tensor, *, training: bool) -> 
     # TODO(luv): differentiate total energy with respect to positions; preserve
     # second derivatives during training and give unused-position energies zero
     # physical forces.
-    raise NotImplementedError
+    (gradient,) = torch.autograd.grad(
+        energy.sum(), positions, create_graph=training, allow_unused=True
+    )
+    if gradient is None:
+        return torch.zeros_like(positions)
+    return -gradient
 
 
 @dataclass(frozen=True)
