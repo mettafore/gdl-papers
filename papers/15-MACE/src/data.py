@@ -16,6 +16,7 @@ T = TypeVar("T")
 TRAIN_FILE = "train_300K.xyz"
 ISOLATED_ATOMS_FILE = "iso_atoms.xyz"
 ATOMIC_NUMBERS = (1, 6, 7, 8)  # H, C, N, O
+ATOMIC_NUMBER_TO_INDEX = {x: idx for idx, x in enumerate(ATOMIC_NUMBERS)}
 TEST_FILES = {
     "300K": ("test_300K.xyz",),
     "600K": ("test_600K.xyz",),
@@ -139,13 +140,19 @@ def build_neighbor_graph(
                 receivers.append(receiver)
 
     edge_index = torch.tensor([senders, receivers], dtype=torch.long)
-    # TODO(luv): convert fixed H/C/N/O species into one-hot node_attrs.
+    node_attrs = torch.tensor(
+        [ATOMIC_NUMBER_TO_INDEX[x.item()] for x in configuration.atomic_numbers]
+    )
+    node_attrs = torch.nn.functional.one_hot(
+        node_attrs, num_classes=len(ATOMIC_NUMBERS)
+    ).to(torch.float64)
     return AtomicGraph(
         atomic_numbers=configuration.atomic_numbers,
         positions=configuration.positions,
         edge_index=edge_index,
         energy=configuration.energy,
         forces=configuration.forces,
+        node_attrs=node_attrs,
     )
 
 
@@ -157,9 +164,9 @@ def get_data_loader(
     drop_last: bool = False,
 ) -> DataLoader:
     """Batch graphs with PyG's index-offset and graph-membership handling."""
-    # TODO(luv): construct the PyG loader so a batch offsets edge indices and
-    # supplies its graph-membership arrays.
-    raise NotImplementedError
+    return DataLoader(
+        dataset=dataset, batch_size=batch_size, shuffle=shuffle, drop_last=drop_last
+    )
 
 
 def validate_data_dir(data_dir: Path) -> None:

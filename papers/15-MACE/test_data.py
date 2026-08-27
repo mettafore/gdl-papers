@@ -48,7 +48,6 @@ def test_neighbor_graph_has_both_directions_and_no_self_edges() -> None:
     assert edges == {(0, 1), (1, 0)}
 
 
-@pytest.mark.xfail(strict=True, reason="TODO(luv): one-hot node attributes")
 def test_neighbor_graph_has_one_hot_node_attributes() -> None:
     configuration = data.AtomicConfiguration(
         atomic_numbers=torch.tensor([1, 6, 8]),
@@ -88,9 +87,6 @@ def test_neighbor_topology_is_translation_invariant() -> None:
     assert torch.equal(graph.edge_index, shifted_graph.edge_index)
 
 
-@pytest.mark.xfail(
-    raises=NotImplementedError, strict=True, reason="TODO(luv): PyG graph batching"
-)
 def test_data_loader_offsets_edges_and_assigns_graph_membership() -> None:
     first = data.AtomicGraph(
         atomic_numbers=torch.tensor([1, 6]),
