@@ -72,10 +72,15 @@ def forces_from_energy(energy: Tensor, positions: Tensor, *, training: bool) -> 
 
 @dataclass(frozen=True)
 class CouplingRoute:
-    """One allowed irreducible tensor-product path."""
+    """One allowed irreducible tensor-product path.
+
+    ``intermediate_ells`` records the angular orders produced between the
+    input factors and the final output. It is empty for a two-factor product.
+    """
 
     input_ells: tuple[int, ...]
     output_ell: int
+    intermediate_ells: tuple[int, ...] = ()
 
 
 def enumerate_coupling_routes(
