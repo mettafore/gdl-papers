@@ -73,6 +73,23 @@ invent a new layout — 00-template is the canonical shape every paper copies.
 
 ## Learning-stage scaffolds
 
+During learning work, interpret the user's shorthand exactly:
+
+- `chk` means manually inspect the current code only; do not run tests.
+- `test` means run the relevant unit tests.
+
+## Author-faithfulness gate
+
+Before asking the user to implement a paper mechanism:
+
+- Read the paper equation and relevant appendix, then inspect the author's
+  reference implementation or a pinned historical version.
+- State the equation-to-code mapping and label any pedagogical derivation that
+  is not on the final model execution path.
+- Do not infer a paper architecture from a general library API alone.
+- If the reference implementation has materially evolved from the paper,
+  surface that difference and obtain a scope decision before scaffolding.
+
 When the user asks to commit only a completed module:
 
 - Stage and commit only the explicitly named files.

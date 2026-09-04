@@ -3,6 +3,8 @@
 from dataclasses import dataclass
 
 import torch
+from e3nn import o3
+from e3nn.o3 import spherical_harmonics
 from torch import Tensor, nn
 
 
@@ -92,7 +94,42 @@ def enumerate_coupling_routes(
     history (not only the final ell), enforce the requested output range, and
     then add parity when moving from SO(3) intuition to full O(3) irreps.
     """
-    raise NotImplementedError
+
+    def recursive_cpl_routes(input_route, intermed_ell, l2, pos, intermed_ells):
+        """Recursive helper"""
+        allowed_ell = range(abs(intermed_ell - l2), intermed_ell + l2 + 1)
+        intermed_ells.append(intermed_ell)
+        if correlation == pos + 2:
+            for output_ell in allowed_ell:
+                if output_ell <= output_max_ell:
+                    coupling_routes.append(
+                        CouplingRoute(
+                            input_ells=tuple(input_route),
+                            output_ell=output_ell,
+                            intermediate_ells=tuple(intermed_ells[1:]),
+                        )
+                    )
+            return coupling_routes
+        else:
+            pos += 1
+            for ell in allowed_ell:
+                recursive_cpl_routes(
+                    input_route, ell, input_route[pos + 1], pos, intermed_ells
+                )
+                intermed_ells.pop()
+
+        return coupling_routes
+
+    coupling_routes: list[CouplingRoute] = []
+    intermed_ells: list[int] = []
+    coupling_routes = coupling_routes + recursive_cpl_routes(
+        input_ells,
+        input_ells[0],
+        input_ells[1],
+        pos=0,
+        intermed_ells=intermed_ells,
+    )
+    return tuple(coupling_routes)
 
 
 class BesselRadialBasis(nn.Module):
@@ -110,40 +147,124 @@ class BesselRadialBasis(nn.Module):
         TODO(luv): implement the paper's Bessel basis and polynomial envelope;
         handle the removable singularity at zero without masking real errors.
         """
-        raise NotImplementedError
+        n = torch.tensor([x for x in range(1, self.num_basis + 1)]).to(
+            device=distances.device, dtype=distances.dtype
+        )
+        zero_distances = (distances == 0).reshape(-1)
+        bessel_fn = torch.zeros_like(distances).repeat(1, self.num_basis)
+        tensor_2 = torch.tensor(2).to(device=distances.device, dtype=distances.dtype)
+        bessel_fn[zero_distances, :] = (
+            torch.sqrt(tensor_2 / self.cutoff) * n * torch.pi / self.cutoff
+        )
+        bessel_fn[~zero_distances, :] = (
+            torch.sqrt(tensor_2 / self.cutoff)
+            * torch.sin(n * torch.pi * distances[~zero_distances, :] / self.cutoff)
+            / distances[~zero_distances, :]
+        )
+        r_over_cutoff = distances / self.cutoff
+        p = self.power
+        envelope = (
+            1.0
+            - ((p + 1.0) * (p + 2.0) / 2.0) * r_over_cutoff.pow(p)
+            + p * (p + 2.0) * r_over_cutoff.pow(p + 1)
+            - (p * (p + 1.0) / 2.0) * r_over_cutoff.pow(p + 2)
+        )
+        envelope = envelope * (distances < self.cutoff)
+        return bessel_fn * envelope
 
 
 class AtomicBasis(nn.Module):
     """Construct Eq. 8 neighbour features from radial and angular factors."""
+
+    def __init__(self, config: MACEConfig):
+        super().__init__()
+        self.config = config
+        self.radial_mlp = nn.Sequential()
+        self.radial_mlp.append(nn.Linear(8, config.radial_mlp_widths[0]))
+        for idx in range(len(config.radial_mlp_widths) - 1):
+            self.radial_mlp.append(nn.SiLU())
+            self.radial_mlp.append(
+                nn.Linear(
+                    config.radial_mlp_widths[idx], config.radial_mlp_widths[idx + 1]
+                )
+            )
 
     def forward(
         self,
         node_features: Tensor,
         edge_index: Tensor,
         edge_vectors: Tensor,
+        edge_radial: Tensor,
     ) -> Tensor:
         """Return edge-conditioned atomic basis features.
 
-        TODO(luv): combine sender features, learned radial weights, and e3nn real
-        spherical harmonics with component normalization.
+        ``edge_radial`` has shape ``[E, num_radial_basis]`` and is computed
+        once from edge lengths before entering this block.
+
+        TODO(luv): combine sender features, learned weights of ``edge_radial``,
+        and e3nn real spherical harmonics of ``edge_vectors`` with component
+        normalization.
         """
-        raise NotImplementedError
+        sender_features = node_features[edge_index[0]].unsqueeze(-1)
+        receiver_index = edge_index[1]
+        ells = list(range(self.config.spherical_harmonics_max_ell + 1))
+        normalize = True
+        normalization = "component"
+        spherical_tensors = spherical_harmonics(
+            l=ells, x=edge_vectors, normalize=normalize, normalization=normalization
+        )
+        radial_weight = self.radial_mlp(edge_radial).reshape(
+            -1,
+            self.config.channels,
+            self.config.spherical_harmonics_max_ell + 1,
+        )
+
+        split_sizes = [2 * ell + 1 for ell in ells]
+        split_sperical_tensors = torch.split(spherical_tensors, split_sizes, dim=1)
+        agg_messages = list()
+        for ell in ells:
+            radial_weight_mul = radial_weight[:, :, ell].unsqueeze(2)
+            spherical_tensor_mul = split_sperical_tensors[ell].unsqueeze(1)
+            edge_message = radial_weight_mul * spherical_tensor_mul * sender_features
+            cumulative_message = torch.zeros(
+                len(node_features), self.config.channels, split_sizes[ell]
+            ).to(device=node_features.device, dtype=node_features.dtype)
+            cumulative_message = cumulative_message.index_add_(
+                0, receiver_index, edge_message
+            )
+            agg_messages.append(cumulative_message.flatten(start_dim=1))
+        return torch.concat(agg_messages, dim=1)
 
 
 class SymmetricContraction(nn.Module):
     """Form Eq. 10 higher-order equivariant product features."""
 
-    def forward(self, atomic_basis: Tensor, node_attrs: Tensor) -> Tensor:
-        """Contract allowed coupling routes through correlation order `nu=3`.
+    def __init__(self, config: MACEConfig):
+        super().__init__()
+        self.config = config
+        self.input_irreps = o3.Irreps(
+            f"{config.channels}x0e + {config.channels}x1o + "
+            f"{config.channels}x2e + {config.channels}x3o"
+        )
+        self.output_irreps = o3.Irreps(config.hidden_irreps)
+        # TODO(luv): follow the author implementation: make one `Contraction`
+        # per requested output irrep. Each contraction uses fixed U matrices
+        # (higher-order real CG coefficients), not manually staged
+        # `o3.TensorProduct` modules or exposed intermediate irreps.
 
-        TODO(luv): use the enumerated routes and CG coefficients; keep channel
-        mixing shared across every `m` within the same irrep.
+    def forward(self, atomic_basis: Tensor, node_attrs: Tensor) -> Tensor:
+        """Return the Eq. 10 product basis with shape `[N, output_irreps.dim]`.
+
+        TODO(luv): apply each author-style per-output-irrep contraction to
+        `atomic_basis` and element one-hot `node_attrs`, then concatenate the
+        output blocks. `U_matrix_real` supplies fixed geometry; learned
+        element/channel weights remain separate.
         """
         raise NotImplementedError
 
 
 class InteractionBlock(nn.Module):
-    """Aggregate Eq. 11 messages and update node states equivariantly."""
+    """Build Eq. 8 neighbour-aggregated equivariant messages."""
 
     def forward(
         self,
@@ -154,9 +275,10 @@ class InteractionBlock(nn.Module):
     ) -> Tensor:
         """Return one updated feature block per node.
 
-        TODO(luv): assemble Eq. 8 -> Eq. 10 -> neighbour aggregation, divide by
-        the training-set average neighbour count, and apply the interaction-
-        specific residual path described in the supplement.
+        TODO(luv): assemble Eq. 8's edge message and neighbour aggregation,
+        divide by the training-set average neighbour count, and apply the
+        interaction-specific residual path. Eq. 10 is applied afterward by
+        `SymmetricContraction`, not inside this block.
         """
         raise NotImplementedError
 
