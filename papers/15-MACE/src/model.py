@@ -236,6 +236,119 @@ class AtomicBasis(nn.Module):
         return torch.concat(agg_messages, dim=1)
 
 
+def _wigner_nj(
+    irrepss: tuple[o3.Irreps, ...],
+    *,
+    normalization: str,
+    dtype: torch.dtype,
+) -> list[tuple[o3.Irrep, Tensor]]:
+    """Return every legal output irrep and its fixed real U-path tensor."""
+    if not irrepss:
+        raise ValueError("irrepss must contain at least one input factor")
+
+    irrepss = tuple(o3.Irreps(irreps) for irreps in irrepss)
+    if len(irrepss) == 1:
+        (irreps,) = irrepss
+        identity = torch.eye(irreps.dim, dtype=dtype)
+        paths = []
+        start = 0
+        for multiplicity, irrep in irreps:
+            for _ in range(multiplicity):
+                stop = start + irrep.dim
+                paths.append((irrep, identity[start:stop]))
+                start = stop
+        return paths
+
+    *irrepss_left, irrepss_right = irrepss
+    left_paths = _wigner_nj(
+        tuple(irrepss_left),
+        normalization=normalization,
+        dtype=dtype,
+    )
+    paths = []
+
+    for left_irrep, left_u in left_paths:
+        right_start = 0
+        for multiplicity, right_irrep in irrepss_right:
+            for irrep_out in left_irrep * right_irrep:
+                cg = o3.wigner_3j(
+                    irrep_out.l,
+                    left_irrep.l,
+                    right_irrep.l,
+                    dtype=dtype,
+                )
+
+                if normalization == "component":
+                    cg *= irrep_out.dim**0.5
+                elif normalization == "norm":
+                    cg *= left_irrep.dim**0.5 * right_irrep.dim**0.5
+
+                coupled_u = torch.einsum("jk,ijl->ikl", left_u.flatten(1), cg)
+                coupled_u = coupled_u.reshape(
+                    irrep_out.dim,
+                    *(irreps.dim for irreps in irrepss_left),
+                    right_irrep.dim,
+                )
+
+                for copy in range(multiplicity):
+                    right_slice = slice(
+                        right_start + copy * right_irrep.dim,
+                        right_start + (copy + 1) * right_irrep.dim,
+                    )
+                    u_path = torch.zeros(
+                        irrep_out.dim,
+                        *(irreps.dim for irreps in irrepss_left),
+                        irrepss_right.dim,
+                        dtype=dtype,
+                    )
+                    u_path[..., right_slice] = coupled_u
+                    paths.append((irrep_out, u_path))
+            right_start += multiplicity * right_irrep.dim
+
+    return sorted(paths, key=lambda path: path[0])
+
+
+def u_matrix_real(
+    coupling_irreps: o3.Irreps,
+    irrep_out: o3.Irrep,
+    correlation: int,
+    *,
+    normalization: str = "component",
+    dtype: torch.dtype | None = None,
+) -> Tensor:
+    """Build fixed real CG paths for one Eq. 10 output irrep.
+
+    Returns ``[m_out, in_dim, ..., in_dim, n_paths]``, with one ``in_dim``
+    axis per correlation factor.
+    """
+    if correlation <= 0:
+        raise ValueError("correlation must be positive")
+    if normalization not in {"component", "norm", "none"}:
+        raise ValueError("normalization must be 'component', 'norm', or 'none'")
+    if dtype is None:
+        dtype = torch.get_default_dtype()
+
+    coupling_irreps = o3.Irreps(coupling_irreps)
+    irrep_out = o3.Irrep(irrep_out)
+    paths = [
+        u_path
+        for output_irrep, u_path in _wigner_nj(
+            (coupling_irreps,) * correlation,
+            normalization=normalization,
+            dtype=dtype,
+        )
+        if output_irrep == irrep_out
+    ]
+    if not paths:
+        return torch.zeros(
+            irrep_out.dim,
+            *([coupling_irreps.dim] * correlation),
+            1,
+            dtype=dtype,
+        )
+    return torch.stack(paths, dim=-1)
+
+
 class SymmetricContraction(nn.Module):
     """Form Eq. 10 higher-order equivariant product features."""
 

@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 import torch
+from e3nn import o3
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
@@ -60,19 +61,25 @@ def test_position_independent_energy_has_zero_forces() -> None:
     assert torch.equal(forces, torch.zeros_like(positions))
 
 
-@pytest.mark.xfail(
-    raises=NotImplementedError,
-    strict=True,
-    reason="TODO(luv): first tensor-product route exercise",
-)
 def test_route_enumeration_1_times_2() -> None:
     routes = model.enumerate_coupling_routes((1, 2), output_max_ell=3, correlation=2)
     assert {route.output_ell for route in routes} == {1, 2, 3}
 
 
-@pytest.mark.xfail(
-    raises=NotImplementedError, strict=True, reason="TODO(luv): radial basis"
-)
+def test_route_enumeration_nu3_retains_each_intermediate_path() -> None:
+    routes = model.enumerate_coupling_routes((1, 1, 1), output_max_ell=3, correlation=3)
+
+    assert {(route.intermediate_ells, route.output_ell) for route in routes} == {
+        ((0,), 1),
+        ((1,), 0),
+        ((1,), 1),
+        ((1,), 2),
+        ((2,), 1),
+        ((2,), 2),
+        ((2,), 3),
+    }
+
+
 def test_radial_basis_shape_is_finite_and_zero_at_cutoff() -> None:
     basis = model.BesselRadialBasis(num_basis=8, cutoff=5.0, power=5)
     distances = torch.tensor([[0.0], [1.25], [5.0]], dtype=torch.float64)
@@ -80,6 +87,23 @@ def test_radial_basis_shape_is_finite_and_zero_at_cutoff() -> None:
     assert output.shape == (3, 8)
     assert torch.isfinite(output).all()
     assert torch.equal(output[-1], torch.zeros(8, dtype=torch.float64))
+
+
+def test_u_matrix_real_builds_nonzero_nu3_paths() -> None:
+    """Eq. 10 U contains one fixed path axis for each legal CG route."""
+    coupling_irreps = o3.Irreps("0e + 1o")
+
+    u_matrix = model.u_matrix_real(
+        coupling_irreps,
+        o3.Irrep("0e"),
+        correlation=3,
+        dtype=torch.float64,
+    )
+
+    assert u_matrix.shape[:4] == (1, 4, 4, 4)
+    assert u_matrix.shape[-1] > 0
+    assert torch.isfinite(u_matrix).all()
+    assert torch.count_nonzero(u_matrix) > 0
 
 
 @pytest.mark.xfail(
