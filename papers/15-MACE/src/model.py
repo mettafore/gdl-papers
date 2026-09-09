@@ -338,6 +338,40 @@ def u_matrix_real(
     return torch.stack(u_paths, dim=-1)
 
 
+class Contraction(nn.Module):
+    """Build one Eq. 10 output-irrep block.
+
+    ``input_irreps`` carries all learned feature channels; ``coupling_irreps``
+    strips that multiplicity so the fixed U tensors describe angular types only.
+    """
+
+    def __init__(
+        self,
+        *,
+        input_irreps: o3.Irreps,
+        irrep_out: o3.Irrep,
+        correlation: int,
+        num_elements: int,
+    ) -> None:
+        super().__init__()
+        self.num_features = input_irreps.count((0, 1))
+        self.coupling_irreps = o3.Irreps([mul_irrep.ir for mul_irrep in input_irreps])
+        self.irrep_out = irrep_out
+        self.correlation = correlation
+        self.num_elements = num_elements
+
+        # TODO(luv): register U_1 through U_correlation, then create the
+        # learned element- and path-dependent weights used in Eq. 10.
+
+    def forward(self, atomic_basis: Tensor, node_attrs: Tensor) -> Tensor:
+        """Return this output irrep's `[N, channels * (2 * ell + 1)]` block.
+
+        TODO(luv): contract live atomic-basis features with the fixed U paths
+        and learned element-conditioned weights.
+        """
+        raise NotImplementedError
+
+
 class SymmetricContraction(nn.Module):
     """Form Eq. 10 higher-order equivariant product features."""
 
