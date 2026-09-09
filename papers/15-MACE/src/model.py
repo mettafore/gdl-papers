@@ -251,7 +251,59 @@ def _wigner_nj(
     3. Preserve one full packed-input axis per input factor and sort by output
        irrep so paths of the same type remain contiguous.
     """
-    raise NotImplementedError
+    if len(irrepss) == 1:
+        (irreps,) = irrepss
+        identity = torch.eye(irreps.dim, dtype=dtype)
+
+        return [
+            (irrep, identity[irrep_slice])
+            for (_, irrep), irrep_slice in zip(irreps, irreps.slices())
+        ]
+    elif len(irrepss) > 1:
+        *irrepss_left, irrepss_right = irrepss
+        left_paths = _wigner_nj(
+            irrepss=tuple(irrepss_left), normalization=normalization, dtype=dtype
+        )
+        paths = []
+        for left_irrep, left_u in left_paths:
+            right_start = 0
+            for multiplicity, right_irrep in irrepss_right:
+                for irrep_out in left_irrep * right_irrep:
+                    cg = o3.wigner_3j(
+                        irrep_out.l,
+                        left_irrep.l,
+                        right_irrep.l,
+                        dtype=dtype,
+                    )
+                    if normalization == "component":
+                        cg *= irrep_out.dim**0.5
+                    elif normalization == "norm":
+                        cg *= (left_irrep.dim * right_irrep.dim) ** 0.5
+                    coupled_u = torch.einsum(
+                        "jk,ijl->ikl",
+                        left_u.flatten(1),
+                        cg,
+                    )
+                    coupled_u = coupled_u.reshape(
+                        irrep_out.dim,
+                        *(irreps.dim for irreps in irrepss_left),
+                        right_irrep.dim,
+                    )
+                    for copy in range(multiplicity):
+                        padded_u = torch.zeros(
+                            irrep_out.dim,
+                            *(irrep.dim for irrep in irrepss_left),
+                            irrepss_right.dim,
+                            dtype=dtype,
+                        )
+                        right_slice = slice(
+                            right_start + copy * right_irrep.dim,
+                            right_start + (copy + 1) * right_irrep.dim,
+                        )
+                        padded_u[..., right_slice] = coupled_u
+                        paths.append((irrep_out, padded_u))
+                right_start += multiplicity * right_irrep.dim
+    return sorted(paths, key=lambda path: path[0])
 
 
 def u_matrix_real(
@@ -267,10 +319,23 @@ def u_matrix_real(
     Returns ``[m_out, in_dim, ..., in_dim, n_paths]``, with one ``in_dim``
     axis per correlation factor.
     """
-    # TODO(luv): validate inputs, make `correlation` copies of
-    # `coupling_irreps`, call `_wigner_nj`, retain only `irrep_out`, and stack
-    # paths on the final axis. If no path exists, return one all-zero path.
-    raise NotImplementedError
+    if correlation < 1:
+        raise ValueError("correlation must be at least 1")
+    if dtype is None:
+        dtype = torch.get_default_dtype()
+    irrepss = (coupling_irreps,) * correlation
+    paths = _wigner_nj(
+        irrepss=irrepss,
+        normalization=normalization,
+        dtype=dtype,
+    )
+    u_paths = [u for (output_irrep, u) in paths if output_irrep == irrep_out]
+
+    if not u_paths:
+        return torch.zeros(
+            irrep_out.dim, *([coupling_irreps.dim] * correlation), 1, dtype=dtype
+        )
+    return torch.stack(u_paths, dim=-1)
 
 
 class SymmetricContraction(nn.Module):

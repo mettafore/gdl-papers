@@ -89,11 +89,6 @@ def test_radial_basis_shape_is_finite_and_zero_at_cutoff() -> None:
     assert torch.equal(output[-1], torch.zeros(8, dtype=torch.float64))
 
 
-@pytest.mark.xfail(
-    raises=NotImplementedError,
-    strict=True,
-    reason="TODO(luv): Eq. 10 fixed U-tensor builder",
-)
 def test_u_matrix_real_builds_nonzero_nu3_paths() -> None:
     """Eq. 10 U contains one fixed path axis for each legal CG route."""
     coupling_irreps = o3.Irreps("0e + 1o")
