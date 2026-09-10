@@ -358,6 +358,10 @@ class Contraction(nn.Module):
         self.coupling_irreps = o3.Irreps([mul_irrep.ir for mul_irrep in input_irreps])
         self.irrep_out = irrep_out
         self.correlation = correlation
+        if self.correlation != 3:
+            raise ValueError(
+                "This learning implementation currently supports correlation=3 only."
+            )
         self.num_elements = num_elements
 
         for nu in range(1, self.correlation + 1):
