@@ -360,8 +360,26 @@ class Contraction(nn.Module):
         self.correlation = correlation
         self.num_elements = num_elements
 
-        # TODO(luv): register U_1 through U_correlation, then create the
-        # learned element- and path-dependent weights used in Eq. 10.
+        for nu in range(1, self.correlation + 1):
+            u_tensor = u_matrix_real(
+                coupling_irreps=self.coupling_irreps,
+                irrep_out=self.irrep_out,
+                correlation=nu,
+            )
+            self.register_buffer(f"U_matrix_{nu}", u_tensor)
+
+        self.weights = nn.ParameterList()
+        u_max = getattr(self, f"U_matrix_{self.correlation}")
+        num_paths = u_max.size(-1)
+
+        self.weights_max = nn.Parameter(
+            torch.randn(
+                self.num_elements,
+                num_paths,
+                self.num_features,
+            )
+            / num_paths
+        )
 
     def forward(self, atomic_basis: Tensor, node_attrs: Tensor) -> Tensor:
         """Return this output irrep's `[N, channels * (2 * ell + 1)]` block.
