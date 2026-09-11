@@ -1,0 +1,17 @@
+.pi/bootstrap.log
+.pi/cache/
+.pi/engine/
+.pi/bin/
+.pi/chrome-headless-shell/
+.pi/state.db
+.pi/state.db-journal
+.pi/state.db-wal
+.pi/state.db-shm
+.pi/state.db.pre-v5-*
+.pi/state-snapshots/
+.pi/anki-audit.db
+.pi/anki-audit.db-journal
+.pi/anki-audit.db-wal
+.pi/anki-audit.db-shm
+.pi/migration-report.json
+.pi/npm/

@@ -1,0 +1,27 @@
+{
+  "schema_version": 5,
+  "last_seen_version": "0.9.66",
+  "delegate_timeout_minutes": 120,
+  "model": "openai-codex/gpt-5.6-sol",
+  "model_fallbacks": [
+    "openai-codex/gpt-6-astra"
+  ],
+  "thinking": {
+    "chat": "xhigh",
+    "create": "xhigh",
+    "review": "xhigh"
+  },
+  "lesson_px": {
+    "target": 8000,
+    "ceiling": 9000
+  },
+  "reminders": "unset",
+  "anki": {
+    "deck_root": "Self-Learning",
+    "per_day": 10,
+    "temperature_days": 10,
+    "review_ceiling": 50
+  },
+  "browser": "default",
+  "completion_sound": true
+}
