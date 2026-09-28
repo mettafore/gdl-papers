@@ -4,9 +4,11 @@ Learning-first reproduction of the MACE `L=2` result on 3BPA. The scientific
 target is the MACE row in Table 2 of Batatia et al. (NeurIPS 2022), not the
 current production MACE package.
 
-The source files are deliberately incomplete. `TODO(luv)` marks the
-learning-owned implementation; strict `xfail` tests turn into failures as soon
-as a stub is replaced by an incorrect implementation.
+The paper-local training and evaluation path is implemented and covered by a
+short end-to-end smoke test. Matching the published three-seed results remains
+an experimental target, not a claimed result. `enumerate_coupling_routes` in
+`model.py` is a pedagogical SO(3) exercise, not part of the final MACE forward
+path; the model uses parity-aware e3nn tensor products and contraction tables.
 
 ## Files
 
@@ -76,7 +78,7 @@ foundation-model machinery.
 
 ## Run
 
-The commands below are contracts until their learning-owned stubs are filled:
+Train one seed, then evaluate its best-validation EMA checkpoint:
 
 ```bash
 uv run python papers/15-MACE/src/train.py --data /path/to/dataset_3BPA
@@ -84,6 +86,17 @@ uv run python papers/15-MACE/src/evaluate.py --run <run_id> \
   --data /path/to/dataset_3BPA
 uv run pytest papers/15-MACE/
 ```
+
+Training prints a `run_id`. Use that ID with `--run`. The training command also
+accepts `--seed` and `--epochs`; its default 500-epoch cap is a configurable
+run setting, not a separately verified published stopping rule. Runs write
+`config.json`, `metrics.jsonl`, and `checkpoint.pt` under `runs/<run_id>/`.
+
+The 2026-09-28 correction unpacks angular blocks before contraction and uses
+the author's bias-free radial networks. Checkpoints from the previous biased
+radial implementation are incompatible and must be retrained. Regression
+tests now cover rotation/reflection equivariance and energy/force continuity
+when an edge crosses the cutoff.
 
 ## Results
 
@@ -101,12 +114,12 @@ Completion means all eight reproduced means are within 10% of the corresponding
 published mean. This reproduction does not claim the paper's baseline
 comparisons, latency, ablations, or production/foundation-model features.
 
-## Learning order
+## Implementation walkthrough
 
-1. Make `test_route_enumeration_1_times_2` pass.
-2. Make the radial basis and cutoff test pass.
-3. Build Eq. 8 atomic features and one Eq. 11 message block.
-4. Pass rotation, translation, and permutation tests on the tiny graph.
-5. Add the second interaction, scalar readout, and autograd forces.
-6. Make the weighted loss and tiny overfit/round-trip tests pass.
-7. Train reduced debug models before launching the three-seed paper recipe.
+1. Follow `data.py`: extxyz records, split, neighbour edges, and batching.
+2. Follow `model.py`: Eq. 9 atomic basis, Eq. 8 interaction, Eqs. 10–12
+   contraction, two readouts, and energy-derived forces.
+3. Follow `train.py`: training statistics, weighted loss, EMA, validation, and
+   best-checkpoint selection.
+4. Follow `evaluate.py`: reload the checkpoint and report each test condition.
+5. Run the full three-seed benchmark and compare all eight RMSE means above.

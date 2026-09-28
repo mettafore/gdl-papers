@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-08-25 (MACE 3BPA reproduction scaffold)
+**Last updated:** 2026-09-28 (MACE contraction layout and smooth-cutoff corrections)
 
 ---
 
@@ -27,7 +27,7 @@ Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 | 09 | NequIP | study | 📄 PDF + sources | — |
 | 10 | ManifoldFormer | breadth | 📄 PDF only | — |
 | 14 | Riemannian Flow Matching | implement | 🟡 in progress | 2026-08-17 |
-| 15 | MACE | implement | 🟡 3BPA code scaffold | 2026-08-25 |
+| 15 | MACE | implement | 🟡 code implemented; benchmark pending | 2026-09-28 |
 
 Tier definitions → [`references/papers.md`](../references/papers.md).
 
@@ -209,16 +209,23 @@ No papers are currently listed here.
 **Goal:** reproduce the MACE `L=2` Table 2 row on 3BPA, with all energy and
 force RMSE means over three seeds within 10% of the published means.
 
-**Current state:** the notebook retains the fundamentals-first derivation. A
-paper-local code scaffold now adds README, data/model/train/evaluate contracts,
-and strict-xfail tests for route enumeration, radial cutoff, graph construction,
-energy/force shapes, loss averaging, and RMSE. Scientific bodies remain
-user-owned `TODO(luv)` work. The target is the two-interaction, `nu=3`, `L=2`
-paper recipe trained on a deterministic 450/50 split of 3BPA's 500 300 K frames
-and evaluated at 300/600/1200 K plus pooled dihedral slices.
+**Current state:** the notebook retains the fundamentals-first derivation. The
+paper-local data, two-interaction model, training loop, checkpoint reload, and
+four-condition evaluator are implemented. Unit tests, a one-epoch synthetic
+train/evaluate round trip, and a real-frame forward sanity check validate the
+code path; these do not establish the published error numbers. Training uses
+the deterministic 450/50 split of 3BPA's 500 300 K frames, while evaluation
+covers 300/600/1200 K and pooled dihedral slices.
 
-**Next action:** implement `enumerate_coupling_routes` in
-`papers/15-MACE/src/model.py` and make the strict `1 x 2 -> 1 + 2 + 3` test pass.
+**Correction (2026-09-28):** the original shape-only/smoke coverage missed an
+angular-block unpacking error and nonzero cutoff messages from biased radial
+MLPs. The contraction now follows the author's split/reshape/concatenate
+layout, and both radial networks use e3nn's bias-free `FullyConnectedNet`.
+Regression tests exercise rotation/reflection symmetry and edge-cutoff
+continuity. Previous radial-network checkpoints require retraining.
+
+**Next action:** inspect the implementation chunk by chunk, then run the full
+three-seed benchmark and compare all eight RMSE means with Table 2.
 
 ---
 
