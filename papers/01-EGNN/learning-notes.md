@@ -82,3 +82,11 @@ The mask removes pairs where an atom connects to itself (`row == col`). Stacking
 ### `_to_charge_power`
 
 `data` is a PyTorch Geometric object for one molecule. This function prepares it for EGNN: it replaces `data.x` with the charge-power atom features, replaces `data.edge_index` with the complete directed graph, sets `data.edge_attr` to `None`, and returns the object. The molecule's positions (`pos`) and target (`y`) remain available.
+
+### `load_split`
+
+This function loads QM9 with `_to_charge_power` as a transform, so each molecule gets the prepared atom features and complete graph when accessed. It checks the requested target, uses a seeded generator to make a reproducible random split, and separates the molecules into training, validation, and test sets.
+
+It computes the training target's mean and mean absolute deviation (MAD), then returns a `NormStats` object for normalization. The three PyG data loaders serve the splits; only the training loader shuffles. `num_workers` controls data-loading worker processes. `dims` records the input **feature width** (15), scalar output width (1), and selected target column—not the number of atoms. Molecules can have different numbers of atoms.
+
+I initially thought `batch_size` counted atoms. Each QM9 dataset item is one molecule, so `batch_size=2` selects two molecules. If they have 3 and 5 atoms, the model sees 8 atoms, with molecule membership recorded as `batch = [0, 0, 0, 1, 1, 1, 1, 1]`. EGCL processes their atoms and edges; pooling later separates the two molecule predictions.
