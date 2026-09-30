@@ -78,3 +78,7 @@ The input `z` holds the atomic number of each atom. The function turns those num
 The input is the number of atoms, `N`. The function forms every ordered pair of atom IDs, like two nested `for` loops. `repeat_interleave` supplies the outer-loop index, and `repeat` supplies the inner-loop index. Pairing the resulting `row` and `col` entries gives `N × N` pairs.
 
 The mask removes pairs where an atom connects to itself (`row == col`). Stacking the remaining indices gives an `edge_index` of shape `(2, N(N−1))`. Both `(i, j)` and `(j, i)` remain, so every atom can exchange messages with every other atom—even if they are not chemically bonded.
+
+### `_to_charge_power`
+
+`data` is a PyTorch Geometric object for one molecule. This function prepares it for EGNN: it replaces `data.x` with the charge-power atom features, replaces `data.edge_index` with the complete directed graph, sets `data.edge_attr` to `None`, and returns the object. The molecule's positions (`pos`) and target (`y`) remain available.
