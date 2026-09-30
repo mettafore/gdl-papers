@@ -1,34 +1,10 @@
-"""QM9 data + the shared, deterministic split for EGNN.  [SCAFFOLD — you fill bodies]
+"""Prepare QM9 molecules and reproducible dataset splits for EGNN.
 
-Contract to match (same as template `data.py`):
-  ONE seeded split, imported by both train.py and evaluate.py so they always
-  agree on train/val/test — no leakage. Target normalization stats come from the
-  TRAIN split only and are returned, so train/evaluate normalize identically.
-
-Backend: torch_geometric.datasets.QM9 (small molecules, 3D coords, 19 targets).
-``torch-geometric`` is a project dependency; run ``uv sync`` before using this
-module in a fresh checkout.
+Atom features and complete directed graphs follow the author’s QM9 setup.
+Training and evaluation share the same seeded split. Target normalization uses
+only training-set statistics (mean and mean absolute deviation).
 
 Paper: Satorras et al., "E(n) Equivariant Graph Neural Networks", ICML 2021.
-Standard split: 100K train / 18K val / 13K test.
-
-------------------------------------------------------------------------------
-WHAT YOU NEED TO BUILD (in rough order):
-  1. NormStats.normalize / denormalize        — the (y-mean)/mad transform
-  2. load_split:
-       a. load QM9(root)
-       b. deterministic permutation w/ an EXPLICIT generator (not global RNG)
-       c. slice into 100K / 18K / 13K
-       d. compute NormStats on TRAIN targets only  (think: which column? why train-only?)
-       e. wrap each split in a PyG DataLoader
-       f. return (train, val, test, norm, dims)
-
-Questions worth answering as you go (this is the point of the exercise):
-  - Why must the split use an explicit generator, not torch.manual_seed?
-  - Why is normalization fit on train only — what leaks if you use the full set?
-  - QM9 y has 19 columns. Which index is your target? Verify against PyG docs.
-  - Where should edge construction live — here, or in the model? Why?
-------------------------------------------------------------------------------
 """
 
 from __future__ import annotations
@@ -52,7 +28,7 @@ except ImportError:  # pragma: no cover - dep not installed yet
 
 # QM9 target columns in torch_geometric's `data.y` (shape [1, 19]).
 # Reference table — VERIFY these indices against the PyG QM9 docs before trusting.
-# Only the properties EGNN benchmarks (Table 1) are listed.
+# Only the properties EGNN benchmarks (Table 3) are listed.
 QM9_TARGETS: dict[str, int] = {
     "mu": 0,  # dipole moment (D)
     "alpha": 1,  # isotropic polarizability (a0^3)
@@ -72,7 +48,7 @@ QM9_TARGETS: dict[str, int] = {
 N_TRAIN = 100_000
 N_VAL = 18_000
 
-# Charge-power node features (reference repo's Table-1 config).
+# Charge-power node features (reference repo's QM9 config).
 # PyG's default data.x is 11-dim: [one-hot(H,C,N,O,F), Z, aromatic, sp, sp2, sp3, num_Hs].
 # The reference instead builds 15-dim features from atomic number alone:
 #   one_hot(z) ⊗ (z / charge_scale)^p  for p = 0, 1, 2   →  5 × 3 = 15 dims
@@ -93,14 +69,6 @@ def charge_power_features(z: torch.Tensor) -> torch.Tensor:
         (num_nodes, 15) float tensor: for each node, the outer product of its
         5-dim one-hot with [(z/9)^0, (z/9)^1, (z/9)^2], flattened.
 
-    # TODO:
-    #   - map z -> one-hot over the ordered vocabulary [1, 6, 7, 8, 9]
-    #     (hint: build a lookup from Z to column index; F.one_hot needs 0-based ids)
-    #   - powers: (z / CHARGE_SCALE) ** p for p in 0..CHARGE_POWER — stack into
-    #     (num_nodes, 3)
-    #   - combine: outer product per node, one_hot[:, :, None] * powers[:, None, :],
-    #     then flatten the last two dims -> (num_nodes, 15)
-    #   - sanity: p=0 slice of the output should just BE the one-hot. Why?
     """
     lookup = torch.full((10,), -1, dtype=torch.long)
     lookup[torch.tensor([1, 6, 7, 8, 9])] = torch.arange(5)
@@ -111,15 +79,6 @@ def charge_power_features(z: torch.Tensor) -> torch.Tensor:
     return combined.reshape(z.size(0), -1)
 
 
-# TODO(wiring): once charge_power_features works, apply it in load_split so
-#   batches carry 15-dim x. Two options — pick one and be able to say why:
-#     (a) QM9(root, transform=...) with a small transform fn that replaces
-#         data.x from data.z (applied lazily per access, nothing re-downloaded);
-#     (b) pre_transform (bakes it into the processed cache — forces reprocess).
-#   Whichever you choose, dims["in_node_dim"] must come from the actual data
-#   (15), NOT dataset.num_features (still reports the raw 11 under option (a)).
-#   That dims value is what train.py feeds EGNN(in_node_nf=...) — nothing else
-#   should need to change
 def fully_connected_edge_index(num_nodes: int) -> torch.Tensor:
     """Build a fully-connected `edge_index` (all ordered pairs i != j).
 
@@ -133,15 +92,9 @@ def fully_connected_edge_index(num_nodes: int) -> torch.Tensor:
         num_nodes: N atoms in one molecule.
 
     Returns:
-        (2, N*(N-1)) long tensor: row 0 = source, row 1 = dest, every ordered
+        (2, N*(N-1)) long tensor: row 0 = receiving node i, row 1 = sending node j, every ordered
         pair with source != dest. Methane (N=5) -> 20 edges, not 8.
 
-    # TODO:
-    #   - build all ordered pairs of node indices 0..N-1 (hint: torch.arange +
-    #     broadcasting, or torch.cartesian_prod / meshgrid)
-    #   - drop the self-pairs where source == dest (mask row != col)
-    #   - stack into shape (2, num_edges), dtype long
-    #   - sanity: N=5 -> 20 columns; no column has row[0]==row[1]
     """
     idx = torch.arange(num_nodes)
     row = idx.repeat_interleave(num_nodes)
@@ -193,7 +146,7 @@ def load_split(
 ):
     """Return (train_loader, val_loader, test_loader, norm, dims).
 
-    dims: dict with `in_node_dim` (atom one-hot width) and `out_dim` (=1), so the
+    dims: dict with `in_node_dim` (atom feature width) and `out_dim` (=1), so the
     model never hardcodes shapes. norm: NormStats fit on the TRAIN split.
     """
     _require_pyg()
@@ -201,22 +154,17 @@ def load_split(
         raise KeyError(f"unknown target {target!r}; choose from {sorted(QM9_TARGETS)}")
     col = QM9_TARGETS[target]
 
-    # TODO a: load QM9
     dataset = QM9(root=root, transform=_to_charge_power)
-    # TODO b: deterministic perm with an EXPLICIT torch.Generator().manual_seed(seed)
     gen = torch.Generator().manual_seed(seed)
     perm = torch.randperm(len(dataset), generator=gen)
-    # TODO c: slice perm -> train_idx / val_idx / test_idx (use N_TRAIN, N_VAL)
     train_idx = perm[:N_TRAIN]
     val_idx = perm[N_TRAIN : N_TRAIN + N_VAL]
     test_idx = perm[N_TRAIN + N_VAL :]
-    # TODO d: fit NormStats on train targets at column `col` (train ONLY)
     train_data = dataset[train_idx]
     train_y = torch.cat([i.y[:, col] for i in train_data], dim=0)
     mean = train_y.mean().item()
     mad = (train_y - mean).abs().mean().item()
     normalizer = NormStats(mean=mean, mad=mad)
-    # TODO e: wrap each split in PyGDataLoader (shuffle train, not val/test)
     train_loader = PyGDataLoader(
         dataset[train_idx],
         shuffle=True,
@@ -233,6 +181,5 @@ def load_split(
         batch_size=batch_size,
         num_workers=num_workers,
     )
-    # TODO f: build dims
     dims = {"in_node_dim": dataset[0].x.shape[1], "out_dim": 1, "target_col": col}
     return train_loader, val_loader, test_loader, normalizer, dims

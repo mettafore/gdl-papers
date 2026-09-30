@@ -1,4 +1,4 @@
-"""Scaffold tests for EGNN model pieces, filled in alongside src/model.py."""
+"""Tests for EGNN model components and symmetry properties."""
 
 import torch
 from src.model import EGCL, EGNN, unsorted_segment_sum

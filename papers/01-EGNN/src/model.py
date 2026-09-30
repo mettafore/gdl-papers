@@ -1,4 +1,4 @@
-"""EGNN model for QM9 property prediction. [SCAFFOLD]
+"""EGNN model for QM9 property prediction.
 
 Paper: Satorras et al., "E(n) Equivariant Graph Neural Networks", ICML 2021.
 QM9 config: 7 EGCL layers, 128 hidden features, Swish activation.
@@ -23,14 +23,6 @@ def unsorted_segment_sum(data, segment_ids, num_segments):
     Returns:
         (num_segments, feat_dim) tensor, row i = sum of data[e] for all edges e
         where segment_ids[e] == i.
-    # TODO:
-    #   - allocate output tensor of zeros, shape (num_segments, data.size(1)),
-    #     same dtype/device as data
-    #   - expand segment_ids to match data's shape so it can index every column
-    #     (hint: unsqueeze + expand_as)
-
-    #   - use Tensor.scatter_add_ along dim 0
-    #   - (equivalent alt: torch_scatter.scatter or torch_geometric.utils.scatter)
     """
     output = torch.zeros(
         num_segments, data.size(1), dtype=data.dtype, device=data.device
@@ -45,7 +37,6 @@ class EGCL(nn.Module):
     For QM9, coordinate update (eq 4) is skipped since positions are static.
     """
 
-    # TODO: __init__
     def __init__(
         self,
         input_nf,
@@ -62,12 +53,6 @@ class EGCL(nn.Module):
         self.act_fn = act_fn
         self.residual = residual
         self.attention = attention
-        # TODO(attention): reference repo Table-1 config runs with attention=1.
-        #   Build self.att_mlp ONLY when attention is True: a tiny MLP that maps
-        #   each message m_ij (hidden_nf) to a single gate value in (0, 1).
-        #   Two pieces, see vgsatorras/egnn models/gcl.py E_GCL.__init__.
-        #   Question worth answering: why (0,1) and not unbounded — what does
-        #   the gate mean, and which activation guarantees that range?
         if self.attention:
             self.att_mlp = nn.Sequential(nn.Linear(self.hidden_nf, 1), nn.Sigmoid())
 
@@ -90,10 +75,6 @@ class EGCL(nn.Module):
             nn.Linear(self.input_nf, self.input_nf),
         )
 
-    #   - edge_mlp (φ_e): [h_i, h_j, ||dist||^2, edge_attr] → hidden
-    #   - coord_mlp (φ_x): hidden → 1 (optional for QM9)
-    #   - node_mlp (φ_h): [h, agg] → hidden, with residual
-    #   - coord2radial helper: compute squared distances
     def _coord2radial(self, edge_index, coord):
         row, col = edge_index
         coord_diff = coord[row] - coord[col]
@@ -114,10 +95,6 @@ class EGCL(nn.Module):
         """
         combined_input = torch.cat([h_row, h_col, radial, edge_attr], dim=1)
         out = self.edge_mlp(combined_input)
-        # TODO(attention): if self.attention, gate each message: multiply `out`
-        #   elementwise by att_mlp(out) — a per-edge scalar in (0,1) that lets
-        #   the layer learn to mute uninformative edges (QM9 graphs are fully
-        #   connected, so most edges are far-apart atom pairs).
         if self.attention:
             attn_score = self.att_mlp(out)
             return attn_score * out
@@ -133,12 +110,6 @@ class EGCL(nn.Module):
 
         Returns:
             (num_nodes, hidden_nf) tensor — updated node embeddings h_i^(l+1).
-        # TODO:
-        #   - split edge_index into row, col
-        #   - aggregate edge_feat per destination node (row) via unsorted_segment_sum,
-        #     num_segments = h.size(0)
-        #   - concat [h, agg] along dim=1, pass through self.node_mlp
-        #   - return residual: h + node_mlp output (MLP predicts a correction)
         """
         row, _ = edge_index
         agg = unsorted_segment_sum(edge_feat, row, len(h))
@@ -159,12 +130,6 @@ class EGCL(nn.Module):
 
         Returns:
             (num_nodes, input_nf) tensor — updated node embeddings.
-        # TODO:
-        #   - split edge_index into row, col
-        #   - radial = _coord2radial(edge_index, x)
-        #   - edge_feat = edge_model(h[row], h[col], radial, edge_attr)
-        #     (if edge_attr is None, pass an empty (num_edges, 0) tensor so cat works)
-        #   - return node_model(h, edge_index, edge_feat)
         """
         row, col = edge_index
         radial = self._coord2radial(edge_index, x)
@@ -191,15 +156,10 @@ class EGNN(nn.Module):
     ):
         """
         Args:
-            in_node_nf: input node feature dim (e.g. 5 for one-hot H/C/N/O/F).
+            in_node_nf: input atom feature width (15 charge-power features for QM9).
             hidden_nf: hidden width (128 for QM9).
             n_layers: number of EGCL layers (7 for QM9).
             edges_in_d: edge feature dim passed to each EGCL.
-        # TODO: build the sub-modules (see notes.md / CLAUDE.md architecture):
-        #   - an embedding that lifts one-hot atom features to hidden width (applied once)
-        #   - n_layers EGCL layers — what container makes their params register? (notes.md)
-        #   - node_dec: per-node MLP (hidden -> hidden) applied after the layers
-        #   - graph_dec: MLP mapping the pooled graph vector down to a single scalar
         """
         super().__init__()
         self.emb = nn.Linear(in_node_nf, hidden_nf)
@@ -225,7 +185,7 @@ class EGNN(nn.Module):
         """Predict one scalar graph property per molecule (invariant to E(3) on x).
 
         Args:
-            h: (num_nodes, in_node_nf) — one-hot atom features.
+            h: (num_nodes, in_node_nf) — input atom features.
             x: (num_nodes, 3) — coordinates.
             edge_index: (2, num_edges) — (row, col).
             edge_attr: (num_edges, edges_in_d) or None.
@@ -235,19 +195,6 @@ class EGNN(nn.Module):
 
         Returns:
             (num_graphs, 1) — one predicted scalar per molecule in the batch.
-        # TODO: batch-aware pooling (see reference: vgsatorras/egnn qm9/models.py,
-        #   EGNN.forward — they reshape+sum since QM9 batches are padded to a
-        #   fixed n_nodes; we use PyG's ragged `batch` index instead):
-        #   - embed h once
-        #   - run h through each EGCL layer in turn (coords x stay fixed for QM9)
-        #   - apply node_dec per node
-        #   - if batch is None, treat every node as graph 0
-        #     (torch.zeros(h.size(0), dtype=torch.long))
-        #   - pool PER GRAPH, not across the whole call — look at
-        #     unsorted_segment_sum in this file (or torch_geometric.nn.global_add_pool):
-        #     you need num_segments = number of distinct graphs in `batch`
-        #   - map each pooled graph vector to a scalar with graph_dec ->
-        #     shape (num_graphs, 1)
         """
         if batch is None:
             batch = torch.zeros(x.size(0), dtype=torch.long, device=x.device)
