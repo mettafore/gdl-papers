@@ -113,7 +113,7 @@ def test_atomic_basis_uses_configured_number_of_radial_features() -> None:
         num_radial_basis=3,
         radial_mlp_widths=(4, 8),
     )
-    atomic_basis = model.AtomicBasis(config)
+    atomic_basis = model.AtomicBasis(config, avg_num_neighbors=2.0)
     node_features = torch.randn(2, config.channels)
     edge_index = torch.tensor([[0, 1], [1, 0]], dtype=torch.long)
     edge_vectors = torch.tensor([[1.0, 0.0, 0.0], [-1.0, 0.0, 0.0]])
@@ -121,6 +121,7 @@ def test_atomic_basis_uses_configured_number_of_radial_features() -> None:
 
     output = atomic_basis(
         node_features,
+        torch.eye(config.num_elements)[:2],
         edge_index,
         edge_vectors,
         edge_radial,
@@ -144,6 +145,117 @@ def test_u_matrix_real_builds_nonzero_nu3_paths() -> None:
     assert u_matrix.shape[-1] > 0
     assert torch.isfinite(u_matrix).all()
     assert torch.count_nonzero(u_matrix) > 0
+
+
+def test_model_matches_pinned_author_energy_and_force_fixture() -> None:
+    """Reference: ACEsuit/mace b3e3b2c, all trainable weights fixed to 0.2."""
+    previous_dtype = torch.get_default_dtype()
+    try:
+        torch.set_default_dtype(torch.float64)
+        config = model.MACEConfig(channels=2, radial_mlp_widths=(64, 64, 64, 8))
+        mace = model.MACE(
+            config,
+            avg_num_neighbours=2.0,
+            atomic_energies=torch.tensor([0.1, 0.2, 0.3, 0.4]),
+            mean_energy_shift=-0.2,
+            rms_forces=1.3,
+        ).double()
+    finally:
+        torch.set_default_dtype(previous_dtype)
+    with torch.no_grad():
+        for parameter in mace.parameters():
+            parameter.fill_(0.2)
+    positions = torch.tensor(
+        [
+            [0.0, 0.0, 0.0],
+            [1.0, 0.2, 0.1],
+            [0.1, 1.1, 0.3],
+            [0.0, 0.0, 0.0],
+            [1.2, 0.3, 0.2],
+        ],
+        dtype=torch.float64,
+    )
+    attrs = torch.eye(4, dtype=torch.float64)[[0, 1, 3, 2, 0]]
+    edges = torch.tensor([[0, 1, 0, 2, 1, 2, 3, 4], [1, 0, 2, 0, 2, 1, 4, 3]])
+    energy, forces = mace(attrs, positions, edges, torch.tensor([0, 0, 0, 1, 1]))
+    torch.testing.assert_close(
+        energy,
+        torch.tensor(
+            [0.10000123909869263, 1.6880516429118586e-08], dtype=torch.float64
+        ),
+        atol=1e-12,
+        rtol=1e-10,
+    )
+    torch.testing.assert_close(
+        forces,
+        torch.tensor(
+            [
+                [
+                    -2.0430371803798855e-05,
+                    -7.070092104246348e-06,
+                    -2.844301204093874e-06,
+                ],
+                [1.487926163618328e-05, 9.305627001321285e-06, 3.1875878816595703e-06],
+                [
+                    5.551110167615576e-06,
+                    -2.235534897074936e-06,
+                    -3.4328667756569685e-07,
+                ],
+                [5.480161432909597e-06, 1.3700403582273992e-06, 9.133602388182662e-07],
+                [
+                    -5.480161432909597e-06,
+                    -1.3700403582273992e-06,
+                    -9.133602388182662e-07,
+                ],
+            ],
+            dtype=torch.float64,
+        ),
+        atol=1e-12,
+        rtol=1e-10,
+    )
+    energy.sum().backward()
+    disconnected = [
+        name
+        for name, parameter in mace.named_parameters()
+        if parameter.grad is None or not parameter.grad.count_nonzero()
+    ]
+    assert disconnected == []
+
+
+def test_first_atomic_basis_normalizes_by_training_neighbor_average() -> None:
+    config = model.MACEConfig(channels=2, radial_mlp_widths=(4, 8))
+    first = model.AtomicBasis(config, avg_num_neighbors=1.0).double()
+    second = model.AtomicBasis(config, avg_num_neighbors=2.0).double()
+    second.load_state_dict(first.state_dict())
+    features = torch.ones(2, 2, dtype=torch.float64)
+    attrs = torch.eye(4, dtype=torch.float64)[:2]
+    edges = torch.tensor([[0, 1], [1, 0]])
+    vectors = torch.tensor([[1.0, 0.0, 0.0], [-1.0, 0.0, 0.0]], dtype=torch.float64)
+    radial = torch.ones(2, 8, dtype=torch.float64)
+    output = first(features, attrs, edges, vectors, radial)
+    assert output.count_nonzero()
+    torch.testing.assert_close(
+        second(features, attrs, edges, vectors, radial), output / 2
+    )
+
+
+def test_first_atomic_basis_uses_receiver_species_without_changing_sender_features() -> (
+    None
+):
+    torch.manual_seed(123)
+    config = model.MACEConfig(channels=2, radial_mlp_widths=(4, 8))
+    first = model.AtomicBasis(config, avg_num_neighbors=2.0).double()
+    features = torch.ones(2, 2, dtype=torch.float64)
+    attrs = torch.eye(4, dtype=torch.float64)[:2]
+    edges = torch.tensor([[0], [1]])
+    vectors = torch.tensor([[1.0, 0.2, 0.1]], dtype=torch.float64)
+    radial = torch.ones(1, 8, dtype=torch.float64)
+    output = first(features, attrs, edges, vectors, radial)
+    other_attrs = attrs.clone()
+    other_attrs[1] = torch.eye(4, dtype=torch.float64)[3]
+    other = first(features, other_attrs, edges, vectors, radial)
+    assert not torch.allclose(output[1], other[1])
+    torch.testing.assert_close(output[0], other[0])
 
 
 def test_symmetric_contraction_returns_packed_hidden_features() -> None:
@@ -326,9 +438,15 @@ def test_atomic_features_vanish_when_an_edge_reaches_cutoff(block_kind: str) -> 
     edge_radial = model.BesselRadialBasis()(lengths)
     edges = torch.tensor([[0], [1]])
     if block_kind == "first":
-        first = model.AtomicBasis(config).double()
+        first = model.AtomicBasis(config, avg_num_neighbors=2.0).double()
         node_features = torch.randn(2, config.channels, dtype=torch.float64)
-        atomic_basis = first(node_features, edges, vectors, edge_radial)
+        atomic_basis = first(
+            node_features,
+            torch.eye(4, dtype=torch.float64)[:2],
+            edges,
+            vectors,
+            edge_radial,
+        )
     else:
         second = model.InteractionBlock(config, avg_num_neighbors=2.0).double()
         node_features = torch.randn(

@@ -4,9 +4,12 @@ from dataclasses import dataclass
 
 import torch
 from e3nn import o3
-from e3nn.nn import FullyConnectedNet
+from e3nn.nn import Activation, FullyConnectedNet
 from e3nn.o3 import spherical_harmonics
 from torch import Tensor, nn
+
+IMPLEMENTATION_VERSION = 2
+AUTHOR_REVISION = "b3e3b2c6c9ac89dbc375905740e15e1e5b1ad721"
 
 
 @dataclass(frozen=True)
@@ -164,11 +167,32 @@ class BesselRadialBasis(nn.Module):
 
 
 class AtomicBasis(nn.Module):
-    """Construct Eq. 8 neighbour features from radial and angular factors."""
+    """Construct first-stage Eq. 9 features with the reference's transforms."""
 
-    def __init__(self, config: MACEConfig):
+    def __init__(self, config: MACEConfig, *, avg_num_neighbors: float):
         super().__init__()
         self.config = config
+        if avg_num_neighbors <= 0:
+            raise ValueError("avg_num_neighbors must be positive")
+        self.avg_num_neighbors = avg_num_neighbors
+        self.input_irreps = o3.Irreps(f"{config.channels}x0e")
+        self.atomic_basis_irreps = o3.Irreps(
+            [
+                (config.channels, ir)
+                for _, ir in o3.Irreps.spherical_harmonics(
+                    config.spherical_harmonics_max_ell
+                )
+            ]
+        )
+        self.sender_linear = o3.Linear(self.input_irreps, self.input_irreps)
+        self.atomic_basis_projection = o3.Linear(
+            self.atomic_basis_irreps, self.atomic_basis_irreps
+        )
+        self.receiver_selector = o3.FullyConnectedTensorProduct(
+            self.atomic_basis_irreps,
+            o3.Irreps(f"{config.num_elements}x0e"),
+            self.atomic_basis_irreps,
+        )
         # Match the author's zero-preserving, variance-normalized radial MLP.
         # No biases: when the cutoff makes all radial features zero, the
         # emitted edge weights are zero too, even after training.
@@ -180,6 +204,7 @@ class AtomicBasis(nn.Module):
     def forward(
         self,
         node_features: Tensor,
+        node_attrs: Tensor,
         edge_index: Tensor,
         edge_vectors: Tensor,
         edge_radial: Tensor,
@@ -189,6 +214,7 @@ class AtomicBasis(nn.Module):
         ``edge_radial`` has shape ``[E, num_radial_basis]`` and is computed
         once from edge lengths before entering this block.
         """
+        node_features = self.sender_linear(node_features)
         sender_features = node_features[edge_index[0]].unsqueeze(-1)
         receiver_index = edge_index[1]
         ells = list(range(self.config.spherical_harmonics_max_ell + 1))
@@ -197,10 +223,15 @@ class AtomicBasis(nn.Module):
         spherical_tensors = spherical_harmonics(
             l=ells, x=edge_vectors, normalize=normalize, normalization=normalization
         )
-        radial_weight = self.radial_mlp(edge_radial).reshape(
-            -1,
-            self.config.channels,
-            self.config.spherical_harmonics_max_ell + 1,
+        # The reference tensor product orders weights by ell, then channel.
+        radial_weight = (
+            self.radial_mlp(edge_radial)
+            .reshape(
+                -1,
+                self.config.spherical_harmonics_max_ell + 1,
+                self.config.channels,
+            )
+            .transpose(1, 2)
         )
 
         # A degree ell has 2 * ell + 1 magnetic components m. Split the packed
@@ -242,7 +273,10 @@ class AtomicBasis(nn.Module):
             agg_messages.append(cumulative_message.flatten(start_dim=1))
 
         # Join the ell = 0, 1, 2, 3 blocks into the packed atomic basis [N, 4096].
-        return torch.concat(agg_messages, dim=1)
+        atomic_basis = torch.concat(agg_messages, dim=1)
+        atomic_basis = self.atomic_basis_projection(atomic_basis)
+        atomic_basis = atomic_basis / self.avg_num_neighbors
+        return self.receiver_selector(atomic_basis, node_attrs)
 
 
 def _wigner_nj(
@@ -509,7 +543,7 @@ class Contraction(nn.Module):
 class SymmetricContraction(nn.Module):
     """Form Eq. 10 higher-order equivariant product features."""
 
-    def __init__(self, config: MACEConfig):
+    def __init__(self, config: MACEConfig, *, output_irreps: o3.Irreps | None = None):
         super().__init__()
         self.config = config
         # this declares the layout of atomic basis A
@@ -518,7 +552,9 @@ class SymmetricContraction(nn.Module):
             f"{config.channels}x2e + {config.channels}x3o"
         )
         # Output Irreps is the output specification of m in Eq 11
-        self.output_irreps = o3.Irreps(config.hidden_irreps)
+        self.output_irreps = (
+            o3.Irreps(config.hidden_irreps) if output_irreps is None else output_irreps
+        )
 
         self.contractions = nn.ModuleList(
             [
@@ -556,12 +592,16 @@ class SymmetricContraction(nn.Module):
 class ProductBasisBlock(nn.Module):
     """Apply the Eq. 10--12 node-wise product-basis update."""
 
-    def __init__(self, config: MACEConfig) -> None:
+    def __init__(
+        self, config: MACEConfig, *, output_irreps: o3.Irreps | None = None
+    ) -> None:
         super().__init__()
         # Eq. 10--11: build higher-order B paths and combine them into message m.
-        self.symmetric_contraction = SymmetricContraction(config)
-        # Declare the packed 0e + 1o + 2e layout for both m and updated h.
-        self.hidden_irreps = o3.Irreps(config.hidden_irreps)
+        self.symmetric_contraction = SymmetricContraction(
+            config, output_irreps=output_irreps
+        )
+        # The first update keeps 0e + 1o + 2e; the final update keeps only 0e.
+        self.hidden_irreps = self.symmetric_contraction.output_irreps
         # Eq. 12 first term: equivariantly mix channels within each output L.
         self.message_linear = o3.Linear(
             irreps_in=self.hidden_irreps,
@@ -576,7 +616,7 @@ class ProductBasisBlock(nn.Module):
     ) -> Tensor:
         """Apply Eq. 10--12 and optionally add the interaction skip."""
         # Eq. 10--11: take atomic basis A [N, 4096] and receiver element
-        # one-hots [N, 4], returning message m [N, 2304].
+        # one-hots [N, 4], returning the configured message irreps.
         product_features = self.symmetric_contraction(
             node_features,
             node_attrs,
@@ -656,6 +696,8 @@ class InteractionBlock(nn.Module):
         self,
         config: MACEConfig,
         avg_num_neighbors: float,
+        *,
+        output_irreps: o3.Irreps | None = None,
     ) -> None:
         super().__init__()
 
@@ -667,6 +709,9 @@ class InteractionBlock(nn.Module):
 
         # Hidden state h: 256 channels for each angular order ell = 0, 1, 2.
         self.hidden_irreps = o3.Irreps(config.hidden_irreps)
+        self.output_irreps = (
+            self.hidden_irreps if output_irreps is None else output_irreps
+        )
 
         # One-hot element identity z (H, C, N, O), represented as four scalars.
         self.node_attr_irreps = o3.Irreps(f"{config.num_elements}x0e")
@@ -676,7 +721,7 @@ class InteractionBlock(nn.Module):
         self.skip_tp = o3.FullyConnectedTensorProduct(
             self.hidden_irreps,
             self.node_attr_irreps,
-            self.hidden_irreps,
+            self.output_irreps,
         )
 
         # Eq. 8 channel mixing W: mix hidden channels within each ell while
@@ -829,10 +874,9 @@ class MACE(nn.Module):
         )
 
         # creating embedding from one hot to num channels
-        self.node_embedding = nn.Linear(
-            config.num_elements,
-            config.channels,
-            bias=False,
+        self.node_embedding = o3.Linear(
+            o3.Irreps(f"{config.num_elements}x0e"),
+            o3.Irreps(f"{config.channels}x0e"),
         )
 
         self.radial_basis = BesselRadialBasis(
@@ -842,7 +886,9 @@ class MACE(nn.Module):
         )
         # Creating clas which encapsulates first layer (Eq 9) of MACE
         # With inputs edge widths and atomic embeddings
-        self.first_atomic_basis = AtomicBasis(config)
+        self.first_atomic_basis = AtomicBasis(
+            config, avg_num_neighbors=self.avg_num_neighbours
+        )
 
         self.first_product_basis = ProductBasisBlock(config)
 
@@ -851,23 +897,33 @@ class MACE(nn.Module):
             irreps_out=o3.Irreps("1x0e"),
         )
 
+        # The reference's final update keeps only scalars for the energy readout.
+        final_irreps = o3.Irreps(f"{config.channels}x0e")
         self.second_interaction_block = InteractionBlock(
             config,
             avg_num_neighbors=self.avg_num_neighbours,
+            output_irreps=final_irreps,
         )
 
-        self.second_product_basis = ProductBasisBlock(config)
+        self.second_product_basis = ProductBasisBlock(
+            config, output_irreps=final_irreps
+        )
 
         self.second_readout = nn.Sequential()
 
         self.second_readout.append(
             o3.Linear(
-                irreps_in=o3.Irreps(config.hidden_irreps),
+                irreps_in=final_irreps,
                 irreps_out=o3.Irreps(f"{config.readout_hidden_width}x0e"),
             )
         )
 
-        self.second_readout.append(nn.SiLU())
+        self.second_readout.append(
+            Activation(
+                o3.Irreps(f"{config.readout_hidden_width}x0e"),
+                [torch.nn.functional.silu],
+            )
+        )
 
         self.second_readout.append(
             o3.Linear(
@@ -899,6 +955,7 @@ class MACE(nn.Module):
 
         A0 = self.first_atomic_basis(
             node_features,
+            node_attrs,
             edge_index,
             edge_vectors,
             edge_radial,

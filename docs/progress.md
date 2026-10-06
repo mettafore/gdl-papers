@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-09-28 (MACE contraction layout and smooth-cutoff corrections)
+**Last updated:** 2026-10-06 (MACE author-code audit and architecture corrections)
 
 ---
 
@@ -27,7 +27,7 @@ Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 | 09 | NequIP | study | 📄 PDF + sources | — |
 | 10 | ManifoldFormer | breadth | 📄 PDF only | — |
 | 14 | Riemannian Flow Matching | implement | 🟡 in progress | 2026-08-17 |
-| 15 | MACE | implement | 🟡 code implemented; benchmark pending | 2026-09-28 |
+| 15 | MACE | implement | 🟡 author-code audit complete; retraining pending | 2026-10-06 |
 
 Tier definitions → [`references/papers.md`](../references/papers.md).
 
@@ -233,6 +233,20 @@ benchmark. MPS is excluded because this reproduction uses float64.
 
 **Next action:** inspect the implementation chunk by chunk, then run the full
 three-seed benchmark and compare all eight RMSE means with Table 2.
+
+**Author-code audit (2026-10-06):** the model now includes the first interaction's
+sender mixing, A projection, neighbour normalization, and receiver selector.
+The node embedding uses e3nn initialization, the final product/skip stage emits
+scalars only, and the final readout uses normalized SiLU. Training constructs CG
+buffers in float64 and matches reference weight-decay groups, gradient clipping,
+and EMA warm-up. Identical random weights reproduce the pinned v0.2.0 model's
+energies, forces, and force-loss gradients on synthetic and real 3BPA batches,
+including the published 256-channel architecture, within float64 rounding error.
+The 57-test suite passes, including checkpoint
+reload and deterministic resume. This is reference-code verification, not the
+three-seed benchmark. Earlier checkpoints require a fresh training run and are
+explicitly rejected. No paid training was launched. See the
+[audit report](../papers/15-MACE/author-code-audit.md) for scope and evidence.
 
 ---
 

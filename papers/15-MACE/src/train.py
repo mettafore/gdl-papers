@@ -12,7 +12,7 @@ from typing import Any
 
 import numpy as np
 import torch
-from model import MACE, MACEConfig
+from model import AUTHOR_REVISION, IMPLEMENTATION_VERSION, MACE, MACEConfig
 from torch import Tensor, nn
 from torch.optim.swa_utils import AveragedModel
 from torch_geometric.data import Data
@@ -44,12 +44,15 @@ class TrainConfig:
     seed: int = 123
     max_epochs: int = 500
     max_train_batches: int | None = None
+    max_grad_norm: float | None = 10.0
 
     def __post_init__(self) -> None:
         if self.batch_size < 1 or self.max_epochs < 1:
             raise ValueError("batch_size and max_epochs must be positive")
         if self.max_train_batches is not None and self.max_train_batches < 1:
             raise ValueError("max_train_batches must be positive when set")
+        if self.max_grad_norm is not None and self.max_grad_norm <= 0:
+            raise ValueError("max_grad_norm must be positive when set")
 
 
 def resolve_device(device: str | torch.device | None = None) -> torch.device:
@@ -208,6 +211,7 @@ def _validate_resume_config(
     current_config: dict,
 ) -> None:
     """Reject resuming a run with changed data, model, or training settings."""
+    validate_implementation(saved_config)
     for section in ("data", "model"):
         current_section = json.loads(json.dumps(current_config[section]))
         if saved_config[section] != current_section:
@@ -274,17 +278,76 @@ def energy_force_loss(
     )
 
 
+def validate_implementation(config: dict) -> None:
+    """Reject checkpoints from the earlier architecture before loading weights."""
+    if config.get("implementation", {}).get("version") != IMPLEMENTATION_VERSION:
+        raise ValueError(
+            "checkpoint predates the author-code corrections; start a new training run"
+        )
+
+
+def build_model(
+    config: MACEConfig,
+    *,
+    avg_num_neighbours: float,
+    atomic_energies: Tensor,
+    mean_energy_shift: float,
+    rms_forces: float,
+) -> MACE:
+    """Construct weights and CG buffers in float64, not rounded float32 copies."""
+    previous_dtype = torch.get_default_dtype()
+    try:
+        torch.set_default_dtype(torch.float64)
+        return MACE(
+            config,
+            avg_num_neighbours=avg_num_neighbours,
+            atomic_energies=atomic_energies,
+            mean_energy_shift=mean_energy_shift,
+            rms_forces=rms_forces,
+        ).double()
+    finally:
+        torch.set_default_dtype(previous_dtype)
+
+
+def make_optimizer(model: MACE, config: TrainConfig) -> torch.optim.Adam:
+    """Apply reference decay to interaction projections and all product weights."""
+    decay_parameters = []
+    other_parameters = []
+    for name, parameter in model.named_parameters():
+        if name.startswith(
+            ("first_product_basis.", "second_product_basis.")
+        ) or name in {
+            "first_atomic_basis.atomic_basis_projection.weight",
+            "second_interaction_block.atomic_basis_projection.weight",
+        }:
+            decay_parameters.append(parameter)
+        else:
+            other_parameters.append(parameter)
+    return torch.optim.Adam(
+        [
+            {"params": decay_parameters, "weight_decay": config.weight_decay},
+            {"params": other_parameters, "weight_decay": 0.0},
+        ],
+        lr=config.learning_rate,
+        amsgrad=config.amsgrad,
+    )
+
+
 def make_ema_model(model: nn.Module, *, decay: float) -> AveragedModel:
     """Create the paper's EMA copy of the live model parameters."""
 
-    def ema_average(average: Tensor, current: Tensor, _: int) -> Tensor:
-        return decay * average + (1.0 - decay) * current
+    def ema_average(average: Tensor, current: Tensor, updates: int) -> Tensor:
+        effective_decay = min(decay, (1 + int(updates)) / (10 + int(updates)))
+        return effective_decay * average + (1.0 - effective_decay) * current
 
-    return AveragedModel(
+    ema_model = AveragedModel(
         model,
         avg_fn=ema_average,
         device=get_module_device(model),
     )
+    # Preserve the initial shadow weights and use the averaging function on step 1.
+    ema_model.n_averaged.fill_(1)
+    return ema_model
 
 
 def compute_validation_loss(
@@ -340,11 +403,13 @@ def train(
     )
 
     train_graphs = [
-        data.build_neighbor_graph(record) for record in train_configurations
+        data.build_neighbor_graph(record, cutoff=model_config.cutoff)
+        for record in train_configurations
     ]
 
     valid_graphs = [
-        data.build_neighbor_graph(record) for record in valid_configurations
+        data.build_neighbor_graph(record, cutoff=model_config.cutoff)
+        for record in valid_configurations
     ]
 
     train_loader = data.get_data_loader(
@@ -385,6 +450,10 @@ def train(
         "seed": train_config.seed,
         "metric": "rmse",
         "runtime": {"device": str(device)},
+        "implementation": {
+            "version": IMPLEMENTATION_VERSION,
+            "author_revision": AUTHOR_REVISION,
+        },
     }
     if paper_dir is None:
         paper_dir = Path(__file__).resolve().parent.parent
@@ -397,38 +466,16 @@ def train(
         _validate_resume_config(saved_config, run_config)
     print(f"run_id: {run_id}", flush=True)
 
-    model = MACE(
+    model = build_model(
         model_config,
         avg_num_neighbours=avg_num_neighbors,
         atomic_energies=atomic_energies,
         mean_energy_shift=mean_energy_shift,
         rms_forces=rms_forces,
-    ).double()
+    )
     model = model.to(device)
 
-    decay_parameters = []
-    other_parameters = []
-
-    for name, parameter in model.named_parameters():
-        if ".symmetric_contraction.contraction" in name:
-            decay_parameters.append(parameter)
-        else:
-            other_parameters.append(parameter)
-
-    optimizer = torch.optim.Adam(
-        [
-            {
-                "params": decay_parameters,
-                "weight_decay": train_config.weight_decay,
-            },
-            {
-                "params": other_parameters,
-                "weight_decay": 0.0,
-            },
-        ],
-        lr=train_config.learning_rate,
-        amsgrad=train_config.amsgrad,
-    )
+    optimizer = make_optimizer(model, train_config)
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer=optimizer,
@@ -487,6 +534,10 @@ def train(
             )
 
             loss.backward()
+            if train_config.max_grad_norm is not None:
+                torch.nn.utils.clip_grad_norm_(
+                    model.parameters(), train_config.max_grad_norm
+                )
             optimizer.step()
             ema_model.update_parameters(model)
 

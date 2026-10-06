@@ -178,7 +178,63 @@ def test_ema_model_tracks_live_parameters_with_configured_decay() -> None:
         live_model.weight.fill_(3.0)
     ema_model.update_parameters(live_model)
 
-    assert ema_model.module.weight.item() == pytest.approx(2.01)
+    # torch_ema's second update uses min(0.99, (1 + 2) / (10 + 2)).
+    assert ema_model.module.weight.item() == pytest.approx(2.75)
+
+
+def test_optimizer_regularizes_projections_and_all_product_weights() -> None:
+    mace = model.MACE(
+        model.MACEConfig(channels=2, radial_mlp_widths=(4, 4, 4, 8)),
+        avg_num_neighbours=2.0,
+    ).double()
+    optimizer = train.make_optimizer(mace, train.TrainConfig())
+    before = {
+        name: parameter.detach().clone() for name, parameter in mace.named_parameters()
+    }
+    for parameter in mace.parameters():
+        parameter.grad = torch.zeros_like(parameter)
+    optimizer.step()
+    parameters = dict(mace.named_parameters())
+    for name in [
+        "first_atomic_basis.atomic_basis_projection.weight",
+        "second_interaction_block.atomic_basis_projection.weight",
+        "first_product_basis.message_linear.weight",
+        "second_product_basis.message_linear.weight",
+        "first_product_basis.symmetric_contraction.contractions.0.weights_max",
+    ]:
+        assert not torch.equal(parameters[name], before[name])
+    for name in [
+        "node_embedding.weight",
+        "first_readout.weight",
+        "second_readout.0.weight",
+    ]:
+        torch.testing.assert_close(parameters[name], before[name], atol=0, rtol=0)
+
+
+def test_float64_construction_preserves_coupling_precision_and_global_dtype() -> None:
+    previous_dtype = torch.get_default_dtype()
+    mace = train.build_model(
+        model.MACEConfig(channels=2, radial_mlp_widths=(4, 4, 4, 8)),
+        avg_num_neighbours=2.0,
+        atomic_energies=torch.zeros(4, dtype=torch.float64),
+        mean_energy_shift=0.0,
+        rms_forces=1.0,
+    )
+    assert torch.get_default_dtype() == previous_dtype
+    assert all(parameter.dtype == torch.float64 for parameter in mace.parameters())
+    scalar = mace.first_product_basis.symmetric_contraction.contractions[0]
+    # The vector-vector scalar CG coefficient is exactly 1/sqrt(3) in float64.
+    assert scalar.U_matrix_2[0, 1, 1, 1].item() == pytest.approx(3**-0.5, abs=1e-15)
+
+
+def test_old_checkpoint_version_is_rejected_before_loading() -> None:
+    with pytest.raises(ValueError, match="start a new training run"):
+        train.validate_implementation({"model": {}})
+
+
+def test_nonpositive_gradient_clip_is_rejected() -> None:
+    with pytest.raises(ValueError, match="max_grad_norm must be positive"):
+        train.TrainConfig(max_grad_norm=0)
 
 
 def test_ema_counter_is_created_on_the_model_device() -> None:
@@ -264,6 +320,13 @@ def test_short_train_run_can_reload_checkpoint_and_evaluate(
     def count_adam_step(optimizer, *args, **kwargs):
         nonlocal optimizer_steps
         optimizer_steps += 1
+        gradients = [
+            parameter.grad.norm()
+            for group in optimizer.param_groups
+            for parameter in group["params"]
+            if parameter.grad is not None
+        ]
+        assert torch.stack(gradients).norm().item() <= 1e-6
         return adam_step(optimizer, *args, **kwargs)
 
     monkeypatch.setattr(torch.optim.Adam, "step", count_adam_step)
@@ -276,6 +339,7 @@ def test_short_train_run_can_reload_checkpoint_and_evaluate(
             max_epochs=1,
             batch_size=5,
             max_train_batches=1,
+            max_grad_norm=1e-6,
         ),
         model_config=model.MACEConfig(
             channels=2,

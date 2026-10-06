@@ -6,10 +6,15 @@ from pathlib import Path
 from typing import Sequence
 
 import torch
-from model import MACE, MACEConfig
+from model import MACEConfig
 from torch import Tensor, nn
 from torch_geometric.data import Data
-from train import get_module_device, resolve_device
+from train import (
+    build_model,
+    get_module_device,
+    resolve_device,
+    validate_implementation,
+)
 
 import data
 from gdl import load_checkpoint, load_run_config, run_dir
@@ -89,12 +94,13 @@ def evaluate(
         paper_dir = Path(__file__).resolve().parent.parent
 
     config = load_run_config(paper_dir, run_id)
+    validate_implementation(config)
     data_config = config["data"]
     model_values = dict(config["model"])
     model_values["radial_mlp_widths"] = tuple(model_values["radial_mlp_widths"])
     model_config = MACEConfig(**model_values)
 
-    model = MACE(
+    model = build_model(
         model_config,
         avg_num_neighbours=data_config["avg_num_neighbors"],
         atomic_energies=torch.tensor(
@@ -102,7 +108,7 @@ def evaluate(
         ),
         mean_energy_shift=data_config["mean_energy_shift"],
         rms_forces=data_config["rms_forces"],
-    ).double()
+    )
     model = model.to(device)
     load_checkpoint(model, run_dir(paper_dir, run_id))
 
@@ -114,7 +120,10 @@ def evaluate(
             for filename in filenames
             for configuration in data.load_extxyz(data_dir / filename)
         ]
-        graphs = [data.build_neighbor_graph(item) for item in configurations]
+        graphs = [
+            data.build_neighbor_graph(item, cutoff=model_config.cutoff)
+            for item in configurations
+        ]
         results[test_name] = _evaluate_graphs(
             model,
             graphs,
