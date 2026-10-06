@@ -1,4 +1,19 @@
-# gdl-papers
+# Saved the plan in the current GDL tracker: [gdl_goals.md (line 11)](/Users/luvsuneja/Documents/wiki/Career/gdl_goals.md:11).
+The three hours are allocated:
+- 0:00–0:10 — rerun Section 12 CG checks
+- 0:10–0:30 — Section 13: \(\nu,\eta_3\) coupling paths
+- 0:30–0:50 — Section 14: radial basis/cutoff
+- 0:50–1:20 — Section 15 / Eq. 8
+- 1:20–1:40 — Section 16 / Eq. 9
+- 1:40–2:10 — Section 17 / Eq. 10
+- 2:10–2:30 — Section 18 / Eq. 11
+- 2:30–2:40 — shape ledger
+- 2:40–2:50 — symmetry checks
+- 2:50–3:00 — recap and save
+Hand derivations and .py implementation are explicitly scheduled after Pali.
+
+
+gdl-papers
 
 PyTorch reproductions of geometric deep learning papers. Each paper is implemented,
 trained, evaluated against its published benchmark, and written up. One

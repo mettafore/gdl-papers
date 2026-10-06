@@ -87,10 +87,55 @@ uv run python papers/15-MACE/src/evaluate.py --run <run_id> \
 uv run pytest papers/15-MACE/
 ```
 
+By default, both commands use CUDA when PyTorch detects it and otherwise use
+CPU. Select a device explicitly with `--device cuda` or `--device cpu`. This
+float64 reproduction does not support Apple's MPS backend.
+
+Run the bounded one-batch CUDA smoke on Modal with:
+
+```bash
+uv run modal run papers/15-MACE/modal_smoke.py
+```
+
+It trains one batch, validates, reloads the checkpoint, and evaluates one
+configuration. It is an execution check, not a benchmark result. Modal requires
+a payment method before it will allocate the T4 GPU.
+
+For full training with persistent, resumable checkpoints, use the separate
+Modal launcher. Start one epoch to establish a run ID, then continue that run
+to 500 epochs:
+
+```bash
+uv run modal run --detach papers/15-MACE/modal_train.py --epochs 1 --seed 123
+uv run modal run --detach papers/15-MACE/modal_train.py --epochs 500 --seed 123 \
+  --resume-run-id <run_id>
+```
+
+It stores run folders in the named Modal Volume `gdl-papers-mace-runs` and
+commits each completed epoch. `training_state.pt` atomically records the latest
+live model, latest EMA, best-validation EMA, optimizer, scheduler, completed
+epoch, and RNG states. The evaluation `checkpoint.pt` is regenerated from that
+snapshot on resume. If a job stops, rerun the same command with
+`--resume-run-id <run_id>` from the log. Modal limits one function call to 24
+hours; the resumed job retries automatically from its most recent completed
+epoch after a timeout or interruption. Updates made during the current epoch
+may need to be repeated.
+
+To evaluate a Modal run locally, download its run folder first:
+
+```bash
+uv run modal volume get gdl-papers-mace-runs runs/<run_id> papers/15-MACE/runs/<run_id>
+uv run python papers/15-MACE/src/evaluate.py --run <run_id> \
+  --data papers/15-MACE/data/dataset_3BPA
+```
+
 Training prints a `run_id`. Use that ID with `--run`. The training command also
-accepts `--seed` and `--epochs`; its default 500-epoch cap is a configurable
+accepts `--seed` and `--epochs`; `--max-train-batches` limits training batches
+per epoch for smoke/debug runs only. The default 500-epoch cap is a configurable
 run setting, not a separately verified published stopping rule. Runs write
-`config.json`, `metrics.jsonl`, and `checkpoint.pt` under `runs/<run_id>/`.
+`config.json`, `metrics.jsonl`, the best-validation `checkpoint.pt`, and the
+latest resumable `training_state.pt` under `runs/<run_id>/`.
+For local interrupted runs, add `--resume-run-id <run_id>` to the training command.
 
 The 2026-09-28 correction unpacks angular blocks before contraction and uses
 the author's bias-free radial networks. Checkpoints from the previous biased

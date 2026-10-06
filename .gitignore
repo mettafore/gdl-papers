@@ -8,6 +8,7 @@ build/
 course/
 course/*
 references/course-reader.md
+.env.local
 # LaTeX build artifacts
 *.aux
 *.log

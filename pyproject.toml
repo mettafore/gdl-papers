@@ -12,6 +12,11 @@ dependencies = [
     "pandas>=2.3.3",
     "matplotlib>=3.11.1",
     "torchdiffeq>=0.2.5",
+    "seaborn>=0.13.2",
+    "plotly>=6.9.0",
+    "e3nn>=0.6.0",
+    "nbformat>=5.11.1",
+    "ase>=3.29.0",
 ]
 
 [dependency-groups]
@@ -24,7 +29,8 @@ dev = [
 
 [tool.ruff]
 # Notebooks are scratch space — not linted (matches the AGENTS.md commit rule).
-extend-exclude = ["*.ipynb"]
+# Fetched author source is preserved verbatim, not formatted as project code.
+extend-exclude = ["*.ipynb", "papers/*/sources/**"]
 line-length = 88
 target-version = "py312"
 

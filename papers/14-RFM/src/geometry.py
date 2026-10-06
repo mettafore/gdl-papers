@@ -37,7 +37,7 @@ def sample_sphere(n: int, device: torch.device | str | None = None) -> torch.Ten
     # Getting radius of circle at coord z
     r = torch.sqrt(1 - torch.square(z))
     # Getting theta to get x and y
-    theta = 2 * torch.pi * torch.rand(n, 1, device=device) - 1
+    theta = 2 * torch.pi * torch.rand(n, 1, device=device) - torch.pi
     x = (r * torch.cos(theta)).reshape(-1, 1)
     y = (r * torch.sin(theta)).reshape(-1, 1)
     return torch.concat([x, y, z], dim=1)

@@ -224,6 +224,13 @@ layout, and both radial networks use e3nn's bias-free `FullyConnectedNet`.
 Regression tests exercise rotation/reflection symmetry and edge-cutoff
 continuity. Previous radial-network checkpoints require retraining.
 
+**Device support (2026-09-28):** training and evaluation now move the model,
+registered buffers, and each PyG batch together. `--device auto` selects CUDA
+when available and CPU otherwise. The one-batch Modal smoke launcher is ready,
+but Modal refused the T4 request because the account has no payment method; no
+CUDA training ran. Retry after billing is enabled, before the full three-seed
+benchmark. MPS is excluded because this reproduction uses float64.
+
 **Next action:** inspect the implementation chunk by chunk, then run the full
 three-seed benchmark and compare all eight RMSE means with Table 2.
 

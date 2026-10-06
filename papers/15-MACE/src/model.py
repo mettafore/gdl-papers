@@ -357,7 +357,7 @@ class Contraction(nn.Module):
         super().__init__()
         # Atomic basis A is packed as [N, 4096] and viewed here as [N, 256, 16].
         # num_features is the learned channel count k: 256, not N * 4096.
-        self.num_features = input_irreps.count((0, 1))
+        self.num_features = input_irreps.count("0e")
 
         # Strip the 256 channel multiplicity: fixed U tensors couple only the
         # angular types 0e + 1o + 2e + 3o, whose packed dimension is 16.

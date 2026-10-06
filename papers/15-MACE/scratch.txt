@@ -1,0 +1,18 @@
+
+CouplingRoute(
+    input_ells=(1, 1, 2),
+    intermediate_ells=(1,),
+    output_ell=1,
+)
+
+
+
+(i1, i2, i_out, "uvw", True)
+
+
+o3.TensorProduct(
+    irreps_in1,
+    irreps_in2,
+    irreps_out,
+    instructions,
+)

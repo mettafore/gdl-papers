@@ -137,14 +137,6 @@ def model_one_point(
     ).reshape(-1)
 
 
-def div_fn(
-    u: Callable[[torch.Tensor], torch.Tensor],
-) -> Callable[[torch.Tensor], torch.Tensor]:
-    """Build a scalar divergence function from a vector-valued field."""
-    J = jacrev(u)
-    return lambda x: torch.trace(J(x))
-
-
 def divergence(
     model: nn.Module,
     x: torch.Tensor,

@@ -15,3 +15,12 @@
 .pi/anki-audit.db-shm
 .pi/migration-report.json
 .pi/npm/
+# Learning Harness generated files
+*.png
+!*/lessons/**/*.png
+!*/sources/**/*.png
+__pycache__/
+*.py[cod]
+.pi/anki-snapshots/
+# Downloaded atomic configurations are local datasets.
+data/**/*.xyz
