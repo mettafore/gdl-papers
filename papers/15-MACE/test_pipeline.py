@@ -211,16 +211,16 @@ def test_optimizer_regularizes_projections_and_all_product_weights() -> None:
         torch.testing.assert_close(parameters[name], before[name], atol=0, rtol=0)
 
 
-def test_float64_construction_preserves_coupling_precision_and_global_dtype() -> None:
-    previous_dtype = torch.get_default_dtype()
-    mace = train.build_model(
+def test_float64_construction_preserves_coupling_precision_and_sets_default() -> None:
+    torch.set_default_dtype(torch.float64)
+    mace = model.MACE(
         model.MACEConfig(channels=2, radial_mlp_widths=(4, 4, 4, 8)),
         avg_num_neighbours=2.0,
         atomic_energies=torch.zeros(4, dtype=torch.float64),
         mean_energy_shift=0.0,
         rms_forces=1.0,
     )
-    assert torch.get_default_dtype() == previous_dtype
+    assert torch.get_default_dtype() == torch.float64
     assert all(parameter.dtype == torch.float64 for parameter in mace.parameters())
     scalar = mace.first_product_basis.symmetric_contraction.contractions[0]
     # The vector-vector scalar CG coefficient is exactly 1/sqrt(3) in float64.

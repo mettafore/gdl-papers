@@ -277,29 +277,6 @@ def energy_force_loss(
     )
 
 
-def build_model(
-    config: MACEConfig,
-    *,
-    avg_num_neighbours: float,
-    atomic_energies: Tensor,
-    mean_energy_shift: float,
-    rms_forces: float,
-) -> MACE:
-    """Construct weights and CG buffers in float64, not rounded float32 copies."""
-    previous_dtype = torch.get_default_dtype()
-    try:
-        torch.set_default_dtype(torch.float64)
-        return MACE(
-            config,
-            avg_num_neighbours=avg_num_neighbours,
-            atomic_energies=atomic_energies,
-            mean_energy_shift=mean_energy_shift,
-            rms_forces=rms_forces,
-        ).double()
-    finally:
-        torch.set_default_dtype(previous_dtype)
-
-
 def make_optimizer(model: MACE, config: TrainConfig) -> torch.optim.Adam:
     """Apply reference decay to interaction projections and all product weights."""
     decay_parameters = []
@@ -385,6 +362,7 @@ def train(
     on_epoch_checkpoint: Callable[[], None] | None = None,
 ) -> tuple[str, Path]:
     """Train one seed and write config, JSONL metrics, and the best EMA checkpoint."""
+    torch.set_default_dtype(torch.float64)
     data_dir = data_dir.resolve()
     device = resolve_device(device)
     set_seed(train_config.seed)
@@ -457,14 +435,14 @@ def train(
         _validate_resume_config(saved_config, run_config)
     print(f"run_id: {run_id}", flush=True)
 
-    model = build_model(
+    model = MACE(
         model_config,
         avg_num_neighbours=avg_num_neighbors,
         atomic_energies=atomic_energies,
         mean_energy_shift=mean_energy_shift,
         rms_forces=rms_forces,
     )
-    model = model.to(device)
+    model = model.double().to(device)
 
     optimizer = make_optimizer(model, train_config)
 

@@ -6,11 +6,10 @@ from pathlib import Path
 from typing import Sequence
 
 import torch
-from model import MACEConfig
+from model import MACE, MACEConfig
 from torch import Tensor, nn
 from torch_geometric.data import Data
 from train import (
-    build_model,
     get_module_device,
     resolve_device,
 )
@@ -87,6 +86,7 @@ def evaluate(
 
     Returns energy RMSE in meV and force-component RMSE in meV/angstrom.
     """
+    torch.set_default_dtype(torch.float64)
     data.validate_data_dir(data_dir)
     device = resolve_device(device)
     if paper_dir is None:
@@ -98,7 +98,7 @@ def evaluate(
     model_values["radial_mlp_widths"] = tuple(model_values["radial_mlp_widths"])
     model_config = MACEConfig(**model_values)
 
-    model = build_model(
+    model = MACE(
         model_config,
         avg_num_neighbours=data_config["avg_num_neighbors"],
         atomic_energies=torch.tensor(
@@ -107,7 +107,7 @@ def evaluate(
         mean_energy_shift=data_config["mean_energy_shift"],
         rms_forces=data_config["rms_forces"],
     )
-    model = model.to(device)
+    model = model.double().to(device)
     load_checkpoint(model, run_dir(paper_dir, run_id))
 
     batch_size = config["hyperparams"]["batch_size"]
