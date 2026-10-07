@@ -13,7 +13,6 @@ from train import (
     build_model,
     get_module_device,
     resolve_device,
-    validate_implementation,
 )
 
 import data
@@ -94,7 +93,6 @@ def evaluate(
         paper_dir = Path(__file__).resolve().parent.parent
 
     config = load_run_config(paper_dir, run_id)
-    validate_implementation(config)
     data_config = config["data"]
     model_values = dict(config["model"])
     model_values["radial_mlp_widths"] = tuple(model_values["radial_mlp_widths"])

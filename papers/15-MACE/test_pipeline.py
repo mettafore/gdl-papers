@@ -227,11 +227,6 @@ def test_float64_construction_preserves_coupling_precision_and_global_dtype() ->
     assert scalar.U_matrix_2[0, 1, 1, 1].item() == pytest.approx(3**-0.5, abs=1e-15)
 
 
-def test_old_checkpoint_version_is_rejected_before_loading() -> None:
-    with pytest.raises(ValueError, match="start a new training run"):
-        train.validate_implementation({"model": {}})
-
-
 def test_nonpositive_gradient_clip_is_rejected() -> None:
     with pytest.raises(ValueError, match="max_grad_norm must be positive"):
         train.TrainConfig(max_grad_norm=0)

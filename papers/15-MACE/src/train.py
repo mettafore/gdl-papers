@@ -211,7 +211,6 @@ def _validate_resume_config(
     current_config: dict,
 ) -> None:
     """Reject resuming a run with changed data, model, or training settings."""
-    validate_implementation(saved_config)
     for section in ("data", "model"):
         current_section = json.loads(json.dumps(current_config[section]))
         if saved_config[section] != current_section:
@@ -276,14 +275,6 @@ def energy_force_loss(
         energy_weight * ((predicted_energy - target_energy) ** 2).mean()
         + (force_weight * (predicted_forces - target_forces) ** 2).mean()
     )
-
-
-def validate_implementation(config: dict) -> None:
-    """Reject checkpoints from the earlier architecture before loading weights."""
-    if config.get("implementation", {}).get("version") != IMPLEMENTATION_VERSION:
-        raise ValueError(
-            "checkpoint predates the author-code corrections; start a new training run"
-        )
 
 
 def build_model(

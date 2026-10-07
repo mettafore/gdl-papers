@@ -20,7 +20,7 @@ internal ell 3, and hidden angular orders through L=2.
 | Gradient clipping | Apply norm clipping before Adam, with the reference default of 10; allow an explicit override | [train.py](https://github.com/ACEsuit/mace/blob/b3e3b2c6c9ac89dbc375905740e15e1e5b1ad721/mace/tools/train.py) |
 | EMA | Preserve initial shadow parameters and use the update-count warm-up of torch_ema before the configured 0.99 decay | [torch_ema](https://github.com/fadel/pytorch_ema/blob/master/torch_ema/ema.py) |
 | Graph cutoff | Forward the configured model cutoff to training and evaluation graph construction | Local configuration contract |
-| Checkpoints | Save implementation version 2 and the author revision; reject earlier run configurations before loading incompatible weights | Local checkpoint contract |
+| Checkpoints | Save implementation version 2 and the author revision as metadata; loading relies on existing configuration and state-dictionary compatibility checks | Local checkpoint contract |
 
 The additional sender linear can be absorbed into the initial species embedding
 mathematically. It is retained to match the reference parameterization, not
