@@ -16,3 +16,29 @@ o3.TensorProduct(
     irreps_out,
     instructions,
 )
+
+# Review notes: 2026-10-07
+# Luv will decide whether to retain the following two changes. Keep the
+# implementation unchanged while reviewing them.
+#
+# 1. Sender linear in AtomicBasis.forward
+#    Adds a learned 256-by-256 scalar channel map after the linear species
+#    embedding, with no intervening nonlinearity. The two linear maps can
+#    be combined mathematically. Separate learned factors can affect
+#    initialization and optimization; this layer matches the author's
+#    parameterization rather than adding a new class of functions.
+#    Decision to consider: retain the separate map or absorb it into the
+#    embedding. Removing it from trained weights requires composing the maps.
+#
+# 2. First atomic-basis radial-weight ordering
+#    Current layout: [E,1024] -> [E,4,256] -> transpose -> [E,256,4].
+#    Previous layout: directly reshape [E,1024] to [E,256,4].
+#    Both conventions are valid when used consistently. The current version
+#    matches the author's flattened tensor-product weight order and enables
+#    direct comparisons after transferring identical MLP weights. It is an
+#    optional compatibility adjustment, not a mathematical fix or a reason
+#    by itself to retrain. Changing conventions for trained weights requires
+#    permuting the final radial-MLP outputs to preserve the same function.
+#    Decision to consider: retain author ordering, restore the previous
+#    convention, or keep [E,4,256] and change downstream indexing to avoid
+#    the transpose while preserving author ordering.
