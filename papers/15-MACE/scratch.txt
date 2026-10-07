@@ -18,7 +18,7 @@ o3.TensorProduct(
 )
 
 # Review notes: 2026-10-07
-# Luv will decide whether to retain the following two changes. Keep the
+# Luv will decide whether to retain the following changes. Keep the
 # implementation unchanged while reviewing them.
 #
 # 1. Sender linear in AtomicBasis.forward
@@ -42,3 +42,13 @@ o3.TensorProduct(
 #    Decision to consider: retain author ordering, restore the previous
 #    convention, or keep [E,4,256] and change downstream indexing to avoid
 #    the transpose while preserving author ordering.
+#
+# 3. Normalized SiLU in the second readout
+#    For the 16 scalar 0e channels, e3nn Activation applies approximately
+#    1.67918 * SiLU(x), preserving the tensor shape. The fixed factor makes
+#    the expected squared output approximately one for standard-normal inputs.
+#    The following linear layer can absorb this factor into its weights, so
+#    it adds no expressive power. It matches the author's scaling convention
+#    and can affect initialization and optimization. Ordinary SiLU was not
+#    a mathematical mistake. Luv regards this as a cosmetic change worth
+#    reconsidering; retain the implementation until he decides.
