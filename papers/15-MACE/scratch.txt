@@ -18,8 +18,7 @@ o3.TensorProduct(
 )
 
 # Review notes: 2026-10-07
-# Luv will decide whether to retain the following changes. Keep the
-# implementation unchanged while reviewing them.
+# Keep the implementation unchanged while reviewing the pending choices.
 #
 # 1. Sender linear in AtomicBasis.forward
 #    Adds a learned 256-by-256 scalar channel map after the linear species
@@ -27,8 +26,8 @@ o3.TensorProduct(
 #    be combined mathematically. Separate learned factors can affect
 #    initialization and optimization; this layer matches the author's
 #    parameterization rather than adding a new class of functions.
-#    Decision to consider: retain the separate map or absorb it into the
-#    embedding. Removing it from trained weights requires composing the maps.
+#    Decision (2026-10-09): retain the separate sender linear. Luv accepts
+#    the author's parameterization despite its mathematical redundancy.
 #
 # 2. First atomic-basis radial-weight ordering
 #    Current layout: [E,1024] -> [E,4,256] -> transpose -> [E,256,4].
