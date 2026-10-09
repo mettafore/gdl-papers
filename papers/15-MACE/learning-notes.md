@@ -1016,6 +1016,45 @@ output irreps contain only `0e`; the input angular orders remain unchanged.
 The forward method explicitly calls them; the list itself does not run
 them as a sequence.
 
+## `Contraction.forward`: the first order-3 contraction
+
+The mixed atomic basis is unpacked as `x` with shape `(N, 256, 16)`.
+`N` counts atoms across the batch. Its 16 angular components concatenate
+the order-0, order-1, order-2, and order-3 blocks.
+
+```python
+out = torch.einsum(
+    "mijkp,epc,nck,ne->ncmij",
+    u_max, self.weights_max, x, node_attrs,
+)
+```
+
+| Tensor | Indices | Meaning |
+| --- | --- | --- |
+| `u_max` | `m i j k p` | Output component, three input angular slots, coupling path |
+| `weights_max` | `e p c` | Receiver element type, coupling path, channel |
+| `x` | `n c k` | Atom, channel, input angular component |
+| `node_attrs` | `n e` | Atom and element one-hot |
+
+Here `m` ranges over the components of one chosen output irrep: 1 for
+`0e`, 3 for `1o`, or 5 for `2e`. Each input angular slot `i`, `j`, and `k`
+ranges over 16 components. These indices do not identify different atoms.
+
+The operation evaluates
+
+\[
+\mathrm{out}_{ncmij}
+=\sum_{e,p,k}U_{mijkp}W_{epc}X_{nck}z_{ne}.
+\]
+
+The one-hot selects the central atom's element weights. Summing over
+`e`, `p`, and `k` leaves `(N, 256, output_dim, 16, 16)`. This is an
+intermediate order-3 contribution with only one atomic-basis factor consumed.
+The remaining slots `i` and `j` will receive two more factors. It is not
+yet the completed message from Equation 11. The learned path weights here
+are Equation 11's weights; the channel mixing inside Equation 10 already
+occurred in the upstream atomic-basis projection.
+
 ## Reviewed training and evaluation conventions
 
 Training and evaluation set PyTorch's default dtype to float64 before
