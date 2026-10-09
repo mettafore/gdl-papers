@@ -606,7 +606,8 @@ Both readouts produce one scalar contribution per atom.
 | Initial node embedding | `(N, 256)` |
 | `edge_radial` | `(E, 8)` |
 | `A0`, `A1` | `(N, 4096)` |
-| `h1`, `h2`, `sc` | `(N, 2304)` |
+| `h1` | `(N, 2304)` |
+| `h2`, `sc` in the final stage | `(N, 256)` |
 | `E1`, `E2`, restored per-atom energy | `(N, 1)` |
 | Configuration energies `E_g` | `(B,)` |
 | Forces `F_g` | `(N, 3)` |
@@ -707,8 +708,9 @@ beyond simply making the values easy to retrieve.
 
 ### Species embedding and radial-module setup
 
-`nn.Linear(num_elements, channels, bias=False)` maps one-hot element
-identity into learned scalar features. I guessed 128 channels; the default
+`o3.Linear("4x0e", "256x0e")` maps one-hot element
+identity into learned scalar features using e3nn's initialization and
+normalization conventions. I guessed 128 channels; the default
 is 256, so `(N, 4)` becomes `(N, 256)`. Each one-hot row selects the learned
 weight-matrix column for its species. Initially, atoms of the same species
 receive the same embedding; the later blocks incorporate geometry.
@@ -739,15 +741,18 @@ product block handles coupled products `B`, message `m`, and updated `h`.
 The second readout is an `nn.Sequential` containing:
 
 ```text
-hidden features -> equivariant linear -> 16x0e
-                -> SiLU              -> 16x0e
+256x0e          -> equivariant linear -> 16x0e
+                -> normalized SiLU   -> 16x0e
                 -> equivariant linear -> 1x0e
 ```
 
 The nonlinearity sits between the two linear layers. `16x0e` means 16 even
 scalar features; `1x0e` means one even scalar energy contribution per atom.
-An ordinary component-wise SiLU preserves the transformation behavior of
-these even scalars.
+The e3nn activation applies approximately `1.67918 * SiLU(x)` to these
+even scalars. The fixed factor normalizes the expected squared output for
+standard-normal inputs. The next linear layer can absorb the factor, so
+it adds no expressive power, but it affects initialization and optimization.
+We retain it to match the author's convention.
 
 `readout_hidden_width=16` is a hyperparameter specified in the paper's
 training setup. The paper gives no particular justification for choosing
@@ -825,6 +830,11 @@ The constructor stores the configuration and creates a scalar radial MLP:
 `8 -> 64 -> 64 -> 64 -> 1024`. SiLU acts after the hidden layers; the
 output layer is linear. These outputs become `(E, 256, 4)`: one learned
 distance weight for each edge, channel, and angular order.
+The code first reshapes to `(E, 4, 256)` and transposes the last two axes.
+This assigns consecutive MLP outputs to channels within an angular order,
+matching the author's ordering. Directly reshaping to `(E, 256, 4)` is also
+valid when used consistently, but transferring trained weights between the
+two conventions requires permuting the final MLP outputs.
 
 The spherical harmonics have shape `(E, 16)`. `split_sizes = [1, 3, 5, 7]`
 specifies block lengths, so splitting produces `(E, 1)`, `(E, 3)`,
@@ -838,7 +848,8 @@ For a chosen angular order, the edge message multiplies three factors:
 | Spherical-harmonic block | `(E, 1, 2*l + 1)` | Direction components for this order |
 | Gathered sender features | `(E, 256, 1)` | Learned scalar species embeddings of the sending atoms |
 
-Here the sender features come from the initial node embedding, gathered
+Here the sender features come from the initial node embedding followed by
+`sender_linear`, gathered
 using `edge_index[0]`. They are the neighbour's features, rather than the
 receiving atom's features. The later interaction block handles hidden
 features. There is no additional existing `edge_message` to multiply.
@@ -882,22 +893,37 @@ Concatenating these already flattened blocks along dimension 1 produces
 is needed. Packing preserves the order: angular block, channel, then
 angular component within each channel.
 
+Before returning A, the block applies `atomic_basis_projection`, divides by
+the training-set average neighbour count, and applies `receiver_selector`.
+The projection mixes the 256 channels separately within each angular order,
+corresponding to the channel-mixing factor inside Equation 10. The receiver
+selector uses `(N, 4)` element one-hots to select a learned 256-by-256 channel
+matrix for each angular order and central species. It shares that matrix
+across the magnetic components and preserves `(N, 4096)` throughout.
+It does not combine features from different atoms or angular orders.
+This additional species-conditioned transform comes from the author code.
+The separate sender linear can be absorbed into the initial embedding;
+we retain the author's parameterization after review.
+
 ## `ProductBasisBlock`: higher-order messages and hidden-feature updates
 
 Code: [model.py](src/model.py), `ProductBasisBlock`.
 
-The constructor receives a `MACEConfig` object. It creates
+The constructor receives a `MACEConfig` object and optional `output_irreps`. It creates
 `SymmetricContraction` for Equations 10–11 and an equivariant linear layer
 for the first term of Equation 12. `o3.Irreps(config.hidden_irreps)` declares
 the layout `256x0e + 256x1o + 256x2e`, containing
 `256 * (1 + 3 + 5) = 2304` components per atom.
+The first stage uses that full output layout. The final stage explicitly
+requests `256x0e`, so its contraction, message linear, and skip output all
+have `(N, 256)` shape. Both stages still receive the full `(N, 4096)` A.
 
 The forward inputs are:
 
 | Input | Meaning | Shape |
 | --- | --- | --- |
 | `node_features` | Atomic basis A from the atomic-basis or interaction block | `(N, 4096)` |
-| `sc` | Transformed previous hidden features for the skip connection | `(N, 2304)` or `None` |
+| `sc` | Transformed previous hidden features for the skip connection | `(N, 256)` in the final stage; `None` in the first |
 | `node_attrs` | Element one-hot encodings | `(N, 4)` |
 
 ### From atomic basis A to message m
@@ -906,7 +932,8 @@ Equation 10 constructs a product of exactly `nu` atomic-basis factors at
 each correlation order: one, two, or three factors here. Fixed angular
 coupling coefficients combine their components into the desired output
 type `(L, M)`. Different valid coupling paths produce different B features.
-The paper expression also includes learned channel mixing before the products.
+The paper expression also includes learned channel mixing before the products;
+the atomic-basis projection performs that operation upstream of contraction.
 
 Equation 11 takes a learned weighted sum over paths within each order,
 then sums the orders to obtain m:
@@ -923,12 +950,13 @@ on the receiving atom's element, selected using `node_attrs`.
 
 The local contraction implementation evaluates the coupled products and
 route weights together. `SymmetricContraction` packs its scalar, vector,
-and order-2 output blocks into message m with shape `(N, 2304)`.
+and order-2 output blocks into message m with shape `(N, 2304)` in the first
+stage. The final stage constructs only the scalar output `(N, 256)`.
 
 ### Equation 12 and the skip connection
 
 `message_linear(product_features)` mixes compatible message channels while
-preserving their angular transformation rules and the `(N, 2304)` layout.
+preserving their angular transformation rules and configured output layout.
 Adding `sc`, when present, supplies Equation 12's second term:
 
 ```text
@@ -959,7 +987,8 @@ and match the hidden-feature layout:
 | Layout | Irreps | Components per atom |
 | --- | --- | --- |
 | Input A | `256x0e + 256x1o + 256x2e + 256x3o` | `256 * (1 + 3 + 5 + 7) = 4096` |
-| Output m | `256x0e + 256x1o + 256x2e` | `256 * (1 + 3 + 5) = 2304` |
+| First-stage output m | `256x0e + 256x1o + 256x2e` | `256 * (1 + 3 + 5) = 2304` |
+| Final-stage output m | `256x0e` | 256 |
 
 Irreps specify the transformation rules as well as the feature sizes.
 
@@ -982,8 +1011,40 @@ orders 1, 2, and 3. `self.correlation` stores that maximum.
 
 `nn.ModuleList` stores the three contractions as registered submodules.
 PyTorch can track their parameters and move them with the parent model.
+The final stage creates only the scalar contraction because its explicit
+output irreps contain only `0e`; the input angular orders remain unchanged.
 The forward method explicitly calls them; the list itself does not run
 them as a sequence.
+
+## Reviewed training and evaluation conventions
+
+Training and evaluation set PyTorch's default dtype to float64 before
+constructing MACE directly. This creates fixed CG tensors at full precision;
+converting float32 tensors afterward cannot recover lost precision.
+
+Graph construction receives `model_config.cutoff` in training, validation,
+and evaluation. The default is 5 angstroms. Evaluation reads it from the
+saved run configuration.
+
+Adam applies weight decay to both atomic-basis projections and all product
+block parameters. Embedding, sender linears, receiver selectors, and readouts
+receive zero decay. In this Adam setup, decay adds `lambda * weight` to the
+loss gradient, discouraging large weights.
+
+After `loss.backward()`, gradient clipping limits the combined parameter
+gradient norm to 10 before `optimizer.step()`. It scales all gradients together
+when the norm exceeds the limit; `None` disables it. This limits gradients,
+not Adam's final update magnitude or the predicted atomic forces.
+
+EMA retains a separate average of model weights. Its effective decay is
+`min(decay, (1 + updates) / (10 + updates))`, giving current weights more
+influence early in training. The counter starts at 1 so the first update
+blends initial and updated weights. The optimizer updates the live model;
+validation and the best saved model use the averaged weights.
+
+Run metadata records implementation version 2 and the author revision.
+The version label does not reject checkpoints. Configuration and weight-shape
+compatibility checks still apply when resuming or loading weights.
 
 ### References
 
