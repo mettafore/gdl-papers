@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-10-06 (MACE author-code audit and architecture corrections)
+**Last updated:** 2026-10-09 (MACE author-code review complete)
 
 ---
 
@@ -242,10 +242,12 @@ buffers in float64 and matches reference weight-decay groups, gradient clipping,
 and EMA warm-up. Identical random weights reproduce the pinned v0.2.0 model's
 energies, forces, and force-loss gradients on synthetic and real 3BPA batches,
 including the published 256-channel architecture, within float64 rounding error.
-The 57-test suite passes, including checkpoint
+The 56-test suite passes, including checkpoint
 reload and deterministic resume. This is reference-code verification, not the
-three-seed benchmark. Earlier checkpoints require a fresh training run and are
-explicitly rejected. No paid training was launched. See the
+three-seed benchmark. Implementation version metadata does not reject earlier
+checkpoints; configuration and weight-loading compatibility checks still apply.
+The review retained sender linear, author radial ordering, and normalized SiLU.
+Training and evaluation set float64 at startup. No paid training was launched. See the
 [audit report](../papers/15-MACE/author-code-audit.md) for scope and evidence.
 
 ---

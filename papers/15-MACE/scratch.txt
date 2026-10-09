@@ -18,7 +18,7 @@ o3.TensorProduct(
 )
 
 # Review notes: 2026-10-07
-# Keep the implementation unchanged while reviewing the pending choices.
+# Review complete: retain all three choices (2026-10-09).
 #
 # 1. Sender linear in AtomicBasis.forward
 #    Adds a learned 256-by-256 scalar channel map after the linear species
@@ -38,9 +38,7 @@ o3.TensorProduct(
 #    optional compatibility adjustment, not a mathematical fix or a reason
 #    by itself to retrain. Changing conventions for trained weights requires
 #    permuting the final radial-MLP outputs to preserve the same function.
-#    Decision to consider: retain author ordering, restore the previous
-#    convention, or keep [E,4,256] and change downstream indexing to avoid
-#    the transpose while preserving author ordering.
+#    Decision (2026-10-09): retain author ordering with reshape and transpose.
 #
 # 3. Normalized SiLU in the second readout
 #    For the 16 scalar 0e channels, e3nn Activation applies approximately
@@ -50,4 +48,4 @@ o3.TensorProduct(
 #    it adds no expressive power. It matches the author's scaling convention
 #    and can affect initialization and optimization. Ordinary SiLU was not
 #    a mathematical mistake. Luv regards this as a cosmetic change worth
-#    reconsidering; retain the implementation until he decides.
+#    reconsidering. Decision (2026-10-09): retain normalized SiLU.

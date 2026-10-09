@@ -66,8 +66,11 @@ also matched on the real batch. Its statistics comparison used identical synthet
 isolated energies to isolate the statistics algorithm from dataset references.
 The saved regression fixture uses author-generated energies and forces with
 all trainable parameters set to 0.2. Tests additionally check receiver conditioning,
-neighbour normalization, optimizer decay behavior, float64 CG precision, old-run
-rejection, and the training/evaluation/resume path.
+neighbour normalization, optimizer decay behavior, float64 CG precision, and the
+training/evaluation/resume path. The reviewed suite contains 56 tests. On
+2026-10-09, the review retained sender linear, author radial ordering, and
+normalized SiLU. Training and evaluation set the default dtype to float64 at
+startup; implementation metadata does not reject older checkpoints.
 
 ## Training recipe and limits
 
