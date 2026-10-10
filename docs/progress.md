@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-10-18 (MACE seed-123 interim holdout evaluation)
+**Last updated:** 2026-10-11 (MACE seed-123 stopped and full holdout results saved)
 
 ---
 
@@ -27,7 +27,7 @@ Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 | 09 | NequIP | study | 📄 PDF + sources | — |
 | 10 | ManifoldFormer | breadth | 📄 PDF only | — |
 | 14 | Riemannian Flow Matching | implement | 🟡 in progress | 2026-08-17 |
-| 15 | MACE | implement | 🟡 author-code audit complete; retraining pending | 2026-10-06 |
+| 15 | MACE | implement | 🟡 seed 123 stopped at 367 epochs; benchmark incomplete | 2026-10-11 |
 
 Tier definitions → [`references/papers.md`](../references/papers.md).
 
@@ -231,8 +231,28 @@ but Modal refused the T4 request because the account has no payment method; no
 CUDA training ran. Retry after billing is enabled, before the full three-seed
 benchmark. MPS is excluded because this reproduction uses float64.
 
-**Next action:** finish seed 123 at 500 epochs, evaluate its best checkpoint on
-all holdout conditions, then decide whether to run the remaining two seeds.
+**Next action:** review the recorded single-seed holdout errors before choosing
+further experiments. Paid training is stopped; resume only if the learner
+requests it with an available compute budget.
+
+**Training stopped (2026-10-11):** the learner requested stopping Modal app
+`ap-Mq3FdH8F4u2eF40ccXy5hs` to preserve the remaining $2.99 credit. Modal confirmed
+zero running tasks at 01:36:53 Dubai time. Run `20261009-125019` completed 367
+epochs (33,030 optimizer steps). Its best-validation EMA checkpoint is from epoch
+360 (zero-based `best_epoch=359`), with weighted validation loss
+`0.13177227648722206`. The best checkpoint and latest resumable training state
+are preserved on the persistent volume and downloaded to the local run folder.
+The original `config.json` still contains the initial three-epoch limit; the
+persisted training state and metrics record the resumed run's completed epochs.
+
+**Best-checkpoint holdout evaluation (2026-10-11):** all 12,993 configurations
+were evaluated using epoch 360's best-validation EMA weights. Energy/force
+RMSEs are 3.99/11.56 (300 K), 13.28/28.96 (600 K), 44.51/96.01 (1200 K),
+and 17.57/21.15 (pooled dihedral), in meV and meV/angstrom. None of the eight
+single-seed metrics meets the 10% target against the paper's three-seed means.
+The largest gap is dihedral energy (2.25 times the paper mean). See the
+[experiment notes](../papers/15-MACE/notes.md) and
+[full-precision results](../papers/15-MACE/holdout-seed123-epoch360.json).
 
 **Author-code audit (2026-10-06):** the model now includes the first interaction's
 sender mixing, A projection, neighbour normalization, and receiver selector.
@@ -255,7 +275,8 @@ best EMA epoch 30 of the 500-epoch target. All 12,993 holdout configurations
 were evaluated. Energy and force RMSE are above the paper's three-seed means in
 all four conditions; this early, single-seed result does not establish benchmark
 reproduction. See the [experiment notes](../papers/15-MACE/notes.md) for the
-full comparison and artifact path. Training remained active after evaluation.
+full comparison and artifact path. The best-checkpoint evaluation above
+supersedes this interim snapshot; training is now stopped.
 
 ---
 

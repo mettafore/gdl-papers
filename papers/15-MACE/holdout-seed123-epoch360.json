@@ -1,0 +1,137 @@
+{
+  "run_id": "20261009-125019",
+  "seed": 123,
+  "checkpoint": "best validation EMA",
+  "checkpoint_epoch": 360,
+  "checkpoint_sha256": "a7424b3908fffa63aac55f5957bc9d4a78b8ff490ee83285d3675b5bd67210cd",
+  "epochs_completed": 367,
+  "best_epoch": 360,
+  "best_validation_loss": 0.13177227648722206,
+  "snapshot_utc": "2026-10-10T21:41:43.314096+00:00",
+  "model_config": {
+    "num_elements": 4,
+    "channels": 256,
+    "num_interactions": 2,
+    "correlation": 3,
+    "max_ell": 2,
+    "spherical_harmonics_max_ell": 3,
+    "cutoff": 5.0,
+    "num_radial_basis": 8,
+    "envelope_power": 5,
+    "radial_mlp_widths": [
+      64,
+      64,
+      64,
+      1024
+    ],
+    "readout_hidden_width": 16
+  },
+  "hyperparams": {
+    "learning_rate": 0.01,
+    "batch_size": 5,
+    "energy_weight": 1.0,
+    "force_weight": 1000.0,
+    "scheduler_patience": 50,
+    "scheduler_factor": 0.8,
+    "ema_decay": 0.99,
+    "weight_decay": 5e-07,
+    "amsgrad": true,
+    "drop_last": true,
+    "seed": 123,
+    "max_epochs": 3,
+    "max_train_batches": null,
+    "max_grad_norm": 10.0
+  },
+  "rmse_mev": {
+    "300K": {
+      "energy": 3.993274047216583,
+      "forces": 11.561626920578863
+    },
+    "600K": {
+      "energy": 13.275081034738752,
+      "forces": 28.962038207804238
+    },
+    "1200K": {
+      "energy": 44.50546060275126,
+      "forces": 96.01392763646544
+    },
+    "dihedral": {
+      "energy": 17.573461302286116,
+      "forces": 21.150381618165916
+    }
+  },
+  "configuration_counts": {
+    "300K": 1669,
+    "600K": 2138,
+    "1200K": 2139,
+    "dihedral": 7047
+  },
+  "paper_reference_mev": {
+    "300K": {
+      "energy": 3.0,
+      "forces": 8.8
+    },
+    "600K": {
+      "energy": 9.7,
+      "forces": 21.8
+    },
+    "1200K": {
+      "energy": 29.8,
+      "forces": 62.0
+    },
+    "dihedral": {
+      "energy": 7.8,
+      "forces": 16.5
+    }
+  },
+  "gpu": "NVIDIA A100-SXM4-40GB",
+  "status": "complete",
+  "device": "cuda",
+  "dtype": "float64",
+  "elapsed_seconds": 1784.5608197899999,
+  "evaluation_app_id": "ap-ahfm6L7tfinQhBGuzn2Bxi",
+  "training_app_id": "ap-Mq3FdH8F4u2eF40ccXy5hs",
+  "training_stopped_at": "2026-10-11T01:36:53+04:00",
+  "evaluation_code_git_commit": "61f30fbc703ec57ba04a0a668b1f9512d66eb630",
+  "optimizer_steps_at_completed_epoch_boundaries": 33030,
+  "total_holdout_configurations": 12993,
+  "units": {
+    "energy": "meV per configuration",
+    "forces": "meV/angstrom per force component"
+  },
+  "scope": "One seed, best validation EMA checkpoint; not a three-seed benchmark reproduction.",
+  "initial_epoch_limit_note": "The original hyperparams.max_epochs=3 predates resumed training; epochs_completed is read from training_state.pt.",
+  "evaluation_source_sha256": {
+    "model.py": "3df28da90e8201ed5e9cddd9d26f325521be1b67cc678d5a1909ccce20f8cb28",
+    "data.py": "9597a2aed3fb26562ee7430764bf4ce2f5f00737f2a25abbf388d6f8745872be",
+    "train.py": "bded43d8d186201e99addc850a4961bccc034f361c91540040145f7a19538233",
+    "evaluate.py": "50b620a268e70f6b685be2f5f0a83a953f3c66a305781a5ce856ea257ffc22ef"
+  },
+  "test_file_sha256": {
+    "test_1200K.xyz": "3c00e89bdb95421329dee018b5cf193a048890400b858ab64ad31b598c1fa2d2",
+    "test_300K.xyz": "8678c4c2e3ce3d628faa0792ccaa9b60970ba5a13ce4db9de83f99bbe42622ef",
+    "test_600K.xyz": "c49009d958c494b59acb247b8bddc715998976a359d11c682937c14535d145a0",
+    "test_dih_beta120.xyz": "e89c14fdeda449c81cffaa3a7ecf16a3ad9e6accf426041911db84ae4848ee6b",
+    "test_dih_beta150.xyz": "0bd0245c229dce4c09cd8d9e9dd18c50d8a966988824104b8b897011fc287dff",
+    "test_dih_beta180.xyz": "1ce5ad389479908b42e6809d36bea0b6aca23ad3e99d5782744332472886ee02"
+  },
+  "percent_above_paper_mean": {
+    "300K": {
+      "energy": 33.10913490721943,
+      "forces": 31.382124097487065
+    },
+    "600K": {
+      "energy": 36.856505512770646,
+      "forces": 32.85338627433136
+    },
+    "1200K": {
+      "energy": 49.34718323070892,
+      "forces": 54.86117360720233
+    },
+    "dihedral": {
+      "energy": 125.30078592674508,
+      "forces": 28.184131019187376
+    }
+  },
+  "all_single_seed_metrics_within_10_percent": false
+}
