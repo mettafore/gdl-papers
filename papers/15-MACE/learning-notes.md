@@ -1567,7 +1567,7 @@ weights.
 
 The helper checks that correlation is positive and uses the default dtype
 when none is supplied. `(coupling_irreps,) * correlation` repeats the input
-specification once for each factor: three copies for order 3. It does not
+specification once for each input: three copies for order 3. It does not
 multiply feature values. `_wigner_nj` constructs a list of paths, each stored
 as `(output_irrep, coupling_tensor)`. The following code selects the requested
 output type and stacks its path tensors into the final U tensor.
@@ -1597,6 +1597,113 @@ this walkthrough. Understanding their role is sufficient to follow MACE;
 revisit the indexing when modifying or debugging coupling construction.
 The main data, model, training, and evaluation walkthrough is covered.
 
+### Identity slices and the full input layout
+
+For `0e + 1o + 2e + 3o`, the correlation-1 call slices a 16-by-16
+identity. Each slice keeps all 16 input columns:
+
+| Irrep | Python row slice | Slice shape |
+| --- | --- | --- |
+| `0e` | `0:1` | `[1, 16]` |
+| `1o` | `1:4` | `[3, 16]` |
+| `2e` | `4:9` | `[5, 16]` |
+| `3o` | `9:16` | `[7, 16]` |
+
+`left_irrep * right_irrep` lists allowed angular orders from
+`abs(l_left - l_right)` through `l_left + l_right`, inclusive. Output
+parity is the product of the two input parities. The CG call receives
+angular orders `.l`, with axes `[output, left, right]`.
+
+e3nn normalizes its Wigner-3j tensor to unit Frobenius norm. The
+`component` convention multiplies by `sqrt(irrep_out.dim)`; the `norm`
+convention multiplies by `sqrt(left_irrep.dim * right_irrep.dim)`.
+For scalar-vector coupling, the raw matching entries are `1/sqrt(3)`;
+component scaling turns them into 1 in the checked e3nn real basis.
+
+### Correlation 2: scalar and vector into a vector
+
+Take `0e` from input 1 and `1o` from input 2, producing `1o`.
+`left_u` is the first identity row, shaped `[1, 16]`. The normalized
+CG tensor is shaped `[3, 1, 3]`, with `cg[:, 0, :]` equal to the
+3-by-3 identity.
+
+```python
+coupled_u = torch.einsum("jk,ijl->ikl", left_u.flatten(1), cg)
+```
+
+This means `coupled_u[i, k, l] = sum_j left_u[j, k] * cg[i, j, l]`.
+The intermediate left component `j` is summed away; the original left
+input axis `k` remains. The result is `[3, 16, 3]`, with ones at
+`[0, 0, 0]`, `[1, 0, 1]`, and `[2, 0, 2]`, and zeros elsewhere.
+
+The reshape keeps `[3, 16, 3]`. Padding then allocates `[3, 16, 16]`:
+`right_irrep.dim` is the selected vector block's size 3, while
+`irrepss_right.dim` is the full right input's size 16. After the scalar
+block, `right_start = 1`, so this vector block uses `slice(1, 4)`.
+`padded_u[..., right_slice] = coupled_u` selects the last axis and
+inserts the vector block into the full input layout. The resulting
+nonzero entries are `[0, 0, 1]`, `[1, 0, 2]`, and `[2, 0, 3]`.
+
+### Correlation 3: reuse the combined first two inputs
+
+The recursive call first combines inputs 1 and 2. Its completed
+`padded_u` becomes `left_u` in the outer call. For the route above,
+the outer call therefore receives `left_irrep = 1o` and
+`left_u.shape = [3, 16, 16]`, describing both original inputs.
+
+Now couple this intermediate `1o` with the `1o` block from input 3
+and select output `0e`. The new CG tensor has shape `[1, 3, 3]`, with
+`cg[0, :, :]` equal to the identity divided by `sqrt(3)`. Component
+normalization leaves it unchanged because the output dimension is 1.
+
+| Step | Shape |
+| --- | --- |
+| `left_u` | `[3, 16, 16]` |
+| `left_u.flatten(1)` | `[3, 256]` |
+| New `cg` | `[1, 3, 3]` |
+| Einsum result | `[1, 256, 3]` |
+| Reshape into the original input axes | `[1, 16, 16, 3]` |
+| Pad the full third input | `[1, 16, 16, 16]` |
+
+Before padding, the only nonzero entries are
+`coupled_u[0, 0, 1, 0]`, `coupled_u[0, 0, 2, 1]`, and
+`coupled_u[0, 0, 3, 2]`, each `1/sqrt(3)` (about 0.57735).
+Their axes are `[output, input 1, input 2, selected input-3 block]`.
+Padding shifts input 3's vector components into its full slots 1–3.
+
+The identity-slice example makes the contraction look like placing
+coefficients into slots. In general, `left_u` already contains combined
+coefficients, so the sum over `j` multiplies and adds them to the new CG
+coefficients. Reshaping restores the original input axes afterward.
+
+### Keeping paths separate, then selecting an output
+
+Each entry in `paths` is `(irrep_out, padded_u)`. Different routes to
+the same output remain separate tensors. Their route information is
+represented by the coefficients; this local helper does not retain
+separate ancestry labels. `Contraction` later learns a weight per path,
+receiver element type, and feature channel; the U tensors stay fixed.
+
+The multiplicity loop builds one path per copy of the current right
+irrep, placing coefficients into each copy's own slice. The current
+base case assumes one copy per angular term, as used by the
+channel-stripped `coupling_irreps`. The pinned author's helper explicitly
+expands repeated left copies in its base case.
+
+`u_matrix_real` filters to one requested output irrep before stacking.
+Thus each remaining tensor has the same output dimension and full input
+dimensions. `torch.stack(u_paths, dim=-1)` creates a new path axis of
+size `len(u_paths)`; it does not merge an existing axis. Correlation 3
+returns `[out_dim, 16, 16, 16, num_paths]`. The empty-path fallback uses
+one zero placeholder on the path axis to preserve this shape contract.
+
+The intermediate model builds separate contractions for `0e`, `1o`,
+and `2e`; the final stage keeps only scalars. Each output-specific
+construction reruns the full path enumeration before filtering, for
+each correlation order. These fixed tensors are constructed during
+initialization and stored as buffers, then reused in forward passes.
+The repeated setup cost was not timed in this session.
+
 ### References
 
 - [ASE overview](https://ase-lib.org/)
@@ -1607,6 +1714,8 @@ The main data, model, training, and evaluation walkthrough is covered.
 - [MACE architecture, Section 4](https://arxiv.org/html/2206.07697v2#S4)
 - [MACE training settings, Appendix A.5.1](https://arxiv.org/html/2206.07697v2#A1.SS5.SSS1)
 - [e3nn irreducible representations](https://docs.e3nn.org/en/stable/api/o3/o3_irreps.html)
+- [e3nn Wigner-3j coefficients](https://docs.e3nn.org/en/stable/api/o3/o3_wigner.html#e3nn.o3.wigner_3j)
+- [Pinned MACE author coupling helper](https://github.com/ACEsuit/mace/blob/b3e3b2c6c9ac89dbc375905740e15e1e5b1ad721/mace/tools/cg.py)
 - [e3nn spherical harmonics](https://docs.e3nn.org/en/stable/api/o3/o3_sh.html)
 - [PyTorch ModuleList](https://docs.pytorch.org/docs/2.14/generated/torch.nn.ModuleList.html)
 - [PyTorch automatic gradients](https://docs.pytorch.org/docs/2.14/generated/torch.autograd.grad.html)

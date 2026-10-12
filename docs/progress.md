@@ -235,6 +235,10 @@ benchmark. MPS is excluded because this reproduction uses float64.
 further experiments. Paid training is stopped; resume only if the learner
 requests it with an available compute budget.
 
+**Coupling walkthrough (2026-10-12):** added correlation-2 and correlation-3
+recursion, shape, padding, numerical coefficient, and path-stacking examples to
+the [learning notes](../papers/15-MACE/learning-notes.md#identity-slices-and-the-full-input-layout).
+
 **Training stopped (2026-10-11):** the learner requested stopping Modal app
 `ap-Mq3FdH8F4u2eF40ccXy5hs` to preserve the remaining $2.99 credit. Modal confirmed
 zero running tasks at 01:36:53 Dubai time. Run `20261009-125019` completed 367
