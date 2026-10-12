@@ -235,9 +235,11 @@ benchmark. MPS is excluded because this reproduction uses float64.
 further experiments. Paid training is stopped; resume only if the learner
 requests it with an available compute budget.
 
-**Coupling walkthrough (2026-10-12):** added correlation-2 and correlation-3
-recursion, shape, padding, numerical coefficient, and path-stacking examples to
-the [learning notes](../papers/15-MACE/learning-notes.md#identity-slices-and-the-full-input-layout).
+**Learning reference (2026-10-12):** reorganized the
+[learning notes](../papers/15-MACE/learning-notes.md#overview-and-notation)
+into a linked revision guide with bullet points, shape tables, and diagrams.
+The comparison against the previous version covers all 77 original headings;
+correlation-2/3 examples, numerical values, and implementation caveats remain.
 
 **Training stopped (2026-10-11):** the learner requested stopping Modal app
 `ap-Mq3FdH8F4u2eF40ccXy5hs` to preserve the remaining $2.99 credit. Modal confirmed
