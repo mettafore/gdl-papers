@@ -1,7 +1,7 @@
 """Run resumable full 3BPA MACE training on Modal's persistent T4 volume.
 
 Fresh run:
-    uv run modal run --detach papers/15-MACE/modal_train.py --epochs 1 --seed 123
+    uv run modal run --detach papers/15-MACE/modal_train.py --epochs 3 --seed 123
 
 Continue to 500 epochs, including automatic retries after interruption:
     uv run modal run --detach papers/15-MACE/modal_train.py --epochs 500 --seed 123 \
@@ -92,8 +92,6 @@ def main(
     seed: int = 123,
     resume_run_id: str | None = None,
 ) -> None:
-    if resume_run_id is None and epochs > 1:
-        raise ValueError("start with --epochs 1, then continue with --resume-run-id")
     result = run_training.spawn(
         epochs=epochs,
         seed=seed,

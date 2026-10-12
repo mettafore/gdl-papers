@@ -1055,6 +1055,208 @@ yet the completed message from Equation 11. The learned path weights here
 are Equation 11's weights; the channel mixing inside Equation 10 already
 occurred in the upstream atomic-basis projection.
 
+### Species selection and the paper's notation
+
+For a fixed atom `n`, summing over `e` selects its element's weights;
+it does not loop over or aggregate atoms of that element. With element
+order `[H, C, N, O]`, a carbon atom has `node_attrs[n] = [0, 1, 0, 0]`, so
+
+\[
+\sum_e W_{epc}z_{ne}=W_{\mathrm C,pc}.
+\]
+
+The one-hot zeros the other element contributions, not other atom rows.
+The repeated `n` aligns the atomic basis and element identity for the same
+atom. It remains in the einsum output, so it is not summed. The summed
+indices `e`, `p`, and `k` are absent from the output.
+
+Equation 11 writes species selection directly as a weight subscript
+`W_{z_i kL, eta_nu}`. The code expands this lookup into the one-hot sum
+above. The paper's atom `i`, channel `k`, and path `eta_nu` become the
+code's `n`, `c`, and `p`. Equation 10 constructs coupled products;
+Equation 11 weights their paths by central species. This einsum evaluates
+parts of both together, while leaving two atomic-basis factors for later.
+
+### Completing orders 3, 2, and 1 by nested contraction
+
+The order-2 coefficient tensor sums over element and path indices:
+
+```python
+c_tensor = torch.einsum("mijp,epc,ne->ncmij", u_2, weights_2, node_attrs)
+out = out + c_tensor
+out = torch.einsum("ncmij,ncj->ncmi", out, x)
+```
+
+Before multiplying by `x`, the terms are `U3 W3 X[k] + U2 W2`, with
+species weights selected by the one-hot. Consuming angular slot `j`
+produces `U3 W3 X[k] X[j] + U2 W2 X[j]`. The shape becomes
+`(N, 256, output_dim, 16)`. Atom `n`, channel `c`, output component `m`,
+and input slot `i` remain. Slot `j` is summed, not a channel index.
+
+The learner predicted the remaining steps: prepare `U1 W1`, add it to
+`out`, and multiply by the final `X[i]` factor. The code does exactly this:
+
+```python
+c_tensor = torch.einsum("mip,epc,ne->ncmi", u_1, weights_1, node_attrs)
+out = out + c_tensor
+out = torch.einsum("ncmi,nci->ncm", out, x)
+return out.flatten(start_dim=1)
+```
+
+The completed sum contains three, two, and one atomic-basis factors:
+`U3 W3 X[k] X[j] X[i] + U2 W2 X[j] X[i] + U1 W1 X[i]`.
+Its shape is `(N, 256, output_dim)`, flattened into the output irrep block.
+
+The nested evaluation shares remaining contractions across orders.
+A scalar analogy is `a3*x**3 + a2*x**2 + a1*x`, evaluated as
+`((a3*x + a2)*x + a1)*x`. Computing each term separately without sharing
+powers requires six multiplications and two additions. Sharing powers
+requires five multiplications and two additions. The nested form requires
+three multiplications and two additions. These counts explain the saving
+but do not measure the tensor implementation: its costs depend on angular
+dimensions, coupling paths, and the einsum contraction plan. They do not
+establish a twofold speedup for the full model.
+
+### Who calls the contractions
+
+`ProductBasisBlock.forward` calls `self.symmetric_contraction(node_features,
+node_attrs)`, where `node_features` contains the atomic basis A.
+`SymmetricContraction.forward` passes that same A and the element one-hots
+to each registered `Contraction`, then concatenates their outputs.
+
+Each `Contraction` fixes one output angular type and evaluates all its valid
+coupling paths at orders 1, 2, and 3. The U3, U2, and U1 nested contractions
+happen inside that module's `forward` method. `SymmetricContraction` wraps
+these modules across requested output types, rather than assigning a separate
+module to every path.
+
+For the first stage, the `0e`, `1o`, and `2e` modules return `(N, 256)`,
+`(N, 768)`, and `(N, 1280)`. Concatenation produces `(N, 2304)`.
+The final stage requests only `0e` and returns `(N, 256)`.
+
+## `InteractionBlock.forward`: hidden features into the next atomic basis
+
+The second interaction receives `h1` as `node_features`, with shape
+`(N, 2304)`, and element one-hots with shape `(N, 4)`.
+
+```python
+sc = self.skip_tp(node_features, node_attrs)
+mixed_node_features = self.sender_linear(node_features)
+sender_index = edge_index[0]
+receiver_index = edge_index[1]
+sender_features = mixed_node_features[sender_index]
+```
+
+The skip tensor product prepares Equation 12's element-dependent residual.
+In this final stage, `sc` contains only scalar channels, with shape `(N, 256)`.
+The sender linear prepares Equation 8's hidden-feature mixing, retaining
+`0e + 1o + 2e` and shape `(N, 2304)`. Gathering by sender index produces
+`(E, 2304)`. These are sending atoms' features, not central receiver features.
+
+The skip cannot replace this sender input without changing the architecture:
+it has discarded vector and order-2 features and uses a different,
+element-dependent transform. The sender branch constructs A1 through
+Equation 8; Equations 10–11 then form the product message, and Equation 12
+combines the transformed message with `sc` to produce h2.
+
+Edge harmonics encode directions with shape `(E, 16)`. `edge_irreps`
+specifies their angular types; `edge_vectors` supplies the directions.
+The radial MLP receives the eight distance-basis values per edge and emits
+weights for legal hidden-feature/harmonic coupling routes.
+Unlike the first scalar-input atomic basis, this interaction needs CG
+coupling because its sender features include non-scalar angular blocks.
+The detailed route instructions and tensor-product setup remain to be studied.
+
+### Tensor-product instructions and intermediate route blocks
+
+`tensor_product_instructions` receives the mixed hidden-feature specification,
+the edge-harmonic specification, and the target atomic-basis types. It loops
+over irrep blocks, not feature values. The product `input_irrep * edge_irrep`
+enumerates angular and parity types permitted by e3nn. The target specification
+filters those types. Every accepted coupling gets a separate output block.
+
+For example, `0e x 0e -> 0e`, `1o x 1o -> 0e`, and `2e x 2e -> 0e`
+are distinct routes with the same output type. Each keeps its own 256-channel
+block and radial weights until the later projection combines matching types.
+
+An instruction `(input_index, edge_index, output_index, "uvu", True)` connects
+a block in the hidden specification and a block in the harmonic specification
+to one block in the intermediate output specification. Its output index is a
+block position, not angular momentum L. `"uvu"` aligns output channels with
+the hidden-input channels; `True` enables externally supplied radial weights.
+
+The helper builds `o3.Irreps(irreps_out_list)` and sorts its blocks by type.
+The permutation maps old block positions to new positions. For old types
+`[2e, 0e, 1o]`, the sorted types are `[0e, 1o, 2e]` and the mapping is
+`(2, 0, 1)`. Remapping each instruction's output index preserves its connection.
+Repeated output types remain distinct blocks after sorting.
+
+`InteractionBlock.__init__` receives the helper's sorted specification as
+`self.intermediate_irreps`, then passes it as the output specification to
+`o3.TensorProduct`. The first two constructor specifications describe its two
+feature inputs. In forward, the third argument is the external radial weights.
+`internal_weights=False` means the module stores no learned route weights;
+`shared_weights=False` allows the radial MLP to supply different weights per edge.
+
+For the default configuration, the 17 intermediate blocks are:
+
+| Sorted indices | Output type | Number of blocks |
+| --- | --- | --- |
+| 0–2 | `256x0e` | 3 |
+| 3–7 | `256x1o` | 5 |
+| 8–12 | `256x2e` | 5 |
+| 13–16 | `256x3o` | 4 |
+
+The edge tensor product returns `(E, 18176)` packed route features.
+The later `atomic_basis_projection` mixes repeated blocks of matching type into
+`256x0e + 256x1o + 256x2e + 256x3o`, producing the 4096-component A layout
+after receiver aggregation. The target layout filters permitted types; it does
+not require the intermediate layout to contain only one block of each type.
+
+### Radial weights, receiver aggregation, and projection
+
+The interaction radial MLP is an ordinary scalar network with widths
+`8 -> 64 -> 64 -> 64 -> 4352`. Its hidden layers use SiLU and its final
+layer is linear. The last size is `edge_tensor_product.weight_numel`:
+17 routes times 256 channel weights. Each edge gets its own distance-dependent
+weights. These are unrestricted scaling weights, not probabilities.
+
+The tensor product receives sender features `(E, 2304)`, harmonics `(E, 16)`,
+and radial weights `(E, 4352)`, producing route features `(E, 18176)`.
+`index_add_(0, receiver_index, edge_features)` sums them into receiver rows
+of a zero accumulator `(N, 18176)`. N counts atoms across the batch.
+The feature count includes angular components:
+`18176 = 256 * (3*1 + 5*3 + 5*5 + 4*7)`.
+It is not simply channels times the number of routes.
+
+The block divides the sum by the fixed training-set average neighbour count,
+then applies the learned equivariant projection:
+
+```python
+self.atomic_basis_projection = o3.Linear(
+    self.intermediate_irreps, self.atomic_basis_irreps,
+)
+atomic_basis = self.atomic_basis_projection(aggregated_features)
+return atomic_basis, sc
+```
+
+The target is `256x0e + 256x1o + 256x2e + 256x3o`, giving packed A1
+with shape `(N, 4096)`. It can later be unpacked and arranged as `(N, 256, 16)`.
+For the vector part, five routes supply 1280 channels with three components
+each. One learned channel map reduces `(N, 1280, 3)` to `(N, 256, 3)`:
+
+\[
+A_{n,c,m}=\sum_a W_{ca}F_{n,a,m}.
+\]
+
+The same channel matrix acts on all three components; W has no component
+index m. A general unrestricted 3840-to-768 linear layer would not enforce
+this equivariance. Each angular type has its own channel map. There is no
+activation in this projection. The returned skip is added later in Equation 12.
+
+This completes the main model execution walkthrough. The construction of the
+fixed coupling tensors inside `u_matrix_real` remains a separate deeper topic.
+
 ## Reviewed training and evaluation conventions
 
 Training and evaluation set PyTorch's default dtype to float64 before
@@ -1084,6 +1286,316 @@ validation and the best saved model use the averaged weights.
 Run metadata records implementation version 2 and the author revision.
 The version label does not reject checkpoints. Configuration and weight-shape
 compatibility checks still apply when resuming or loading weights.
+
+## `train.py`: entry point, graph preparation, and loaders
+
+Running the script calls `main()` through the `__name__ == "__main__"`
+guard. `main` parses the command-line arguments, creates `TrainConfig`,
+and calls `train` with the data path, device choice, and optional resume ID.
+
+`train` sets the default dtype to float64, resolves the filesystem data path,
+selects CPU or CUDA, and sets the random seed. Path resolution does not
+disable logging. It loads configurations from the training file and splits
+them into training and validation sets; the test holdout files remain separate.
+
+Each configuration becomes an atomic graph using `model_config.cutoff`.
+The graph carries node attributes, positions, edge indices, energy, and force
+targets. Graph construction uses distances to choose edges; the model later
+recomputes differentiable edge vectors and distances from positions.
+
+The PyTorch Geometric loaders combine configurations into disconnected batched
+graphs. Both training and validation use `train_config.batch_size`, normally
+five configurations. Training shuffles and uses the configured `drop_last`;
+validation does not shuffle and retains the final incomplete batch. Validation
+does not load only one configuration at a time.
+
+### Training-set reference and normalization statistics
+
+The isolated-atom loader provides element reference energies used to sum
+the atomic baseline for each configuration. `compute_mean_rms_energy_forces`
+calculates the mean residual energy per atom after baseline subtraction and
+the RMS of training force components. The model adds the mean energy shift
+and uses the force RMS to scale learned energy contributions.
+`compute_average_num_neighbors` supplies the fixed normalization for neighbour
+sums. These statistics come from the training graphs, not the validation or
+test sets. The next step is tracing the statistics helper's exact calculation.
+
+### `compute_mean_rms_energy_forces`: reference-energy lookup
+
+The helper takes training graphs and isolated atomic energies.
+`graph_dft_energies` collects one dataset reference energy per configuration.
+The dictionary `{1: 0, 6: 1, 7: 2, 8: 3}` maps atomic numbers for H, C, N,
+and O to indices in the isolated-energy tensor. Here it performs energy
+lookup, not one-hot encoding: carbon's atomic number 6 selects index 1.
+The following expression sums the selected references over each graph's atoms
+to produce one atomic-baseline energy per configuration.
+
+The nested `map` looks up one isolated reference energy per atom, and `sum`
+adds those values within each graph. The outer comprehension repeats this
+for every training graph. `graph_iso_energies` therefore contains one baseline
+energy per configuration, in the same graph order as `graph_dft_energies`:
+\(E_{\mathrm{iso},g}=\sum_{a\in g}E_{\mathrm{iso}}(Z_a)\).
+This is the isolated-reference sum, not the interacting configuration's energy.
+
+`n_atoms` has shape `(G,)`, with one atom count for each of the G graphs.
+Each force tensor has shape `(N_g, 3)`. `reshape(-1)` flattens its individual
+x, y, and z components into `(3*N_g,)`; concatenating the flattened tensors
+produces `(3*total_atoms,)` across the training graphs. These are force
+components, not vector magnitudes or one summed force per configuration.
+
+The force statistic squares each component, averages those squares, and takes
+the square root. It is RMS, not a second squaring and not a prediction-error
+RMSE despite the local variable name `rmse_forces`.
+
+\[
+F_{\mathrm{RMS}}=\sqrt{\operatorname{mean}(F_\alpha^2)},\qquad
+\mu_E=\operatorname{mean}_g\left(
+\frac{E_{\mathrm{DFT},g}-E_{\mathrm{iso},g}}{N_g}\right).
+\]
+
+DFT means density functional theory. The dataset provides the interacting
+configuration's reference energy. The isolated baseline sums separate atomic
+reference energies; it is not another energy of the interacting molecule.
+The code divides the whole energy difference by the atom count, then averages
+over training graphs. `.item()` converts each scalar tensor to a Python number.
+
+Calculated from `train_300K.xyz` with seed 123 and the default 450/50 split:
+
+| Training statistic | Value |
+| --- | --- |
+| Mean residual energy shift | -4.873118444762043 eV/atom |
+| Force-component RMS | 0.9461023467607689 eV/angstrom |
+
+### `compute_average_num_neighbors`: incoming edges per receiver
+
+`graph.edge_index[1]` contains the receiver atom index for every directed edge.
+`torch.unique(..., return_counts=True)` returns unique receiver indices and
+their occurrence counts; `[1]` selects the counts. For receiver indices
+`[0, 0, 1, 1, 1, 2]`, the counts are `[2, 3, 1]`.
+
+The helper concatenates these counts across training graphs, converts them
+to the default floating dtype, averages them, and returns a Python number.
+This is an average over receiver atoms, not an equally weighted average of
+graph-level averages. Atoms with zero incoming neighbours do not appear in
+`torch.unique` and are omitted by this implementation.
+
+### `run_config`: recording the training recipe
+
+This dictionary records existing settings and training statistics; constructing
+it does not change them. The data section stores the dataset path, isolated
+atomic energies, mean per-atom residual energy, force-component RMS, and average
+incoming-neighbour count. The force statistic is square, mean, then square root;
+the neighbour statistic averages counts per receiver, not the number of unique
+receivers in each graph.
+
+`asdict(model_config)` and `asdict(train_config)` convert dataclasses into
+dictionaries. They do not retrieve remote configuration. The remaining fields
+record seed, metric, device, implementation version, and the author-code commit
+used for comparison. `author_revision` is provenance, not authorization.
+
+### Run directory, model construction, and optimizer
+
+The run-directory block creates a new run and saves its configuration, or
+finds an existing run and checks its saved settings before resuming.
+If no paper directory is supplied, it derives the paper root from the script path.
+
+The code creates MACE using the model configuration and computed training
+statistics, converts it to double precision, and moves it to the selected
+device. `make_optimizer(model, train_config)` then creates Adam with the
+parameter groups reviewed earlier. These steps reuse the model constructor
+and optimizer behavior we already studied.
+
+### Validation-loss learning-rate scheduler
+
+`ReduceLROnPlateau` uses `mode="min"` to monitor validation loss, supplied
+later by `scheduler.step(validation_loss)`. If the loss shows no sufficient
+improvement for the configured patience, the scheduler multiplies the learning
+rate by its factor. With factor 0.8, a rate of 0.01 becomes 0.008.
+Patience is measured in validation checks, which here occur once per epoch,
+not once per batch. The default patience is 50.
+
+### EMA revisited: smoothing live weights
+
+EMA keeps a smoothed model alongside the live model that Adam updates.
+For decay 0.99, the update is
+\(w_{\mathrm{EMA,new}}=0.99w_{\mathrm{EMA,old}}+0.01w_{\mathrm{live}}\).
+If an averaged weight is 2 and the live weight is 3, the new average is 2.01.
+High decay suppresses fluctuations from noisy batch updates, but responds more
+slowly to genuine changes. Decay 0.99 has a characteristic memory of roughly
+100 updates, with older contributions fading rather than being abruptly dropped.
+
+Warmup computes `effective_decay = min(decay, (1 + updates)/(10 + updates))`
+inside `ema_average`. The returned blend uses that value on the old average and
+`1 - effective_decay` on the current weights. At update counts 1, 10, 100,
+and 1000, effective decay is approximately 0.182, 0.55, 0.918, and 0.99.
+Early averaging follows the rapidly changing live model more closely.
+`ema_model.update_parameters(model)` applies this after each optimizer step.
+
+EMA warmup and the learning-rate scheduler both adjust behavior over time,
+but control different operations. The scheduler changes Adam's learning rate
+based on validation progress; EMA warmup changes the averaged model's tracking
+rate based on update count. It does not change the optimizer's live-weight update.
+
+### Resuming an interrupted training run
+
+When a resume ID is supplied, `_load_training_state` restores the live model,
+EMA model, optimizer, scheduler, and random-number-generator states. It also
+returns the next epoch and best-validation tracking values. This continues
+from the last saved epoch; it does not recover unsaved progress within an epoch.
+Loading only weights would lose Adam's accumulated state and the scheduler's
+history. The following guard rejects an epoch limit below the completed count,
+and run-file reconciliation aligns logs and the best checkpoint with saved state.
+
+### Epoch and batch loops
+
+`range(start_epoch, max_epochs)` starts at the next epoch to run and excludes
+the upper limit. `model.train()` selects training mode. The inner loop visits
+the shuffled training batches with a zero-based batch index. If an optional
+`max_train_batches` is set, the loop stops when `batch_index >=` that limit;
+for a limit of 2 it processes indices 0 and 1. This is a diagnostic cap, not
+a limit on the number of configurations in each batch.
+
+`batch.to(device)` moves the graph batch to the selected device.
+`optimizer.zero_grad(set_to_none=True)` clears gradients from the previous
+update by setting parameter gradients to None, preventing accumulation across
+ordinary batch updates. The next step runs the model on that batch.
+
+### Prediction, loss, and weight updates
+
+Calling MACE on node attributes, positions, edge indices, and graph assignments
+returns predicted energies `(B,)` and forces `(N, 3)`. The loss combines energy
+and force errors with default weights 1 and 1000. `loss.backward()` calculates
+gradients with respect to model parameters. Optional gradient clipping limits
+their combined norm, then `optimizer.step()` updates the live weights.
+`ema_model.update_parameters(model)` blends those updated weights into the EMA.
+
+### Validation and best-model tracking
+
+After the training batches, validation evaluates the EMA model. The code
+rejects a non-finite validation loss and compares a finite result against the
+best loss so far. On improvement, it records the loss and epoch and copies
+the EMA state dictionary, including weights and buffers, to independent CPU
+tensors using `detach().cpu().clone()`.
+
+The code reads the current learning rate for logging before calling
+`scheduler.step(validation_loss)`. This advances the existing scheduler and
+may reduce the learning rate; it does not restart the scheduler.
+
+### Logging, checkpoint files, and the epoch callback
+
+`log_metrics` writes the epoch metrics to the console and `metrics.jsonl`
+in the run directory. It does not involve Tailscale.
+`training_state.pt` is saved every epoch with the state needed for resuming.
+`checkpoint.pt` is updated only when validation improves and contains the
+best EMA model state. Training returns the run ID and run path when its loop ends.
+
+`on_epoch_checkpoint` is an optional function called after the epoch's files
+are saved. Local training normally supplies None. The Modal launcher supplies
+`runs_volume.commit`, which persists run files to its storage volume after
+each saved epoch. The callback does not perform the model checkpoint save itself.
+
+### `compute_validation_loss`: evaluate the EMA model
+
+The helper sets evaluation mode, finds the supplied model's device, and moves
+each validation batch to that device. It predicts energies and forces, computes
+the same energy/force loss, and appends `loss.detach()` to a list. Detaching
+stores each value without retaining its gradient graph. Stacking and averaging
+the batch losses produces the returned Python number.
+
+Evaluation mode does not disable autograd. Position derivatives are still
+needed to obtain forces from energy, but validation does not call `backward`
+or update parameters. This helper averages batch losses equally; it does not
+weight that final average by batch size if the last batch is smaller.
+
+### `energy_force_loss`: where the weighted errors are used
+
+The helper returns energy MSE over configurations plus force-component MSE
+weighted by the configured coefficients, normally 1 and 1000. It combines
+squared prediction errors, not raw energies and forces. Training differentiates
+this loss to update parameters. Validation uses the same loss on the EMA model
+for best-checkpoint selection and learning-rate scheduling.
+
+## `evaluate.py`: rebuild the saved model and visit test conditions
+
+The command-line entry point accepts a run ID, data path, and device choice,
+then calls `evaluate`. That function sets float64, validates the data directory,
+selects the device, and loads the saved run configuration. It reconstructs
+MACEConfig, including restoring the radial-width list to a tuple.
+
+MACE is built using the saved architecture and training statistics, converted
+to double precision, and moved to the device. Loading the checkpoint restores
+the best EMA state. Evaluation reuses the training normalization values rather
+than recalculating them on test data.
+
+The code reads the saved batch size and creates a results dictionary. It visits
+the 300 K, 600 K, 1200 K, and pooled-dihedral test conditions, not cross-validation
+folds. For each condition it loads configurations from its files, builds graphs
+using the saved cutoff, and calls `_evaluate_graphs`. The dictionary stores test
+energy and force RMSE under the condition name, not validation loss.
+
+### `_evaluate_graphs`: collect predictions and targets
+
+The helper creates an unshuffled loader for test graphs and four lists for
+predicted and target energies and forces. It sets evaluation mode and enables
+autograd for position derivatives. `torch.enable_grad()` does not start training:
+there is no loss backpropagation or optimizer update. Each batch moves to the
+device and produces energies and forces. Predictions and targets are detached,
+moved to CPU, and appended to the lists. The next step concatenates batches
+and calculates RMSE across the whole test condition.
+
+### Final test RMSE and units
+
+The helper concatenates predictions and targets across batches, subtracts
+them, squares the errors, averages, and takes the square root. Energy RMSE
+averages over configuration energies; force RMSE averages over all atom/XYZ
+components. Multiplying by 1000 converts energy from eV to meV and force
+from eV/angstrom to meV/angstrom. The force unit is not milliamperes.
+These returned values measure prediction errors on each test condition.
+
+The evaluation entry point prints the measured RMSE dictionary alongside
+the paper reference values. This completes the main data, model, training,
+and evaluation execution walkthrough. Fixed CG construction and detailed
+checkpoint/storage helper internals remain optional deeper topics.
+
+## `u_matrix_real`: constructing fixed coupling tensors
+
+The inputs specify the angular types to couple (`0e + 1o + 2e + 3o`),
+one desired output irrep, correlation order, coefficient normalization, and
+numerical dtype. Normalization is a scaling convention, not a relativistic
+setting. The resulting U tensors are fixed coupling coefficients, not learned
+weights.
+
+The helper checks that correlation is positive and uses the default dtype
+when none is supplied. `(coupling_irreps,) * correlation` repeats the input
+specification once for each factor: three copies for order 3. It does not
+multiply feature values. `_wigner_nj` constructs a list of paths, each stored
+as `(output_irrep, coupling_tensor)`. The following code selects the requested
+output type and stacks its path tensors into the final U tensor.
+
+### `_wigner_nj`: sufficient understanding for the model walkthrough
+
+`_wigner_nj` is a local recursive helper. It calls e3nn's `o3.wigner_3j`
+to construct fixed angular coupling coefficients. It returns a list of
+`(output_irrep, coupling_tensor)` pairs, with one entry per legal coupling
+path. Several paths can reach the same output irrep.
+
+For correlation 1, identity slices select the input components belonging to
+each output irrep. For higher orders, the helper couples the previous result
+with the rightmost input. Each input has the ordered component layout
+`0e + 1o + 2e + 3o`, with 1 + 3 + 5 + 7 = 16 components. The coefficient
+tensors use that full layout, with zeros outside the components used by a path.
+
+For example, `1o × 1o → 0e` starts with coefficients shaped `[1, 3, 3]`.
+The helper inserts them into the full input layout, producing `[1, 16, 16]`.
+This constructs coefficients; it does not yet multiply atomic feature values.
+`u_matrix_real` selects paths for the requested output and stacks them along
+the last axis. `Contraction` later combines U, atomic features, and learned
+weights.
+
+The recursion, reshaping, and padding are optional implementation detail for
+this walkthrough. Understanding their role is sufficient to follow MACE;
+revisit the indexing when modifying or debugging coupling construction.
+The main data, model, training, and evaluation walkthrough is covered.
 
 ### References
 

@@ -102,11 +102,11 @@ configuration. It is an execution check, not a benchmark result. Modal requires
 a payment method before it will allocate the T4 GPU.
 
 For full training with persistent, resumable checkpoints, use the separate
-Modal launcher. Start one epoch to establish a run ID, then continue that run
-to 500 epochs:
+Modal launcher. Start a run with the desired epoch limit, or resume an existing
+run to a higher total epoch limit:
 
 ```bash
-uv run modal run --detach papers/15-MACE/modal_train.py --epochs 1 --seed 123
+uv run modal run --detach papers/15-MACE/modal_train.py --epochs 3 --seed 123
 uv run modal run --detach papers/15-MACE/modal_train.py --epochs 500 --seed 123 \
   --resume-run-id <run_id>
 ```
