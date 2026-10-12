@@ -38,7 +38,7 @@
 
 ```mermaid
 flowchart TD
-    Inputs["Species, positions, edges, graph IDs"] --> Geometry["Live edge geometry and radial basis"]
+    Inputs["Species, positions, edges, graph IDs"] --> Geometry["Live edge vectors, lengths, and radial basis"]
     Inputs --> Embed["Species embedding: N x 256"]
     Geometry --> A0["First atomic basis A0: N x 4096"]
     Embed --> A0
@@ -54,6 +54,8 @@ flowchart TD
     Sum --> Force["Negative position gradient: N x 3 forces"]
 ```
 
+- **Diagram inputs:** both atomic-basis blocks compute direction harmonics from the edge vectors; species one-hots also condition product weights, the second-stage skip, and atomic-energy references.
+
 ### Symbols and shapes
 
 | Symbol | Meaning |
@@ -62,6 +64,7 @@ flowchart TD
 | `E` | Directed edges across the current batch |
 | `B` | Configurations in the batch |
 | `G`, `N_g` | Graph count and atom count of graph g in a statistics calculation |
+| `N_total` | Atoms across all training graphs in the force-RMS statistic |
 | `l`, `L` | Angular order of an input or output irrep |
 | `m`, `M` | One of an irrep's `2*l + 1` components |
 | `k`, `c` | Feature-channel indices; local einsum letters can have different meanings |
@@ -114,7 +117,7 @@ flowchart TD
 
 - **Atomic basis:** `256 * (1 + 3 + 5 + 7) = 4096` components; angular-only coupling layout has 16 components.
 - **First hidden output:** `256 * (1 + 3 + 5) = 2304` components.
-- **Inversion:** `(x, y, z) → (-x, -y, -z)`; even features stay unchanged, odd features change sign.
+- **Inversion:** `(x, y, z) → (-x, -y, -z)`; even features stay unchanged, odd features change sign. Parity describes transformation behavior, not whether a value is positive or negative.
 - **Examples:** distance and energy are even; displacement and force are odd; `xy`, `xz`, and `x² - y²` are even under inversion.
 - **Rotation still acts on `2e`:** the parity label specifies inversion behavior, not invariance under every rotation.
 - **Natural harmonic parity:** `Y_l^m(-r̂) = (-1)^l Y_l^m(r̂)`, giving `0e, 1o, 2e, 3o` for the angular basis.
@@ -132,7 +135,7 @@ flowchart LR
     ASE --> Config["AtomicConfiguration records"]
     Config --> Split["Seeded train / validation split"]
     Split --> Graph["Cutoff graphs and element one-hots"]
-    Graph --> Batch["PyG disconnected graph batches"]
+    Graph --> Batch["PyTorch Geometric disconnected graph batches"]
 ```
 
 ### ASE frames and labels
@@ -175,7 +178,7 @@ forces = frame.get_forces()
 | Container | Role | Important behavior |
 | --- | --- | --- |
 | `AtomicConfiguration` | Keeps one snapshot's atomic numbers, positions, energy, and forces together | Frozen dataclass; input geometry stays paired with target labels |
-| `AtomicGraph` | Stores that snapshot as a PyG `Data` graph | Adds edges and one-hot element attributes; sets `num_nodes` from positions |
+| `AtomicGraph` | Stores that snapshot as a PyTorch Geometric (PyG) `Data` graph | Adds edges and one-hot element attributes; sets `num_nodes` from positions |
 
 | Field | One practice graph | Dtype / meaning |
 | --- | --- | --- |
@@ -196,7 +199,7 @@ forces = frame.get_forces()
 | --- | --- | --- |
 | `load_extxyz` | Read frames; convert atomic numbers, positions, energy, and forces to tensors; create one record per frame | List of `AtomicConfiguration`; 500 records for the training file |
 | `load_isolated_atom_energies` | Read `iso_atoms.xyz`; map atomic number to reference energy; stack in H/C/N/O order | Float64 `(4,)` tensor; reject multi-atom frames, unsupported species, duplicates, or missing species |
-| `split_train_valid` | Use `np.random.default_rng(seed).permutation(...)` to shuffle indices without repetition | First 450 shuffled records train; remaining 50 validate; test files stay separate |
+| `split_train_valid` | Use `np.random.default_rng(seed).permutation(...)` to shuffle indices without repetition | Default 500-record/50-validation split: first 450 train, remaining 50 validate; test files stay separate |
 | `validate_data_dir` | Check required training, isolated-atom, and test paths with `.is_file()` | Raise `FileNotFoundError` listing sorted missing filenames |
 
 - **Isolated-energy order:** `iso_atoms.xyz` begins C, then H; the returned tensor follows `ATOMIC_NUMBERS = (1, 6, 7, 8)` regardless of file order.
@@ -279,10 +282,10 @@ forces = frame.get_forces()
 - **`edge_vectors_and_lengths`:** transpose `(2,E)` edges to `(E,2)` and visit each sender/receiver pair.
 - **Direction:** destination minus origin points from sender to receiver.
 
-\[
+$$
 \mathbf v=\mathbf R_{\mathrm{receiver}}-\mathbf R_{\mathrm{sender}},
 \qquad d=\|\mathbf v\|_2=\sqrt{v_x^2+v_y^2+v_z^2}.
-\]
+$$
 
 | Input / output | Shape | Example |
 | --- | --- | --- |
@@ -300,22 +303,22 @@ forces = frame.get_forces()
 - **Parameters:** cutoff `r_c=5.0` angstroms and envelope power `p=5`.
 - **Nonzero-distance basis:** the square root covers `2/r_c`; the sine is divided by distance.
 
-\[
+$$
 b_n(r)=\sqrt{\frac{2}{r_c}}\frac{\sin(n\pi r/r_c)}{r}.
-\]
+$$
 
 - **Zero-distance branch:** avoids `0/0` by using the finite limit separately on zero-distance rows.
 
-\[
+$$
 \lim_{r\to0}\frac{\sin(ar)}{r}=a,
 \qquad b_n(0)=\sqrt{\frac{2}{r_c}}\frac{n\pi}{r_c}.
-\]
+$$
 
 - **Envelope:** with `x=r/r_c`, the dimensionless polynomial is:
 
-\[
+$$
 f(x)=1-21x^5+35x^6-15x^7.
-\]
+$$
 
 - **Boundary behavior:** starts at 1; reaches 0 at the cutoff with zero first and second derivatives; `distances < cutoff` makes it zero at and beyond the cutoff.
 - **Broadcasting:** the `(E,1)` envelope scales all eight features of the same edge.
@@ -325,7 +328,9 @@ f(x)=1-21x^5+35x^6-15x^7.
 ### First atomic basis: equation 9
 
 - **`AtomicBasis.forward`:** combines radial weights, edge harmonics, and gathered scalar sender embeddings; accumulates complete messages into receivers.
-- **Radial MLP:** `8 → 64 → 64 → 64 → 1024`, with SiLU after hidden layers and a linear output.
+- **Radial multilayer perceptron (MLP):** `8 → 64 → 64 → 64 → 1024`, with variance-normalized SiLU after hidden layers and a linear output.
+- **Cutoff preservation:** both radial MLPs use e3nn's bias-free `FullyConnectedNet`; zero radial features produce zero edge weights because every linear map and SiLU preserve zero.
+- **Harmonics:** `normalize=True` uses unit edge directions; `normalization="component"` sets harmonic scaling separately from the CG normalization used in coupling.
 - **Weight layout:** reshape `(E,1024)` to `(E,4,256)`, then transpose to `(E,256,4)`; consecutive outputs represent channels within an angular order.
 - **Checkpoint convention:** a direct `(E,256,4)` reshape is possible with consistent parameterization, but transferring weights requires permuting the final MLP outputs.
 - **Harmonic blocks:** split `(E,16)` by lengths `[1,3,5,7]`; these are lengths, not split indices.
@@ -338,10 +343,10 @@ f(x)=1-21x^5+35x^6-15x^7.
 | Sender embedding | `(E,256,1)` | Sender species features |
 | Product | `(E,256,2*l+1)` | Complete edge message |
 
-\[
+$$
 A_{i,k\ell m}=\sum_{j\in\mathcal N(i)}
 R_{k\ell}(r_{ji})Y_{\ell m}(\hat{\mathbf r}_{ji})W_{k,z_j}.
-\]
+$$
 
 - **Shared angular scaling:** each channel's radial weight and sender feature scale every component of its selected angular block.
 - **Receiver sum:** `index_add_(0, receiver_index, edge_message)` changes the leading axis from edges E to atoms N; shared receivers add messages into the same row.
@@ -397,7 +402,7 @@ R_{k\ell}(r_{ji})Y_{\ell m}(\hat{\mathbf r}_{ji})W_{k,z_j}.
 
 #### Radial weights, aggregation, and projection
 
-- **Radial MLP:** `8 → 64 → 64 → 64 → 4352`; SiLU hidden layers, linear output; `4352 = 17 * 256 = edge_tensor_product.weight_numel`.
+- **Radial MLP:** `8 → 64 → 64 → 64 → 4352`; the same bias-free, variance-normalized SiLU convention as the first MLP; `4352 = 17 * 256 = edge_tensor_product.weight_numel`.
 - **Weight meaning:** unrestricted distance-dependent scaling values, not probabilities.
 - **Edge tensor product:** combines sender `(E,2304)`, harmonics `(E,16)`, and weights `(E,4352)` into route features `(E,18176)`.
 - **Route feature count:** `18176 = 256 * (3*1 + 5*3 + 5*5 + 4*7)`; angular components contribute to width.
@@ -405,9 +410,9 @@ R_{k\ell}(r_{ji})Y_{\ell m}(\hat{\mathbf r}_{ji})W_{k,z_j}.
 - **Equivariant projection:** `o3.Linear(intermediate_irreps, atomic_basis_irreps)` combines matching angular types into A1; no activation is applied.
 - **Vector example:** five vector routes give `(N,1280,3)`; one shared channel map reduces this to `(N,256,3)`:
 
-\[
+$$
 A_{n,c,m}=\sum_a W_{ca}F_{n,a,m}.
-\]
+$$
 
 - **Equivariance constraint:** W has no component index m; the same channel map acts on all vector components. An unrestricted 3840-to-768 linear layer would not enforce that constraint.
 - **Other orders:** each angular type has its own channel map.
@@ -440,10 +445,10 @@ A_{n,c,m}=\sum_a W_{ca}F_{n,a,m}.
 - **Species and channel weights:** one learned weight per receiver element, route, and channel, separately at each correlation order.
 - **Message:** sum weighted route contributions across correlation orders:
 
-\[
+$$
 m_{i,kLM}=\sum_{\nu=1}^{3}\sum_{\eta_\nu}
 W_{z_i kL,\eta_\nu}B_{i,\eta_\nu kLM}.
-\]
+$$
 
 - **Paper indices:** `nu` selects order; `eta_nu` selects path; `xi` labels an A input inside equation 10's product.
 - **Channel mixing:** equation 10's learned channel mixing already occurs in the upstream A projection; the weights below are equation 11's route weights.
@@ -464,9 +469,9 @@ out = torch.einsum(
 | `x` | `n c k` | Atom, channel, angular component |
 | `node_attrs` | `n e` | Atom, species one-hot |
 
-\[
+$$
 \mathrm{out}_{ncmij}=\sum_{e,p,k}U_{mijkp}W_{epc}X_{nck}z_{ne}.
-\]
+$$
 
 - **Contracted:** species e, path p, and one input angular slot k.
 - **Retained:** atom n, channel c, output component m, and two remaining input slots i/j.
@@ -513,7 +518,7 @@ return out.flatten(start_dim=1)
 
 ### Readouts and energy restoration
 
-- **First readout:** equivariant linear map from first hidden features to one scalar contribution per atom.
+- **First readout:** equivariant linear map from first hidden features to one scalar contribution per atom; only the `0e` block connects directly to the scalar output. Vector and order-2 blocks also feed the next interaction.
 - **Final readout:** scalar hidden features pass through:
 
 ```text
@@ -547,11 +552,11 @@ E = self.rms_forces * (E1 + E2) + self.mean_energy_shift + atomic_baseline
 
 ### Forces and gradients through forces
 
-\[
+$$
 \mathbf F_i=-\frac{\partial E}{\partial\mathbf R_i}
 =-\left(\frac{\partial E}{\partial x_i},
 \frac{\partial E}{\partial y_i},\frac{\partial E}{\partial z_i}\right).
-\]
+$$
 
 ```python
 torch.autograd.grad(
@@ -594,21 +599,21 @@ torch.autograd.grad(
 - **Reference-energy lookup:** atomic numbers `{1,6,7,8}` map to reference indices `{0,1,2,3}`; the nested lookup/sum gives one isolated-reference sum per graph.
 - **DFT:** density functional theory; `E_DFT,g` is the interacting configuration's dataset reference energy, distinct from its sum of isolated-atom references.
 
-\[
+$$
 E_{\mathrm{iso},g}=\sum_{a\in g}E_{\mathrm{iso}}(Z_a),
 \qquad
 \mu_E=\operatorname{mean}_g\left(
 \frac{E_{\mathrm{DFT},g}-E_{\mathrm{iso},g}}{N_g}\right).
-\]
+$$
 
 - **Averaging order:** subtract the whole graph baseline, divide by that graph's atom count, then average graph residuals.
 - **Shapes:** `graph_dft_energies`, `graph_iso_energies`, and `n_atoms` each have one entry per training graph, shape `(G,)`, with matching graph order.
 - **Force components:** flatten `(N_g,3)` to `(3*N_g,)` and concatenate all training graphs; average components across all training atoms.
 
-\[
-s_F=\sqrt{\frac{1}{3M}\sum_{a=1}^{M}
+$$
+s_F=\sqrt{\frac{1}{3N_{\mathrm{total}}}\sum_{a=1}^{N_{\mathrm{total}}}
 \left(F_{ax}^2+F_{ay}^2+F_{az}^2\right)}.
-\]
+$$
 
 | Quantity for force `(3,4,0)` | Calculation | Value |
 | --- | --- | --- |
@@ -636,12 +641,12 @@ s_F=\sqrt{\frac{1}{3M}\sum_{a=1}^{M}
 
 - **`energy_force_loss`:** energy mean squared error (MSE) over configurations plus force-component MSE, normally weighted 1 and 1000.
 
-\[
+$$
 L=\lambda_E L_E+\lambda_F L_F,
 \qquad
 L_F=\frac{1}{3N}\sum_{a=1}^{N}\sum_{\alpha\in\{x,y,z\}}
 \left(F^{\mathrm{pred}}_{a\alpha}-F^{\mathrm{target}}_{a\alpha}\right)^2.
-\]
+$$
 
 | Reduction | Shape / example |
 | --- | --- |
@@ -677,9 +682,9 @@ L_F=\frac{1}{3N}\sum_{a=1}^{N}\sum_{\alpha\in\{x,y,z\}}
 - **Patience:** default 50 validation checks, once per epoch here; it is not measured in training batches.
 - **EMA rule:** blend the previous average with current live weights:
 
-\[
+$$
 w_{\mathrm{EMA,new}}=d\,w_{\mathrm{EMA,old}}+(1-d)w_{\mathrm{live}}.
-\]
+$$
 
 - **Decay 0.99 example:** average 2 and live weight 3 produce 2.01.
 - **Tradeoff:** higher decay smooths noisy updates but follows changes more slowly; decay 0.99 has roughly 100-update characteristic memory, with older terms fading gradually.
@@ -843,9 +848,9 @@ flowchart LR
 coupled_u = torch.einsum("jk,ijl->ikl", left_u.flatten(1), cg)
 ```
 
-\[
+$$
 \mathrm{coupled\_u}_{ikl}=\sum_j\mathrm{left\_u}_{jk}\,\mathrm{cg}_{ijl}.
-\]
+$$
 
 | Index | Meaning in this local einsum |
 | --- | --- |

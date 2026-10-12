@@ -240,6 +240,8 @@ requests it with an available compute budget.
 into a linked revision guide with bullet points, shape tables, and diagrams.
 The comparison against the previous version covers all 77 original headings;
 correlation-2/3 examples, numerical values, and implementation caveats remain.
+A second source review clarified radial-MLP cutoff preservation, scalar readout
+connections, statistic notation, and display-math formatting.
 
 **Training stopped (2026-10-11):** the learner requested stopping Modal app
 `ap-Mq3FdH8F4u2eF40ccXy5hs` to preserve the remaining $2.99 credit. Modal confirmed
