@@ -54,19 +54,25 @@ def run_dir(paper_dir, run_id: str, base: str = "runs") -> Path:
     return Path(paper_dir) / base / run_id
 
 
-def new_run_dir(paper_dir, config: dict, base: str = "runs"):
+def new_run_dir(
+    paper_dir, config: dict, base: str = "runs", *, run_id: str | None = None
+):
     """Create a fresh run folder and write config.json.
 
     Returns (run_id, run_dir). ``base`` is a parameter so tests can redirect runs
     to a tmp dir instead of littering the paper's runs/.
+    A supplied ``run_id`` is used exactly and never overwrites an existing folder.
     """
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-    run_id, suffix = stamp, 0
-    while run_dir(paper_dir, run_id, base).exists():
-        suffix += 1
-        run_id = f"{stamp}-{suffix}"  # avoid collision on same-second runs
+    if run_id is None:
+        stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        run_id, suffix = stamp, 0
+        while run_dir(paper_dir, run_id, base).exists():
+            suffix += 1
+            run_id = f"{stamp}-{suffix}"  # avoid collision on same-second runs
+    elif not run_id or Path(run_id).name != run_id or run_id in {".", ".."}:
+        raise ValueError("run_id must be a non-empty directory name")
     rdir = run_dir(paper_dir, run_id, base)
-    rdir.mkdir(parents=True, exist_ok=True)
+    rdir.mkdir(parents=True, exist_ok=False)
     with (rdir / "config.json").open("w") as f:
         json.dump({**config, "provenance": _provenance()}, f, indent=2)
     return run_id, rdir

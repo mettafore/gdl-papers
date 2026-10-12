@@ -359,9 +359,16 @@ def train(
     paper_dir: Path | None = None,
     device: str | torch.device | None = None,
     resume_run_id: str | None = None,
+    fresh_run_id: str | None = None,
     on_epoch_checkpoint: Callable[[], None] | None = None,
 ) -> tuple[str, Path]:
     """Train one seed and write config, JSONL metrics, and the best EMA checkpoint."""
+    if fresh_run_id is not None and (
+        not fresh_run_id
+        or Path(fresh_run_id).name != fresh_run_id
+        or fresh_run_id in {".", ".."}
+    ):
+        raise ValueError("fresh_run_id must be a non-empty directory name")
     torch.set_default_dtype(torch.float64)
     data_dir = data_dir.resolve()
     device = resolve_device(device)
@@ -426,8 +433,17 @@ def train(
     }
     if paper_dir is None:
         paper_dir = Path(__file__).resolve().parent.parent
+    if fresh_run_id is not None and resume_run_id is None:
+        if (get_run_dir(paper_dir, fresh_run_id) / "training_state.pt").is_file():
+            resume_run_id = fresh_run_id
     if resume_run_id is None:
-        run_id, run_path = new_run_dir(paper_dir, run_config)
+        if fresh_run_id is not None and get_run_dir(paper_dir, fresh_run_id).exists():
+            run_id = fresh_run_id
+            run_path = get_run_dir(paper_dir, run_id)
+            _validate_resume_config(load_run_config(paper_dir, run_id), run_config)
+            _reconcile_run_files(run_path, 0, {})
+        else:
+            run_id, run_path = new_run_dir(paper_dir, run_config, run_id=fresh_run_id)
     else:
         run_id = resume_run_id
         run_path = get_run_dir(paper_dir, run_id)

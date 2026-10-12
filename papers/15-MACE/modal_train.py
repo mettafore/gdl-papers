@@ -9,7 +9,9 @@ Continue to 500 epochs, including automatic retries after interruption:
 """
 
 import json
+from datetime import datetime, timezone
 from pathlib import Path
+from uuid import uuid4
 
 import modal
 
@@ -49,7 +51,11 @@ image = (
     volumes={RUNS_ROOT: runs_volume},
 )
 def run_training(
-    *, epochs: int, seed: int, resume_run_id: str | None
+    *,
+    epochs: int,
+    seed: int,
+    resume_run_id: str | None,
+    fresh_run_id: str | None = None,
 ) -> dict[str, float | int | str]:
     """Train or resume one seed, persisting each epoch to the named Volume."""
     import sys
@@ -70,6 +76,7 @@ def run_training(
         train_config=TrainConfig(max_epochs=epochs, seed=seed),
         device="cuda",
         resume_run_id=resume_run_id,
+        fresh_run_id=fresh_run_id,
         on_epoch_checkpoint=runs_volume.commit,
     )
     runs_volume.commit()
@@ -92,9 +99,15 @@ def main(
     seed: int = 123,
     resume_run_id: str | None = None,
 ) -> None:
+    fresh_run_id = None
+    if resume_run_id is None:
+        fresh_run_id = (
+            datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S") + "-" + uuid4().hex[:8]
+        )
     result = run_training.spawn(
         epochs=epochs,
         seed=seed,
         resume_run_id=resume_run_id,
+        fresh_run_id=fresh_run_id,
     ).get()
     print(json.dumps(result, indent=2, sort_keys=True))

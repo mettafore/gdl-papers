@@ -112,7 +112,10 @@ uv run modal run --detach papers/15-MACE/modal_train.py --epochs 500 --seed 123 
 ```
 
 It stores run folders in the named Modal Volume `gdl-papers-mace-runs` and
-commits each completed epoch. `training_state.pt` atomically records the latest
+commits each completed epoch. A fresh launch assigns its run ID before dispatch,
+so automatic retries use the same folder and resume its latest checkpoint.
+An interruption before the first checkpoint restarts epoch one under that ID.
+`training_state.pt` atomically records the latest
 live model, latest EMA, best-validation EMA, optimizer, scheduler, completed
 epoch, and RNG states. The evaluation `checkpoint.pt` is regenerated from that
 snapshot on resume. If a job stops, rerun the same command with

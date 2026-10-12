@@ -2,8 +2,10 @@
 
 import json
 import sys
+from functools import partial
 from pathlib import Path
 
+import pytest
 import torch
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -12,6 +14,50 @@ import model
 import train
 
 import data
+
+
+def test_retry_before_first_checkpoint_keeps_run_id(
+    tmp_path: Path, monkeypatch
+) -> None:
+    records = _synthetic_records()
+    monkeypatch.setattr(data, "load_extxyz", lambda _: records)
+    monkeypatch.setattr(
+        data,
+        "split_train_valid",
+        lambda configurations, *, seed: (configurations[:10], configurations[10:]),
+    )
+    monkeypatch.setattr(data, "load_isolated_atom_energies", lambda _: torch.zeros(4))
+    run = partial(
+        train.train,
+        data_dir=tmp_path,
+        paper_dir=tmp_path,
+        device="cpu",
+        train_config=train.TrainConfig(max_epochs=1, batch_size=5),
+        model_config=model.MACEConfig(
+            channels=2,
+            radial_mlp_widths=(4, 4, 4, 8),
+            readout_hidden_width=2,
+        ),
+        fresh_run_id="preempted-run",
+    )
+    with monkeypatch.context() as patch:
+
+        def interrupt(*args, **kwargs):
+            raise RuntimeError("simulated preemption")
+
+        patch.setattr(model.MACE, "forward", interrupt)
+        with pytest.raises(RuntimeError, match="simulated preemption"):
+            run()
+    assert not (tmp_path / "runs/preempted-run/training_state.pt").exists()
+    run_id, run_path = run()
+    assert run_id == "preempted-run"
+    assert list((tmp_path / "runs").iterdir()) == [run_path]
+    assert (
+        torch.load(run_path / "training_state.pt", weights_only=True)[
+            "completed_epochs"
+        ]
+        == 1
+    )
 
 
 def _synthetic_records() -> list[data.AtomicConfiguration]:
@@ -63,7 +109,9 @@ def test_resume_matches_uninterrupted_epoch_boundary_run(
         device="cpu",
         train_config=train.TrainConfig(max_epochs=1, batch_size=5),
         model_config=small_model,
+        fresh_run_id="stable-modal-run",
     )
+    assert staged_id == "stable-modal-run"
     staged_state = torch.load(staged_run / "training_state.pt", weights_only=True)
     assert staged_state["best_ema_model"]
     torch.save({"interrupted": torch.tensor(1)}, staged_run / "checkpoint.pt")
@@ -96,7 +144,7 @@ def test_resume_matches_uninterrupted_epoch_boundary_run(
         device="cpu",
         train_config=train.TrainConfig(max_epochs=2, batch_size=5),
         model_config=small_model,
-        resume_run_id=staged_id,
+        fresh_run_id=staged_id,
         on_epoch_checkpoint=lambda: durable_epoch_callbacks.append(True),
     )
 
