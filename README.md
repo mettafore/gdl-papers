@@ -71,6 +71,26 @@ The secret scan needs [gitleaks](https://github.com/gitleaks/gitleaks) on your
 `PATH` (`brew install gitleaks`); without it the hook warns and skips that step.
 CI runs the same checks, and its gitleaks scan covers the full history.
 
+## License
+
+Original repository code and documentation use the [MIT license](LICENSE).
+Third-party source, research papers, and datasets retain their own terms; see
+[Third-party notices](THIRD_PARTY_NOTICES.md).
+
+## Automated PR review
+
+- Claude reviews new or updated pull requests. Comment-triggered reviews require
+  `@claude` on a pull request; ordinary issue comments do not start a review.
+- Configure `CLAUDE_CODE_OAUTH_TOKEN` in GitHub repository secrets using the
+  token produced by `claude setup-token`. Alternatively, configure
+  `ANTHROPIC_API_KEY`; the workflow uses it when present.
+- The workflow grants the CLI access to PR viewing, diffs, and comments. It
+  reports common authentication, usage-limit, or model-access failures with
+  fixed diagnostic messages. Raw provider responses are not printed.
+- Failed reviews remain failed. Local diagnostic tests do not prove that the
+  configured Claude account can complete a live review. Setup details:
+  [official action documentation](https://github.com/anthropics/claude-code-action/blob/main/docs/setup.md).
+
 ## Layout
 
 - `src/gdl/` — shared, paper-agnostic helpers (seed, metrics, logging, run, checkpoint)
