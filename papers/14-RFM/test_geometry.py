@@ -50,15 +50,17 @@ def test_near_antipodal_points_reach_endpoint_and_stay_finite() -> None:
     ).all()
 
 
-def test_coincident_conditional_velocity_has_tangent_derivative() -> None:
-    point = torch.tensor([[1.0, 0.0, 0.0]], dtype=torch.float64)
+@pytest.mark.parametrize("coordinates", [(1.0, 0.0, 0.0), (1.0, 2.0, 3.0)])
+def test_coincident_conditional_velocity_has_tangent_derivative(coordinates) -> None:
+    point = torch.nn.functional.normalize(
+        torch.tensor([coordinates], dtype=torch.float64), dim=-1
+    )
     time = torch.tensor([0.5], dtype=torch.float64)
     jacobian = torch.autograd.functional.jacobian(
         lambda x: conditional_vf(x, point, time), point
     ).reshape(3, 3)
-    torch.testing.assert_close(
-        jacobian, torch.diag(torch.tensor([0.0, -2.0, -2.0], dtype=torch.float64))
-    )
+    tangent_projector = torch.eye(3, dtype=torch.float64) - point.T @ point
+    torch.testing.assert_close(jacobian, -2.0 * tangent_projector)
 
 
 def test_conditional_velocity_handles_mixed_coincident_and_distinct_pairs() -> None:

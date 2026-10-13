@@ -321,12 +321,14 @@ after EGNN lands.
 - RFM retains the explicit schedule, distance, gradient, and squared gradient
   norm terms of Eq. 13 for pedagogical review. A safe denominator and continuous
   limit preserve zero velocity and its tangent derivative at coincidence.
+  Keep the original unit-sphere projection; isolate coincidence handling from
+  ordinary inputs and test its derivative at axis and non-axis sphere points.
   Exact antipodes raise a clear error for their nonunique shortest direction;
   near-antipodal pairs remain supported.
 - MACE derives edge geometry by indexed tensor operations, preserving autograd
   for empty-edge inputs. Edgeless inference and force-loss backpropagation are
   tested. Train/validation splitting rejects sizes that leave either set empty.
-- Verify 198 Python tests and two workflow diagnostic tests. Five dataset-backed
+- Verify 199 Python tests and two workflow diagnostic tests. Five dataset-backed
   EGNN tests remain excluded. Ruff and per-paper type checks pass; no benchmark
   training or evaluation was rerun.
 - Add MIT licensing for original code, preserve the upstream MACE MIT notice,

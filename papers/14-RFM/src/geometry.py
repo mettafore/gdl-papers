@@ -74,8 +74,14 @@ def log_map(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         torch.cross(x, y, dim=1), dim=-1, keepdim=True
     )
     theta = torch.atan2(cross_prod, dot_prod)
-    y_parallel = dot_prod / x.square().sum(dim=1, keepdim=True) * x
+    y_parallel = dot_prod * x
     y_perp = y - y_parallel
+    # At exact coincidence, project y - x to avoid roundoff in x dot x.
+    # Keeping this expression differentiable preserves the tangent derivative.
+    difference = y - x
+    coincident_perp = difference - (x * difference).sum(dim=1, keepdim=True) * x
+    coincident = torch.all(x == y, dim=1, keepdim=True)
+    y_perp = torch.where(coincident, coincident_perp, y_perp)
     perpendicular_norm = torch.linalg.vector_norm(y_perp, dim=-1, keepdim=True)
     denominator = torch.where(
         perpendicular_norm > 0, perpendicular_norm, torch.ones_like(perpendicular_norm)
