@@ -1,23 +1,30 @@
-# Saved the plan in the current GDL tracker: [gdl_goals.md (line 11)](/Users/luvsuneja/Documents/wiki/Career/gdl_goals.md:11).
-The three hours are allocated:
-- 0:00–0:10 — rerun Section 12 CG checks
-- 0:10–0:30 — Section 13: \(\nu,\eta_3\) coupling paths
-- 0:30–0:50 — Section 14: radial basis/cutoff
-- 0:50–1:20 — Section 15 / Eq. 8
-- 1:20–1:40 — Section 16 / Eq. 9
-- 1:40–2:10 — Section 17 / Eq. 10
-- 2:10–2:30 — Section 18 / Eq. 11
-- 2:30–2:40 — shape ledger
-- 2:40–2:50 — symmetry checks
-- 2:50–3:00 — recap and save
-Hand derivations and .py implementation are explicitly scheduled after Pali.
-
-
-gdl-papers
+# gdl-papers
 
 PyTorch reproductions of geometric deep learning papers. Each paper is implemented,
 trained, evaluated against its published benchmark, and written up. One
 self-contained paper per folder, sharing a small train/evaluate scaffold.
+
+## Results
+
+Each reproduction is compared with the number the paper reports. Lower is better.
+
+| Paper | Task | Metric | Paper | This repo |
+|---|---|---|---:|---:|
+| [EGNN](papers/01-EGNN/) | QM9 HOMO–LUMO gap | MAE (meV) | 48 | **48.50** |
+| [Riemannian Flow Matching](papers/14-RFM/) | Fire locations on S² | Test NLL (uniform-sphere baseline: +2.531) | — | **−0.700** |
+| [MACE](papers/15-MACE/) | 3BPA, 300 K | Energy RMSE (meV) | 3.0 | **3.99** |
+| | | Force RMSE (meV/Å) | 8.8 | **11.56** |
+
+**MACE, all 3BPA test sets** (epoch-360 checkpoint, single seed; paper values are three-seed means):
+
+| Test set | Energy RMSE (meV) | Paper | Force RMSE (meV/Å) | Paper |
+|---|---:|---:|---:|---:|
+| 300 K | 3.99 | 3.0 | 11.56 | 8.8 |
+| 600 K | 13.28 | 9.7 | 28.96 | 21.8 |
+| 1200 K | 44.51 | 29.8 | 96.01 | 62.0 |
+| Dihedral slices | 17.57 | 7.8 | 21.15 | 16.5 |
+
+MACE is still in progress: more seeds and an energy-calibration check on the dihedral set are next.
 
 ## Quickstart
 
