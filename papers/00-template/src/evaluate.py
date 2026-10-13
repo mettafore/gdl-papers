@@ -8,10 +8,10 @@ reports the metric on the SAME held-out split training used.
 import argparse
 from pathlib import Path
 
+import data
 import torch
 from model import MLP
 
-import data
 from gdl import METRICS, load_checkpoint, load_run_config, run_dir
 
 PAPER_DIR = Path(__file__).parent.parent  # runs/ lives at the paper root, not in src/

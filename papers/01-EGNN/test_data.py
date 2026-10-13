@@ -90,7 +90,7 @@ def test_fc_covers_all_pairs():
     # every ordered pair i!=j present exactly once.
     n = 4
     ei = fully_connected_edge_index(n)
-    pairs = {(int(s), int(d)) for s, d in zip(ei[0], ei[1])}
+    pairs = {(int(s), int(d)) for s, d in zip(ei[0], ei[1], strict=True)}
     expected = {(i, j) for i in range(n) for j in range(n) if i != j}
     assert pairs == expected
     assert ei.shape[1] == len(expected)

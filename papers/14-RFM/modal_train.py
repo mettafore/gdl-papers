@@ -73,10 +73,9 @@ def run_calibration(
     sys.path.insert(0, f"{REMOTE_ROOT}/paper_src")
     sys.path.insert(0, REMOTE_ROOT)
 
+    import data as d
     from evaluate import evaluate_run
     from train import train_run
-
-    import data as d
 
     paper_data = cast(Any, d)
 

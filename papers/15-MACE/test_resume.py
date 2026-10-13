@@ -10,10 +10,9 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
+import data
 import model
 import train
-
-import data
 
 
 def test_retry_before_first_checkpoint_keeps_run_id(

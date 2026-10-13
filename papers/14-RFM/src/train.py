@@ -5,8 +5,9 @@ import math
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TypeAlias, TypedDict
+from typing import TypedDict
 
+import data as d
 import geometry as geom
 import loss as l
 import model as m
@@ -14,11 +15,10 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 
-import data as d
 from gdl import log_metrics, new_run_dir, save_checkpoint, set_seed
 
-DataSource: TypeAlias = torch.Tensor
-LossCallable: TypeAlias = Callable[..., torch.Tensor]
+type DataSource = torch.Tensor
+type LossCallable = Callable[..., torch.Tensor]
 PAPER_DIR = Path(__file__).resolve().parent.parent
 METRIC = "nll"
 
@@ -286,7 +286,7 @@ def train_run(
         device=device,
     )
     for epoch, (train_loss, validation_loss) in enumerate(
-        zip(result.train_loss, result.validation_loss)
+        zip(result.train_loss, result.validation_loss, strict=True)
     ):
         log_metrics(
             {

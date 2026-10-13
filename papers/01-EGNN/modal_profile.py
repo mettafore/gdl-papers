@@ -40,10 +40,9 @@ def profile(n_batches=50, warmup_batches=5):
     from torch_geometric.loader import DataLoader as PyGDataLoader
 
     sys.path.insert(0, "/root/gdl-papers/papers/01-EGNN/src")
+    import data
     from model import EGNN
     from train import target_for
-
-    import data
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"device: {device}, cpu count: {os.cpu_count()}")

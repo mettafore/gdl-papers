@@ -35,8 +35,13 @@ line-length = 88
 target-version = "py312"
 
 [tool.ruff.lint]
-# Defaults (E4/E7/E9 + F) plus import sorting.
-extend-select = ["I"]
+# Defaults (E4/E7/E9 + F) plus import sorting, bugbear (likely bugs), pyupgrade
+# (modern 3.12 syntax), simplify, and NumPy-specific checks.
+extend-select = ["I", "B", "UP", "SIM", "NPY"]
+
+[tool.ruff.lint.flake8-bugbear]
+# Stateless modules / frozen dataclasses are safe as default arguments.
+extend-immutable-calls = ["torch.nn.SiLU", "model.MACEConfig", "train.TrainConfig"]
 
 [tool.pytest.ini_options]
 markers = [

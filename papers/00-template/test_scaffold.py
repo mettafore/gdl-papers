@@ -9,10 +9,10 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
+import data
 import evaluate as eval_mod
 import train as train_mod
 
-import data
 from gdl import accuracy, mae, rmse
 
 # --- unit: metrics ---
@@ -37,7 +37,7 @@ def test_mae_rmse_known_values():
 def test_split_deterministic():
     a = data.load_split(seed=42)
     b = data.load_split(seed=42)
-    for ta, tb in zip(a[:4], b[:4]):
+    for ta, tb in zip(a[:4], b[:4], strict=True):
         assert torch.equal(ta, tb)
 
 

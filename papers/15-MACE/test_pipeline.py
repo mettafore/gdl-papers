@@ -8,11 +8,10 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
+import data
 import evaluate
 import model
 import train
-
-import data
 
 
 def test_reference_table_matches_approved_target() -> None:

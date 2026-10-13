@@ -3,6 +3,7 @@
 import argparse
 from pathlib import Path
 
+import data as d
 import evaluate
 import geometry
 import matplotlib
@@ -10,7 +11,6 @@ import model as m
 import torch
 from torch import nn
 
-import data as d
 from gdl import load_checkpoint, load_run_config, run_dir
 
 matplotlib.use("Agg")

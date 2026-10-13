@@ -106,7 +106,9 @@ def test_train_updates_model_parameters() -> None:
 
     assert any(
         not torch.equal(before, after)
-        for before, after in zip(parameters_before, result.model.parameters())
+        for before, after in zip(
+            parameters_before, result.model.parameters(), strict=True
+        )
     )
 
 
