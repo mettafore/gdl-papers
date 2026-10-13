@@ -28,6 +28,8 @@ dev = [
 ]
 
 [tool.ruff]
+# Ignore untracked data folders when classifying first-party imports.
+src = ["src"]
 # Notebooks are scratch space — not linted (matches the AGENTS.md commit rule).
 # Fetched author source is preserved verbatim, not formatted as project code.
 extend-exclude = ["*.ipynb", "papers/*/sources/**"]

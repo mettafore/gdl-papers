@@ -6,7 +6,7 @@ set -eu
 MAX_FILE_BYTES=1000000
 
 echo "Checking for large files..."
-too_big=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=AM | while IFS= read -r path; do
+too_big=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=ACMRT | while IFS= read -r path; do
     size=$(git cat-file -s ":$path")
     if [ "$size" -gt "$MAX_FILE_BYTES" ]; then
         echo "  $path is $size bytes (limit $MAX_FILE_BYTES)"
