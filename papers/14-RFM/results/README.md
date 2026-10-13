@@ -7,9 +7,13 @@
   It records NLL −2.473926271923619 from the training/calibration wrapper's
   evaluation. This is not the later reported standalone evaluation of −0.700.
 
-Training and standalone evaluation are separate jobs. The saved checkpoint and
-configuration remain in the Modal volume, but the standalone evaluation output
-supporting the README's −0.700 result has not been recovered. Do not substitute
-the historical calibration result for that reported value. Commit `88f680c`
-later corrected sphere divergence; the calibration JSON has no evaluator revision
-or solver settings sufficient to establish its numerical comparability.
+- `local-evaluation-20261013.json`: confirmed local CPU evaluation of the saved
+  checkpoint, with NLL −0.7004 across all 1,282 held-out points and exit code 0.
+  It records solver settings, evaluator revision, and checkpoint/data hashes.
+  The CLI reports four decimal places, so the record does not claim more precision.
+
+Training and standalone evaluation are separate jobs. The original later
+standalone output remains unrecovered, but the fresh local evaluation confirms
+its reported −0.700 value to three decimal places. The historical calibration
+result is retained separately. Commit `88f680c` corrected sphere divergence;
+that historical JSON lacks evaluator revision and solver settings.

@@ -1,0 +1,24 @@
+{
+  "run_id": "20260818-103835",
+  "evaluation_date": "2026-10-13",
+  "nll": -0.7004,
+  "precision_note": "CLI reports four decimal places; full precision was not emitted.",
+  "test_points": 1282,
+  "seed": 42,
+  "split_percentages": [
+    80,
+    10,
+    10
+  ],
+  "device": "cpu",
+  "solver": "dopri5",
+  "divergence": "exact Jacobian trace",
+  "rtol": 1e-07,
+  "atol": 1e-07,
+  "batch_size": 64,
+  "exit_code": 0,
+  "evaluation_git_commit": "035924e61bca1422d0e8b53c79f51b9cedcb14c7",
+  "checkpoint_sha256": "d23efd14c32161df6372d060c88734df4535189a28c5373f9367fc182863430b",
+  "config_sha256": "31843e367cd4f604a5dd633176e81f3fa335d1bc605b9acddbae3ea016421786",
+  "dataset_sha256": "d6bd754abfe369b9a9da9aa66b3d92dcd144ee6e06aa0bc1248d449a15fea999"
+}

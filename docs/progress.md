@@ -190,7 +190,8 @@ README reports Fire test NLL −0.700 against uniform +2.531, below the paper's
 performance of −1.86 ± 0.11. On 2026-10-13, inspection recovered the Modal
 training/calibration summary for run `20260818-103835`, containing a different
 historical NLL of −2.474. The separate standalone evaluation output supporting
-−0.700 remains unrecovered; see [result provenance](../papers/14-RFM/results/README.md).
+−0.700 was not recovered. A fresh local evaluation on 2026-10-13 confirms
+NLL −0.7004 across all 1,282 test points, with exit code 0; see [result provenance](../papers/14-RFM/results/README.md).
 
 Training persists canonical run folders
 (`config.json`, per-epoch `metrics.jsonl`, `checkpoint.pt`), and evaluation
@@ -199,9 +200,8 @@ deterministic held-out split. Train/validation/test percentages are stored in
 the run recipe and replayed by evaluation. The full paper suite passes 89
 tests.
 
-**Next action:** recover the separate evaluation output or, in a separately
-authorized evaluation, regenerate a durable result from the saved checkpoint.
-No new training is needed to document checkpoint evaluation.
+**Next action:** use the saved local evaluation record as the evidence for the
+reported Fire NLL. Further experiments remain separate from artifact cleanup.
 
 ---
 

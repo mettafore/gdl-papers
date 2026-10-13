@@ -151,14 +151,15 @@ CPU), `--rtol` and `--atol` (both default `1e-7`), `--data-path`, and
 | Fire test NLL (lower is better) | Value |
 |---|---:|
 | Uniform-sphere baseline | +2.531 |
-| Reported reproduction | −0.700 |
+| Locally confirmed reproduction | −0.7004 |
 | Paper, five-run mean and variation | −1.86 ± 0.11 |
 
-The reported reproduction improves on the uniform baseline but does not match
-the paper. It is an existing result, not a fresh evaluation of the current
-geometry changes. The standalone evaluation output has not been recovered;
-[artifact provenance](results/README.md) distinguishes it from an older Modal
-calibration result.
+The local evaluation on 2026-10-13 confirms NLL −0.7004 on all 1,282 held-out
+points, using the saved checkpoint and current evaluator. This improves on the
+uniform baseline but does not match the paper. The [evaluation record](results/local-evaluation-20261013.json)
+includes checkpoint/data hashes, split, solver, tolerances, and evaluator revision.
+The CLI reports four decimal places. [Artifact provenance](results/README.md)
+distinguishes this result from the older Modal calibration evaluation.
 
 ![Observed Fire locations and generated samples](results/fire-comparison.png)
 
