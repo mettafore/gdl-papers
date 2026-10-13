@@ -3,11 +3,70 @@
 import sys
 from pathlib import Path
 
+import pytest
 import torch
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from geometry import conditional_vf, geodesic_path, sample_sphere
+from geometry import conditional_vf, geodesic_path, grad_d, log_map, sample_sphere
+
+
+@pytest.mark.parametrize("dtype", [torch.float32, torch.float64])
+def test_coincident_points_have_zero_log_and_conditional_velocity(dtype) -> None:
+    points = torch.nn.functional.normalize(
+        torch.tensor([[1.0, 2.0, 3.0], [1.0, 0.0, 0.0]], dtype=dtype), dim=-1
+    )
+    time = torch.tensor([0.25, 0.98], dtype=dtype)
+    for result in (
+        log_map(points, points),
+        grad_d(points, points),
+        conditional_vf(points, points, time),
+    ):
+        torch.testing.assert_close(result, torch.zeros_like(points), atol=0, rtol=0)
+
+
+@pytest.mark.parametrize("operation", [log_map, grad_d, geodesic_path, conditional_vf])
+def test_antipodal_points_report_nonunique_geodesic(operation) -> None:
+    point = torch.tensor([[1.0, 0.0, 0.0]])
+    args = (point, -point)
+    if operation in (geodesic_path, conditional_vf):
+        args += (torch.tensor([0.5]),)
+    with pytest.raises(ValueError, match="antipodal"):
+        operation(*args)
+
+
+def test_near_antipodal_points_reach_endpoint_and_stay_finite() -> None:
+    start = torch.tensor([[1.0, 0.0, 0.0]], dtype=torch.float64)
+    angle = torch.tensor(torch.pi - 1e-8, dtype=torch.float64)
+    end = torch.stack([angle.cos(), angle.sin(), angle.new_zeros(())]).reshape(1, 3)
+    torch.testing.assert_close(
+        geodesic_path(start, end, torch.ones(1, dtype=torch.float64)),
+        end,
+        atol=1e-12,
+        rtol=1e-12,
+    )
+    assert torch.isfinite(
+        conditional_vf(start, end, torch.tensor([0.5], dtype=torch.float64))
+    ).all()
+
+
+def test_coincident_conditional_velocity_has_tangent_derivative() -> None:
+    point = torch.tensor([[1.0, 0.0, 0.0]], dtype=torch.float64)
+    time = torch.tensor([0.5], dtype=torch.float64)
+    jacobian = torch.autograd.functional.jacobian(
+        lambda x: conditional_vf(x, point, time), point
+    ).reshape(3, 3)
+    torch.testing.assert_close(
+        jacobian, torch.diag(torch.tensor([0.0, -2.0, -2.0], dtype=torch.float64))
+    )
+
+
+def test_sub_epsilon_angle_preserves_logarithmic_displacement() -> None:
+    angle = torch.tensor(1e-14, dtype=torch.float64)
+    start = torch.tensor([[1.0, 0.0, 0.0]], dtype=torch.float64)
+    end = torch.stack([angle.cos(), angle.sin(), angle.new_zeros(())]).reshape(1, 3)
+    expected = torch.tensor([[0.0, 1e-14, 0.0]], dtype=torch.float64)
+    torch.testing.assert_close(log_map(start, end), expected, atol=1e-28, rtol=1e-12)
 
 
 def test_sample_sphere_respects_requested_device() -> None:

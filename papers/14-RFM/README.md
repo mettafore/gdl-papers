@@ -29,6 +29,14 @@ fits the **Fire** location distribution on the unit sphere `S^2`.
 
 Data files are local inputs and must not be committed.
 
+## Geometry boundary behavior
+
+- Coincident points have zero logarithmic displacement and conditional velocity.
+- `grad_d` returns zero at coincidence as a finite convention for the distance
+  singularity.
+- Exact antipodes raise `ValueError`: a unique shortest direction does not exist.
+  Nearby antipodal points remain supported.
+
 ## Run
 
 Run from the repository root with the CLI defaults:

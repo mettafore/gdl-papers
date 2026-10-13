@@ -131,6 +131,10 @@ def split_train_valid[T](
     configurations: list[T], *, valid_size: int = 50, seed: int = 123
 ) -> tuple[list[T], list[T]]:
     """Return the paper-era shuffled-prefix train, shuffled-suffix valid split."""
+    if not 0 < valid_size < len(configurations):
+        raise ValueError(
+            "valid_size must be positive and smaller than the number of configurations"
+        )
     rng = np.random.default_rng(seed=seed)
     indices = rng.permutation(len(configurations))
     train_size = len(configurations) - valid_size

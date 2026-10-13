@@ -1,8 +1,7 @@
-"""Sphere geometry contracts for the RFM reproduction.
+"""Closed-form sphere geometry for the RFM reproduction.
 
-The notebook ``nbs/spherical.ipynb`` is the executable derivation and oracle.
-This module is intentionally scaffold-only: the correctness-critical math is
-implemented by the learner and checked separately.
+The notebook ``nbs/spherical.ipynb`` records the derivation. Unit tests cover
+the runtime geometry and its boundary contracts.
 """
 
 import torch
@@ -63,20 +62,28 @@ def log_map(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
 
     Contract: ``x`` and ``y`` have shape ``(n, 3)``; return shape ``(n, 3)``.
     The output is tangent at ``x`` and has norm equal to the spherical distance
-    between each pair. Generic pairs exclude identical and antipodal points.
+    between each pair. Coincident points return zero. Antipodal points raise
+    ``ValueError`` because their shortest geodesic is not unique.
     """
     _check_point_pair(x, y)
+    if torch.any(torch.all(x == -y, dim=-1)):
+        raise ValueError("the shortest geodesic is not unique for antipodal points")
 
     dot_prod = (x * y).sum(dim=1, keepdim=True)
     cross_prod = torch.linalg.vector_norm(
         torch.cross(x, y, dim=1), dim=-1, keepdim=True
     )
     theta = torch.atan2(cross_prod, dot_prod)
-    y_parallel = dot_prod * x
+    y_parallel = dot_prod / x.square().sum(dim=1, keepdim=True) * x
     y_perp = y - y_parallel
-    v_normalized = torch.nn.functional.normalize(y_perp, dim=-1)
-    v = theta * v_normalized
-    return v
+    perpendicular_norm = torch.linalg.vector_norm(y_perp, dim=-1, keepdim=True)
+    denominator = torch.where(
+        perpendicular_norm > 0, perpendicular_norm, torch.ones_like(perpendicular_norm)
+    )
+    # theta / sin(theta) tends to one at coincidence. Preserve the tangent
+    # projection's derivative rather than replacing that row by a constant.
+    scale = torch.where(perpendicular_norm > 0, theta / denominator, 1.0)
+    return scale * y_perp
 
 
 def premetric_d(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
@@ -96,13 +103,15 @@ def grad_d(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     """Return the gradient of ``d(x, y)`` with respect to ``x``.
 
     Contract: return a tangent tensor of shape ``(n, 3)``. For generic pairs,
-    each row has unit norm and points opposite to ``log_map(x, y)``.
+    each row has unit norm and points opposite to ``log_map(x, y)``. At
+    coincident points, return zero as a finite convention for the singularity.
     """
     _check_point_pair(x, y)
 
     v = log_map(x, y)
     v_norm = torch.linalg.vector_norm(v, dim=-1, keepdim=True)
-    return -v / v_norm
+    denominator = torch.where(v_norm > 0, v_norm, torch.ones_like(v_norm))
+    return -v / denominator
 
 
 def kappa(t: torch.Tensor) -> torch.Tensor:
@@ -134,11 +143,9 @@ def conditional_vf(x: torch.Tensor, x1: torch.Tensor, t: torch.Tensor) -> torch.
         raise ValueError("t must have shape (n,) matching x")
     if not torch.isfinite(t).all() or not torch.all((t >= 0) & (t < 1)):
         raise ValueError("t must be finite and lie in [0, 1)")
-    logk_deriv = dlog_kappa_dt(t).reshape(-1, 1)
-    d = premetric_d(x, x1).reshape(-1, 1)
-    grad = grad_d(x, x1)
-    grad_norm_sq = torch.square(torch.linalg.vector_norm(grad, dim=1, keepdim=True))
-    return logk_deriv * d * grad * torch.reciprocal(grad_norm_sq)
+    # For spherical distance, Eq. 13 is log_x(x1) / (1-t). This form has
+    # the continuous zero-velocity extension when x equals the endpoint.
+    return log_map(x, x1) / (1 - t).reshape(-1, 1)
 
 
 def geodesic_path(x0: torch.Tensor, x1: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
