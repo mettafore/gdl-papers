@@ -9,9 +9,8 @@ from e3nn import o3
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-import model
-
 import data
+import model
 
 
 def test_published_model_defaults_distinguish_output_and_internal_ell() -> None:
@@ -489,5 +488,5 @@ def test_model_energy_and_forces_are_continuous_when_an_edge_leaves_cutoff() -> 
         )
 
     assert edge_counts == [6, 4]
-    for inside, outside in zip(predictions[0], predictions[1]):
+    for inside, outside in zip(predictions[0], predictions[1], strict=True):
         torch.testing.assert_close(inside, outside, atol=1e-6, rtol=1e-6)

@@ -292,7 +292,7 @@ def _wigner_nj(
 
         return [
             (irrep, identity[irrep_slice])
-            for (_, irrep), irrep_slice in zip(irreps, irreps.slices())
+            for (_, irrep), irrep_slice in zip(irreps, irreps.slices(), strict=True)
         ]
     elif len(irrepss) > 1:
         *irrepss_left, irrepss_right = irrepss
@@ -470,7 +470,7 @@ class Contraction(nn.Module):
         x = torch.cat(
             [
                 block.reshape(atomic_basis.size(0), self.num_features, ir.dim)
-                for block, (_, ir) in zip(blocks, self.coupling_irreps)
+                for block, (_, ir) in zip(blocks, self.coupling_irreps, strict=True)
             ],
             dim=-1,
         )
@@ -491,7 +491,7 @@ class Contraction(nn.Module):
             node_attrs,
         )
         # Build the fixed nu=2 stencil: [out_dim, 16, 16, num_paths].
-        u_2 = getattr(self, "U_matrix_2")
+        u_2 = self.U_matrix_2
         # Eq. 11 nu=2 weights: [4 receiver elements, num_paths, 256 channels].
         weights_2 = self.weights[0]
 
@@ -514,7 +514,7 @@ class Contraction(nn.Module):
             x,
         )
         # Retrieve the fixed nu=1 coupling stencil and its Eq. 11 weights.
-        u_1 = getattr(self, "U_matrix_1")
+        u_1 = self.U_matrix_1
         weights_1 = self.weights[1]
 
         # U1 W1 has one remaining angular axis i: [N, 256, out_dim, 16].

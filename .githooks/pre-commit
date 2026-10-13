@@ -1,6 +1,31 @@
 #!/usr/bin/env sh
 set -eu
 
+# Largest file (bytes) a commit may add. Datasets, checkpoints and PDFs belong on
+# disk, not in git; .gitignore misses anything with an unexpected extension.
+MAX_FILE_BYTES=1000000
+
+echo "Checking for large files..."
+too_big=$(git -c core.quotePath=false diff --cached --name-only --diff-filter=ACMRT | while IFS= read -r path; do
+    size=$(git cat-file -s ":$path")
+    if [ "$size" -gt "$MAX_FILE_BYTES" ]; then
+        echo "  $path is $size bytes (limit $MAX_FILE_BYTES)"
+    fi
+done)
+if [ -n "$too_big" ]; then
+    echo "$too_big"
+    echo "Large files are staged. Unstage them, or add them to .gitignore."
+    exit 1
+fi
+
+echo "Checking for secrets..."
+if command -v gitleaks >/dev/null 2>&1; then
+    gitleaks git --pre-commit --staged --redact --no-banner -v
+else
+    # CI scans every push and PR, so a missing local install is a warning only.
+    echo "  gitleaks not installed; skipping (see README: Commit checks)."
+fi
+
 echo "Checking Ruff formatting..."
 uv run ruff format --check src/ papers/
 

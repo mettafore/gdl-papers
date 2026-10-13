@@ -1,8 +1,8 @@
 """3BPA records and author-faithful graph construction."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence, TypeVar
 
 import numpy as np
 import torch
@@ -10,8 +10,6 @@ from ase.io import read
 from torch import Tensor
 from torch_geometric.data import Data
 from torch_geometric.loader import DataLoader
-
-T = TypeVar("T")
 
 TRAIN_FILE = "train_300K.xyz"
 ISOLATED_ATOMS_FILE = "iso_atoms.xyz"
@@ -129,7 +127,7 @@ def load_isolated_atom_energies(path: Path) -> Tensor:
     return torch.stack([energy_dict[z] for z in ATOMIC_NUMBERS])
 
 
-def split_train_valid(
+def split_train_valid[T](
     configurations: list[T], *, valid_size: int = 50, seed: int = 123
 ) -> tuple[list[T], list[T]]:
     """Return the paper-era shuffled-prefix train, shuffled-suffix valid split."""

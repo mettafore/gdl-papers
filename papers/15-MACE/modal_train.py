@@ -9,7 +9,7 @@ Continue to 500 epochs, including automatic retries after interruption:
 """
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -102,7 +102,7 @@ def main(
     fresh_run_id = None
     if resume_run_id is None:
         fresh_run_id = (
-            datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S") + "-" + uuid4().hex[:8]
+            datetime.now(UTC).strftime("%Y%m%d-%H%M%S") + "-" + uuid4().hex[:8]
         )
     result = run_training.spawn(
         epochs=epochs,

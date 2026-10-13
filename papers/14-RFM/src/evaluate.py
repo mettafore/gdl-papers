@@ -4,8 +4,8 @@ import argparse
 import math
 from collections.abc import Callable
 from pathlib import Path
-from typing import TypeAlias
 
+import data as d
 import model as m
 import torch
 from torch import nn
@@ -13,11 +13,10 @@ from torch.func import jacrev, vmap
 from torch.nn import functional as F
 from torchdiffeq import odeint
 
-import data as d
 from gdl import load_checkpoint, load_run_config, run_dir
 
-VelocityField: TypeAlias = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
-StateUpdate: TypeAlias = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+type VelocityField = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+type StateUpdate = Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
 PAPER_DIR = Path(__file__).resolve().parent.parent
 
 

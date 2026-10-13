@@ -51,11 +51,11 @@ def run_smoke() -> dict[str, float | int | str | bool]:
     sys.path.insert(0, f"{REMOTE_ROOT}/src")
     sys.path.insert(0, PAPER_SRC)
 
+    import data
     from evaluate import _evaluate_graphs
     from model import MACE, MACEConfig
     from train import TrainConfig, train
 
-    import data
     from gdl import load_checkpoint, load_run_config, run_dir
 
     data_path = Path(DATA_DIR)

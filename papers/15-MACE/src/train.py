@@ -10,6 +10,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
+import data
 import numpy as np
 import torch
 from model import AUTHOR_REVISION, IMPLEMENTATION_VERSION, MACE, MACEConfig
@@ -17,7 +18,6 @@ from torch import Tensor, nn
 from torch.optim.swa_utils import AveragedModel
 from torch_geometric.data import Data
 
-import data
 from gdl import (
     load_run_config,
     log_metrics,
@@ -86,7 +86,7 @@ def get_module_device(module: nn.Module) -> torch.device:
 def _capture_rng_state() -> dict[str, Any]:
     """Capture global RNGs so the next shuffled epoch can continue reproducibly."""
     numpy_name, numpy_keys, numpy_position, has_gauss, cached_gaussian = (
-        np.random.get_state()
+        np.random.get_state()  # noqa: NPY002 — checkpoint the global RNG
     )
     numpy_keys_array = np.asarray(numpy_keys, dtype=np.uint32)
     return {
@@ -109,7 +109,7 @@ def _restore_rng_state(state: dict[str, Any]) -> None:
     """Restore RNG state after model and optimizer construction on resume."""
     random.setstate(state["python"])
     numpy_name, numpy_keys, numpy_position, has_gauss, cached_gaussian = state["numpy"]
-    np.random.set_state(
+    np.random.set_state(  # noqa: NPY002 — restore the global RNG
         (
             numpy_name,
             numpy_keys.cpu().numpy().astype(np.uint32, copy=False),
@@ -433,9 +433,12 @@ def train(
     }
     if paper_dir is None:
         paper_dir = Path(__file__).resolve().parent.parent
-    if fresh_run_id is not None and resume_run_id is None:
-        if (get_run_dir(paper_dir, fresh_run_id) / "training_state.pt").is_file():
-            resume_run_id = fresh_run_id
+    if (
+        fresh_run_id is not None
+        and resume_run_id is None
+        and (get_run_dir(paper_dir, fresh_run_id) / "training_state.pt").is_file()
+    ):
+        resume_run_id = fresh_run_id
     if resume_run_id is None:
         if fresh_run_id is not None and get_run_dir(paper_dir, fresh_run_id).exists():
             run_id = fresh_run_id

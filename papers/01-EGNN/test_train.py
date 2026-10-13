@@ -10,9 +10,8 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
-from train import raw_target_for, target_for
-
 from data import NormStats
+from train import raw_target_for, target_for
 
 
 def _fake_batch(y):

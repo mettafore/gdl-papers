@@ -10,11 +10,11 @@ Paper: Satorras et al., "E(n) Equivariant Graph Neural Networks", ICML 2021.
 import argparse
 from pathlib import Path
 
+import data
 import torch
 from model import EGNN
 from torch import nn
 
-import data
 from gdl import load_checkpoint, log_metrics, new_run_dir, save_checkpoint, set_seed
 
 PAPER_DIR = Path(__file__).parent.parent

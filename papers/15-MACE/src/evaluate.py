@@ -2,9 +2,10 @@
 
 import argparse
 import json
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
+import data
 import torch
 from model import MACE, MACEConfig
 from torch import Tensor, nn
@@ -14,7 +15,6 @@ from train import (
     resolve_device,
 )
 
-import data
 from gdl import load_checkpoint, load_run_config, run_dir
 
 REFERENCE_RMSE_MEV = {

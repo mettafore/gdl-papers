@@ -8,11 +8,11 @@ saves a checkpoint, and prints the run_id to pass to evaluate.py.
 import argparse
 from pathlib import Path
 
+import data
 import torch
 from model import MLP
 from torch import nn
 
-import data
 from gdl import log_metrics, new_run_dir, save_checkpoint, set_seed
 
 PAPER_DIR = Path(__file__).parent.parent  # runs/ lives at the paper root, not in src/

@@ -9,11 +9,11 @@ target in (see UNIT_NOTE below for how that compares to the paper's table).
 import argparse
 from pathlib import Path
 
+import data
 import torch
 from model import EGNN
 from train import raw_target_for
 
-import data
 from gdl import METRICS, load_checkpoint, load_run_config, run_dir
 
 PAPER_DIR = Path(__file__).parent.parent

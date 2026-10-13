@@ -109,7 +109,7 @@ def kappa(t: torch.Tensor) -> torch.Tensor:
     """Return the RFM schedule ``kappa(t)`` for ``t`` in ``[0, 1]``."""
     if t.ndim != 1:
         raise ValueError("t must have shape (n,)")
-    if not torch.isfinite(t).all() or not torch.all((0 <= t) & (t <= 1)):
+    if not torch.isfinite(t).all() or not torch.all((t >= 0) & (t <= 1)):
         raise ValueError("t must be finite and lie in [0, 1]")
     return 1 - t
 
@@ -118,7 +118,7 @@ def dlog_kappa_dt(t: torch.Tensor) -> torch.Tensor:
     """Return the time derivative of ``log(kappa(t))``."""
     if t.ndim != 1:
         raise ValueError("t must have shape (n,)")
-    if not torch.isfinite(t).all() or not torch.all((0 <= t) & (t < 1)):
+    if not torch.isfinite(t).all() or not torch.all((t >= 0) & (t < 1)):
         raise ValueError("t must be finite and lie in [0, 1)")
     return -torch.reciprocal(1 - t)
 
@@ -132,7 +132,7 @@ def conditional_vf(x: torch.Tensor, x1: torch.Tensor, t: torch.Tensor) -> torch.
     _check_point_pair(x, x1)
     if t.ndim != 1 or t.shape[0] != x.shape[0]:
         raise ValueError("t must have shape (n,) matching x")
-    if not torch.isfinite(t).all() or not torch.all((0 <= t) & (t < 1)):
+    if not torch.isfinite(t).all() or not torch.all((t >= 0) & (t < 1)):
         raise ValueError("t must be finite and lie in [0, 1)")
     logk_deriv = dlog_kappa_dt(t).reshape(-1, 1)
     d = premetric_d(x, x1).reshape(-1, 1)
@@ -150,7 +150,7 @@ def geodesic_path(x0: torch.Tensor, x1: torch.Tensor, t: torch.Tensor) -> torch.
     _check_point_pair(x0, x1)
     if t.ndim != 1 or t.shape[0] != x0.shape[0]:
         raise ValueError("t must have shape (n,) matching x0")
-    if not torch.isfinite(t).all() or not torch.all((0 <= t) & (t <= 1)):
+    if not torch.isfinite(t).all() or not torch.all((t >= 0) & (t <= 1)):
         raise ValueError("t must be finite and lie in [0, 1]")
 
     return exp_map(x0, t.reshape(-1, 1) * log_map(x0, x1))

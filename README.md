@@ -63,8 +63,13 @@ Enable the versioned Git hook once per clone:
 git config core.hooksPath .githooks
 ```
 
-It blocks commits unless Ruff formatting and linting, per-paper type checks, and
-the lightweight test suites pass. Dataset-backed tests remain opt-in.
+It blocks commits that add a file over 1 MB or contain a secret, and commits
+where Ruff formatting and linting, per-paper type checks, or the lightweight test
+suites fail. Dataset-backed tests remain opt-in.
+
+The secret scan needs [gitleaks](https://github.com/gitleaks/gitleaks) on your
+`PATH` (`brew install gitleaks`); without it the hook warns and skips that step.
+CI runs the same checks, and its gitleaks scan covers the full history.
 
 ## Layout
 

@@ -13,5 +13,5 @@ import torch
 
 def set_seed(seed: int) -> None:
     random.seed(seed)
-    np.random.seed(seed)
+    np.random.seed(seed)  # noqa: NPY002 — seeding the global RNG is the point
     torch.manual_seed(seed)

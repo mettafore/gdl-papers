@@ -10,6 +10,7 @@ from torch import nn
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
+import data as data_module
 import evaluate as evaluate_module
 from evaluate import (
     divergence,
@@ -19,7 +20,6 @@ from evaluate import (
 )
 from model import TimeConditionedVectorField
 
-import data as data_module
 from gdl import new_run_dir, save_checkpoint
 
 
@@ -216,7 +216,9 @@ def test_evaluate_run_rebuilds_checkpoint_and_replays_saved_split(
     data_path = tmp_path / "fire.csv"
     rows = [
         f"{latitude},{longitude}"
-        for latitude, longitude in zip(range(-15, 15), range(-150, 150, 10))
+        for latitude, longitude in zip(
+            range(-15, 15), range(-150, 150, 10), strict=True
+        )
     ]
     data_path.write_text("LATITUDE,LONGITUDE\n" + "\n".join(rows) + "\n")
     config = {

@@ -8,7 +8,7 @@ and evaluate it.
 import hashlib
 import json
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -64,7 +64,7 @@ def new_run_dir(
     A supplied ``run_id`` is used exactly and never overwrites an existing folder.
     """
     if run_id is None:
-        stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        stamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
         run_id, suffix = stamp, 0
         while run_dir(paper_dir, run_id, base).exists():
             suffix += 1
