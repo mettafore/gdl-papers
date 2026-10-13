@@ -334,7 +334,7 @@ after EGNN lands.
 - Add MIT licensing for original code, preserve the upstream MACE MIT notice,
   and verify the wheel includes the license and attribution files.
 - Claude review configuration now filters comment triggers, permits the requested
-  PR CLI commands, supports either documented authentication method, and emits
+  PR CLI commands, retains OAuth-only authentication, and emits
   sanitized failure diagnostics. A live review remains unverified until this
   branch runs in GitHub with a working account. Provider credentials were not
   changed. Manual code/security review is authorized for this branch; Sonar

@@ -82,8 +82,7 @@ Third-party source, research papers, and datasets retain their own terms; see
 - Claude reviews new or updated pull requests. Comment-triggered reviews require
   `@claude` on a pull request; ordinary issue comments do not start a review.
 - Configure `CLAUDE_CODE_OAUTH_TOKEN` in GitHub repository secrets using the
-  token produced by `claude setup-token`. Alternatively, configure
-  `ANTHROPIC_API_KEY`; the workflow uses it when present.
+  token produced by `claude setup-token`.
 - The workflow grants the CLI access to PR viewing, diffs, and comments. It
   reports common authentication, usage-limit, or model-access failures with
   fixed diagnostic messages. Raw provider responses are not printed.

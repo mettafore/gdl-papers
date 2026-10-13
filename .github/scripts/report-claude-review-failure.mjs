@@ -10,7 +10,7 @@ export function failureMessage(messages) {
     : [];
   const text = JSON.stringify(results).toLowerCase();
   if (/authentication|unauthorized|oauth|invalid.{0,30}(api.key|token)|login/.test(text)) {
-    return "Claude authentication failed. Refresh CLAUDE_CODE_OAUTH_TOKEN using claude setup-token, or configure ANTHROPIC_API_KEY in repository secrets.";
+    return "Claude authentication failed. Run claude setup-token and update CLAUDE_CODE_OAUTH_TOKEN in repository secrets.";
   }
   if (/credit balance|billing|usage limit|rate.limit|quota/.test(text)) {
     return "Claude reported a billing or usage limit. Check the configured account before retrying.";
