@@ -28,7 +28,7 @@ def test_coincident_points_have_zero_log_and_conditional_velocity(dtype) -> None
 @pytest.mark.parametrize("operation", [log_map, grad_d, geodesic_path, conditional_vf])
 def test_antipodal_points_report_nonunique_geodesic(operation) -> None:
     point = torch.tensor([[1.0, 0.0, 0.0]])
-    args = (point, -point)
+    args: tuple[torch.Tensor, ...] = (point, -point)
     if operation in (geodesic_path, conditional_vf):
         args += (torch.tensor([0.5]),)
     with pytest.raises(ValueError, match="antipodal"):
@@ -59,6 +59,17 @@ def test_coincident_conditional_velocity_has_tangent_derivative() -> None:
     torch.testing.assert_close(
         jacobian, torch.diag(torch.tensor([0.0, -2.0, -2.0], dtype=torch.float64))
     )
+
+
+def test_conditional_velocity_handles_mixed_coincident_and_distinct_pairs() -> None:
+    points = torch.tensor([[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], dtype=torch.float64)
+    endpoints = torch.tensor([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], dtype=torch.float64)
+    times = torch.tensor([0.25, 0.5], dtype=torch.float64)
+    expected = torch.tensor(
+        [[0.0, 0.0, 0.0], [0.0, torch.pi, 0.0]], dtype=torch.float64
+    )
+
+    torch.testing.assert_close(conditional_vf(points, endpoints, times), expected)
 
 
 def test_sub_epsilon_angle_preserves_logarithmic_displacement() -> None:

@@ -143,9 +143,19 @@ def conditional_vf(x: torch.Tensor, x1: torch.Tensor, t: torch.Tensor) -> torch.
         raise ValueError("t must have shape (n,) matching x")
     if not torch.isfinite(t).all() or not torch.all((t >= 0) & (t < 1)):
         raise ValueError("t must be finite and lie in [0, 1)")
-    # For spherical distance, Eq. 13 is log_x(x1) / (1-t). This form has
-    # the continuous zero-velocity extension when x equals the endpoint.
-    return log_map(x, x1) / (1 - t).reshape(-1, 1)
+    # Keep the schedule, distance, and gradient terms of Eq. 13 explicit.
+    logk_deriv = dlog_kappa_dt(t).reshape(-1, 1)
+    d = premetric_d(x, x1).reshape(-1, 1)
+    grad = grad_d(x, x1)
+    grad_norm_sq = torch.square(torch.linalg.vector_norm(grad, dim=1, keepdim=True))
+    nonzero_grad = grad_norm_sq > 0
+    denominator = torch.where(nonzero_grad, grad_norm_sq, torch.ones_like(grad_norm_sq))
+    field = logk_deriv * d * grad / denominator
+
+    # At coincidence, d and grad vanish. The spherical identity d * grad =
+    # -log_x(x1) supplies the continuous limit and its tangent derivative.
+    coincident_field = -logk_deriv * log_map(x, x1)
+    return torch.where(nonzero_grad, field, coincident_field)
 
 
 def geodesic_path(x0: torch.Tensor, x1: torch.Tensor, t: torch.Tensor) -> torch.Tensor:
