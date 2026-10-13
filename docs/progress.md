@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-10-11 (MACE seed-123 stopped and full holdout results saved)
+**Last updated:** 2026-10-13 (PyTorch dependency and native Mac environment upgrade)
 
 ---
 
@@ -293,3 +293,19 @@ supersedes this interim snapshot; training is now stopped.
 PDFs and LaTeX sources live under `papers/NN-name/`. No reproduction code yet.
 Reading order suggestion: SchNet → TFN → SE(3)-Transformer → EquiFormer → NequIP,
 after EGNN lands.
+
+## Repository maintenance (2026-10-13)
+
+- Pin PyTorch 2.14.0 in the shared dependencies and RFM's Modal image. The
+  universal lock retains other existing package versions; PyTorch's Linux CUDA
+  dependencies change with its wheel requirements.
+- Verify Python 3.12 on native Apple Silicon: EGNN 33, RFM 78, MACE 57, and
+  template 8 tests pass. Five EGNN tests requiring downloaded data are excluded.
+  Ruff and mypy pass. MACE changes only declare buffer types and widen the EMA
+  callback annotation to match current PyTorch; model calculations stay the same.
+- Autograd and a `weights_only=True` checkpoint round-trip pass. OSV returns
+  no advisories for Torch 2.14.0; other previously reported dependency findings
+  remain outside this change.
+- Manual code/security review substitutes for the two unavailable review skills
+  with user approval. Sonar is deferred. Linux, Windows, and GPU execution have
+  not been tested in this upgrade; benchmark results above remain unchanged.

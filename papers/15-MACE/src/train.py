@@ -304,7 +304,7 @@ def make_optimizer(model: MACE, config: TrainConfig) -> torch.optim.Adam:
 def make_ema_model(model: nn.Module, *, decay: float) -> AveragedModel:
     """Create the paper's EMA copy of the live model parameters."""
 
-    def ema_average(average: Tensor, current: Tensor, updates: int) -> Tensor:
+    def ema_average(average: Tensor, current: Tensor, updates: Tensor | int) -> Tensor:
         effective_decay = min(decay, (1 + int(updates)) / (10 + int(updates)))
         return effective_decay * average + (1.0 - effective_decay) * current
 

@@ -843,6 +843,10 @@ class InteractionBlock(nn.Module):
 class MACE(nn.Module):
     """Two-interaction scalar-energy model with forces from autograd."""
 
+    atomic_energies: Tensor
+    mean_energy_shift: Tensor
+    rms_forces: Tensor
+
     def __init__(
         self,
         config: MACEConfig,

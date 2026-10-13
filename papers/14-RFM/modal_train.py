@@ -20,7 +20,7 @@ if modal.is_local():
     image = (
         modal.Image.debian_slim(python_version="3.12")
         .uv_pip_install(
-            "torch==2.2.2",
+            "torch==2.14.0",
             "numpy<2",
             "pandas>=2.3.3",
             "torchdiffeq>=0.2.5",
