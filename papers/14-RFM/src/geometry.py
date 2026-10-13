@@ -83,13 +83,15 @@ def log_map(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     coincident = torch.all(x == y, dim=1, keepdim=True)
     y_perp = torch.where(coincident, coincident_perp, y_perp)
     perpendicular_norm = torch.linalg.vector_norm(y_perp, dim=-1, keepdim=True)
-    denominator = torch.where(
-        perpendicular_norm > 0, perpendicular_norm, torch.ones_like(perpendicular_norm)
-    )
-    # theta / sin(theta) tends to one at coincidence. Preserve the tangent
-    # projection's derivative rather than replacing that row by a constant.
-    scale = torch.where(perpendicular_norm > 0, theta / denominator, 1.0)
-    return scale * y_perp
+    nonzero_perpendicular = perpendicular_norm > 0
+    # Avoid the default 1e-12 cutoff so small but representable angles survive.
+    tiny = torch.finfo(y_perp.dtype).tiny
+    safe_y_perp = torch.where(nonzero_perpendicular, y_perp, torch.ones_like(y_perp))
+    v_normalized = torch.nn.functional.normalize(safe_y_perp, dim=-1, eps=tiny)
+    v = theta * v_normalized
+    # At coincidence, return the tangent projection itself to retain its
+    # derivative instead of differentiating a normalized zero vector.
+    return torch.where(nonzero_perpendicular, v, y_perp)
 
 
 def premetric_d(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
