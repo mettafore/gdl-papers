@@ -9,6 +9,9 @@ course/
 course/*
 references/course-reader.md
 .env.local
+# Local experimental learning harness
+papers/15-MACE/.pi/
+papers/15-MACE/AGENTS.md
 # LaTeX build artifacts
 *.aux
 *.log
