@@ -12,6 +12,9 @@ path; the model uses parity-aware e3nn tensor products and contraction tables.
 
 ## Files
 
+- `notebooks/EDA.ipynb` — molecular visualization of 3BPA configurations
+- `notebooks/EDA_practice.ipynb` — ASE exercises using 3BPA
+- `notebooks/MACE.ipynb` — derivation and implementation walkthrough
 - `src/data.py` — extxyz records, exact 450/50 split, neighbour topology, PyG batching
 - `src/model.py` — radial/angular features, coupling routes, Eqs. 8–11, MACE
 - `src/train.py` — energy/force loss and the training driver
