@@ -156,7 +156,9 @@ CPU), `--rtol` and `--atol` (both default `1e-7`), `--data-path`, and
 
 The reported reproduction improves on the uniform baseline but does not match
 the paper. It is an existing result, not a fresh evaluation of the current
-geometry changes. A standalone evaluation record is not yet tracked here.
+geometry changes. The standalone evaluation output has not been recovered;
+[artifact provenance](results/README.md) distinguishes it from an older Modal
+calibration result.
 
 ![Observed Fire locations and generated samples](results/fire-comparison.png)
 

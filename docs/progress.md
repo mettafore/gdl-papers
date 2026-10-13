@@ -185,16 +185,23 @@ The closed-form sphere notebook and paper-local geometry, model, loss, training,
 sampling, divergence, and exact NLL implementations are complete. Fire remains
 the only dataset in the current experiment.
 
-**Current state:** green — training now persists canonical run folders
+**Current state:** implementation and saved-run visualization complete. The
+README reports Fire test NLL −0.700 against uniform +2.531, below the paper's
+performance of −1.86 ± 0.11. On 2026-10-13, inspection recovered the Modal
+training/calibration summary for run `20260818-103835`, containing a different
+historical NLL of −2.474. The separate standalone evaluation output supporting
+−0.700 remains unrecovered; see [result provenance](../papers/14-RFM/results/README.md).
+
+Training persists canonical run folders
 (`config.json`, per-epoch `metrics.jsonl`, `checkpoint.pt`), and evaluation
 rebuilds the saved model and reports sample-weighted exact NLL on the
 deterministic held-out split. Train/validation/test percentages are stored in
-the run recipe and replayed by evaluation. The full paper suite passes 61
+the run recipe and replayed by evaluation. The full paper suite passes 89
 tests.
 
-**Next action:** run a one-epoch Fire CLI smoke, evaluate its saved run, then
-start the real Fire training run and compare held-out NLL with the paper's
-`-1.86 +/- 0.11` reference.
+**Next action:** recover the separate evaluation output or, in a separately
+authorized evaluation, regenerate a durable result from the saved checkpoint.
+No new training is needed to document checkpoint evaluation.
 
 ---
 
