@@ -260,7 +260,7 @@ and 17.57/21.15 (pooled dihedral), in meV and meV/angstrom. None of the eight
 single-seed metrics meets the 10% target against the paper's three-seed means.
 The largest gap is dihedral energy (2.25 times the paper mean). See the
 [experiment notes](../papers/15-MACE/notes.md) and
-[full-precision results](../papers/15-MACE/holdout-seed123-epoch360.json).
+[full-precision results](../papers/15-MACE/results/holdout-seed123-epoch360.json).
 
 **Author-code audit (2026-10-06):** the model now includes the first interaction's
 sender mixing, A projection, neighbour normalization, and receiver selector.

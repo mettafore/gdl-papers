@@ -151,6 +151,11 @@ when an edge crosses the cutoff.
 
 ## Results
 
+The [saved holdout evaluation](results/holdout-seed123-epoch360.json) records
+seed 123's epoch-360 best-validation EMA checkpoint, configuration, checkpoint
+hash, and full-precision metrics. The root README summarizes those measured
+results; the table below lists the published comparison targets.
+
 Report energy RMSE in meV and force-component RMSE in meV/angstrom. Run three
 seeds and compare each three-seed mean with the published mean:
 

@@ -29,7 +29,7 @@ energy RMSE, about 2.25 times the paper mean. This is a single-seed result
 after an intentionally stopped run and does not establish benchmark reproduction.
 All four conditions improved over the earlier epoch-30 evaluation.
 
-The [full-precision results](holdout-seed123-epoch360.json) include sample
+The [full-precision results](results/holdout-seed123-epoch360.json) include sample
 counts, checkpoint hash, source and test-file hashes, model configuration,
 completed epochs, and percentage differences. The original evaluation result
 also remains in the local run folder and the persistent Modal Volume
