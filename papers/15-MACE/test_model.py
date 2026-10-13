@@ -50,6 +50,43 @@ def test_edge_geometry_uses_paper_sender_receiver_direction() -> None:
     assert torch.allclose(lengths, torch.full((2, 1), 5.0**0.5, dtype=torch.float64))
 
 
+def test_empty_edge_geometry_retains_shapes_and_autograd() -> None:
+    positions = torch.zeros((2, 3), dtype=torch.float64, requires_grad=True)
+    edges = torch.empty((2, 0), dtype=torch.long)
+    vectors, lengths = model.edge_vectors_and_lengths(positions, edges)
+    assert vectors.shape == (0, 3)
+    assert lengths.shape == (0, 1)
+    assert vectors.dtype == lengths.dtype == positions.dtype
+    gradient = torch.autograd.grad(vectors.sum() + lengths.sum(), positions)[0]
+    torch.testing.assert_close(gradient, torch.zeros_like(positions), atol=0, rtol=0)
+
+
+@pytest.mark.parametrize("training", [False, True])
+def test_model_handles_graphs_without_neighbors(training: bool) -> None:
+    mace = model.MACE(
+        model.MACEConfig(channels=2, radial_mlp_widths=(4, 4, 4, 8)),
+        avg_num_neighbours=2.0,
+    ).double()
+    mace.train(training)
+    positions = torch.tensor([[0.0, 0.0, 0.0], [10.0, 0.0, 0.0]], dtype=torch.float64)
+    energy, forces = mace(
+        torch.eye(4, dtype=torch.float64)[:2],
+        positions,
+        torch.empty((2, 0), dtype=torch.long),
+        torch.tensor([0, 1]),
+    )
+    assert energy.shape == (2,)
+    assert torch.isfinite(energy).all()
+    torch.testing.assert_close(forces, torch.zeros_like(positions), atol=0, rtol=0)
+    if training:
+        (energy.sum() + forces.square().sum()).backward()
+        assert all(
+            torch.isfinite(parameter.grad).all()
+            for parameter in mace.parameters()
+            if parameter.grad is not None
+        )
+
+
 def test_force_loss_backpropagates_through_force_derivative() -> None:
     scale = torch.nn.Parameter(torch.tensor(2.0, dtype=torch.float64))
     positions = torch.tensor(

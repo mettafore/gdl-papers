@@ -42,6 +42,9 @@ jobs:
       - name: Sync dependencies (locked)
         run: uv sync --frozen
 
+      - name: Workflow diagnostic tests
+        run: node --test .github/scripts/report-claude-review-failure.test.mjs
+
       - name: ruff format --check
         run: uv run ruff format --check src/ papers/
 

@@ -48,15 +48,10 @@ def edge_vectors_and_lengths(
     positions: Tensor, edge_index: Tensor
 ) -> tuple[Tensor, Tensor]:
     """Derive live sender-to-receiver geometry from differentiable positions."""
-    edge_vectors = []
-    edge_distances = []
-    for sender, receiver in edge_index.T:
-        edge_vector = positions[receiver] - positions[sender]
-        edge_distance = torch.linalg.vector_norm(edge_vector, 2)
-        edge_vectors.append(edge_vector)
-        edge_distances.append(edge_distance)
-    edge_vectors_tensor = torch.stack(edge_vectors)
-    edge_distances_tensor = torch.stack(edge_distances).reshape(-1, 1)
+    edge_vectors_tensor = positions[edge_index[1]] - positions[edge_index[0]]
+    edge_distances_tensor = torch.linalg.vector_norm(
+        edge_vectors_tensor, dim=-1, keepdim=True
+    )
 
     return edge_vectors_tensor, edge_distances_tensor
 

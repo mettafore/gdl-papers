@@ -24,9 +24,11 @@ PAPER_DIR = Path(__file__).parent.parent
 EV_TO_MEV_TARGETS = {"homo", "lumo", "gap", "U0"}
 
 
-def evaluate(run_id, runs_base="runs", paper_dir=PAPER_DIR, data_root="data/qm9"):
+def evaluate(run_id, runs_base="runs", paper_dir=PAPER_DIR, data_root=None):
     """Score a saved run on its held-out test split. Returns (metric_name, score)."""
     cfg = load_run_config(paper_dir, run_id, base=runs_base)
+    if data_root is None:
+        data_root = cfg["data"].get("root", "data/qm9")
 
     egnn = EGNN(
         in_node_nf=cfg["data"]["dims"]["in_node_dim"],
@@ -61,7 +63,9 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--run", required=True, help="run_id under runs/")
     p.add_argument("--runs-base", type=str, default="runs")
-    p.add_argument("--data-root", type=str, default="data/qm9")
+    p.add_argument(
+        "--data-root", type=str, help="override the dataset root saved in the run"
+    )
     args = p.parse_args()
 
     cfg = load_run_config(PAPER_DIR, args.run, base=args.runs_base)

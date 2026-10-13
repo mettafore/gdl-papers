@@ -16,12 +16,29 @@ permissions:
 
 jobs:
   claude-review:
+    if: >-
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request &&
+       contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' &&
+       contains(github.event.comment.body, '@claude'))
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLAUDE_AUTH_CONFIGURED: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Check Claude authentication configuration
+        if: env.CLAUDE_AUTH_CONFIGURED != 'true'
+        run: |
+          echo "::error::Configure CLAUDE_CODE_OAUTH_TOKEN in repository secrets."
+          exit 1
       - uses: anthropics/claude-code-action@v1
+        id: review
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: >-
+            --allowedTools "Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*)"
           prompt: |
             Review this pull request for correctness, code quality, and any issues.
             Post a single summary comment on the PR using `gh pr comment` with:
@@ -30,3 +47,8 @@ jobs:
             - anything you checked that looked good.
             Leave inline comments for specific line-level issues. If nothing is
             wrong, still post the summary saying the PR looks good and why.
+      - name: Report sanitized Claude failure diagnostics
+        if: failure() && steps.review.outcome == 'failure'
+        env:
+          CLAUDE_EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
+        run: node .github/scripts/report-claude-review-failure.mjs

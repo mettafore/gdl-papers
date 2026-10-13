@@ -33,6 +33,22 @@ def test_split_matches_paper_era_prefix_train_suffix_valid() -> None:
     assert valid == [3, 9]
 
 
+@pytest.mark.parametrize("valid_size", [-1, 0, 10, 11])
+def test_split_rejects_empty_or_invalid_partitions(valid_size: int) -> None:
+    with pytest.raises(ValueError, match="valid_size"):
+        data.split_train_valid(list(range(10)), valid_size=valid_size)
+
+
+def test_default_split_rejects_dataset_smaller_than_validation_set() -> None:
+    with pytest.raises(ValueError, match="valid_size"):
+        data.split_train_valid(list(range(10)))
+
+
+def test_split_rejects_empty_dataset() -> None:
+    with pytest.raises(ValueError, match="valid_size"):
+        data.split_train_valid([], valid_size=1)
+
+
 def test_neighbor_graph_has_both_directions_and_no_self_edges() -> None:
     configuration = data.AtomicConfiguration(
         atomic_numbers=torch.tensor([1, 6, 8]),

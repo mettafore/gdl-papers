@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-10-13 (PyTorch dependency and native Mac environment upgrade)
+**Last updated:** 2026-10-13 (dependency security updates and correctness fixes)
 
 ---
 
@@ -17,7 +17,7 @@ Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 | # | Paper | Tier | Status | Last touched |
 |---|-------|------|--------|--------------|
 | 00 | Template (Iris MLP) | scaffold | ✅ done | — |
-| 01 | EGNN | implement | 🟡 in progress | 2026-07-14 |
+| 01 | EGNN | implement | 🟡 in progress | 2026-10-13 |
 | 02 | Hitchhiker's Guide | study | 📄 PDF only | — |
 | 03 | MPNN | study | 📄 PDF only | — |
 | 05 | SchNet | study | 📄 PDF + sources | — |
@@ -26,8 +26,8 @@ Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 | 08 | EquiFormer | study | 📄 PDF + sources | — |
 | 09 | NequIP | study | 📄 PDF + sources | — |
 | 10 | ManifoldFormer | breadth | 📄 PDF only | — |
-| 14 | Riemannian Flow Matching | implement | 🟡 in progress | 2026-08-17 |
-| 15 | MACE | implement | 🟡 seed 123 stopped at 367 epochs; benchmark incomplete | 2026-10-11 |
+| 14 | Riemannian Flow Matching | implement | 🟡 in progress | 2026-10-13 |
+| 15 | MACE | implement | 🟡 seed 123 stopped at 367 epochs; benchmark incomplete | 2026-10-13 |
 
 Tier definitions → [`references/papers.md`](../references/papers.md).
 
@@ -309,3 +309,33 @@ after EGNN lands.
 - Manual code/security review substitutes for the two unavailable review skills
   with user approval. Sonar is deferred. Linux, Windows, and GPU execution have
   not been tested in this upgrade; benchmark results above remain unchanged.
+
+### Security and correctness follow-up
+
+- Update `fsspec` to 2026.6.0, `urllib3` to 2.8.0, `aiohttp` to 3.14.3,
+  `h2` to 4.4.1, and `multidict` to 6.9.1. Other locked package versions stay
+  the same. OSV reports no known advisories across 109 registry packages in
+  the updated lockfile snapshot; GitHub master alerts change only after merge.
+- EGNN evaluation replays the saved dataset root, with an explicit CLI override
+  and a default fallback for older configurations.
+- RFM retains the explicit schedule, distance, gradient, and squared gradient
+  norm terms of Eq. 13 for pedagogical review. A safe denominator and continuous
+  limit preserve zero velocity and its tangent derivative at coincidence.
+  Keep the original unit-sphere projection; isolate coincidence handling from
+  ordinary inputs and test its derivative at axis and non-axis sphere points.
+  Exact antipodes raise a clear error for their nonunique shortest direction;
+  near-antipodal pairs remain supported.
+- MACE derives edge geometry by indexed tensor operations, preserving autograd
+  for empty-edge inputs. Edgeless inference and force-loss backpropagation are
+  tested. Train/validation splitting rejects sizes that leave either set empty.
+- Verify 199 Python tests and two workflow diagnostic tests. Five dataset-backed
+  EGNN tests remain excluded. Ruff and per-paper type checks pass; no benchmark
+  training or evaluation was rerun.
+- Add MIT licensing for original code, preserve the upstream MACE MIT notice,
+  and verify the wheel includes the license and attribution files.
+- Claude review configuration now filters comment triggers, permits the requested
+  PR CLI commands, retains OAuth-only authentication, and emits
+  sanitized failure diagnostics. A live review remains unverified until this
+  branch runs in GitHub with a working account. Provider credentials were not
+  changed. Manual code/security review is authorized for this branch; Sonar
+  remains deferred.

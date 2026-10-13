@@ -71,6 +71,10 @@ Both commands print a `run_id`. Evaluate it on the same held-out split:
 uv run python papers/01-EGNN/src/evaluate.py --run <run_id>
 ```
 
+- Evaluation reuses the dataset location saved in the run's configuration.
+- After moving the cache, override it with `--data-root <new-path>`. Older
+  configurations without a saved location fall back to `data/qm9`.
+
 Local runs live in `papers/01-EGNN/runs/<run_id>/`. Modal runs live in the
 Modal volume at `/vol/runs/<run_id>/`.
 
