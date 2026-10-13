@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-10-13 (dependency security updates and correctness fixes)
+**Last updated:** 2026-10-13 (artifact cleanup and confirmed local RFM evaluation)
 
 ---
 
@@ -185,13 +185,13 @@ The closed-form sphere notebook and paper-local geometry, model, loss, training,
 sampling, divergence, and exact NLL implementations are complete. Fire remains
 the only dataset in the current experiment.
 
-**Current state:** implementation and saved-run visualization complete. The
-README reports Fire test NLL −0.700 against uniform +2.531, below the paper's
-performance of −1.86 ± 0.11. On 2026-10-13, inspection recovered the Modal
-training/calibration summary for run `20260818-103835`, containing a different
-historical NLL of −2.474. The separate standalone evaluation output supporting
-−0.700 was not recovered. A fresh local evaluation on 2026-10-13 confirms
-NLL −0.7004 across all 1,282 test points, with exit code 0; see [result provenance](../papers/14-RFM/results/README.md).
+**Current state:** implementation, saved-run visualization, and local checkpoint
+evaluation complete. On 2026-10-13, run `20260818-103835`, seed 42, achieved
+test NLL −0.7004 across all 1,282 held-out points with exit code 0. Evaluation
+used CPU, batch size 64, adaptive `dopri5`, exact Jacobian traces, and relative
+and absolute tolerances of `1e-7`. The [evaluation record](../papers/14-RFM/results/local-evaluation-20261013.json)
+includes checkpoint/data hashes and evaluator revision. This beats uniform
++2.531 but does not match the paper's five-run mean of −1.86 ± 0.11.
 
 Training persists canonical run folders
 (`config.json`, per-epoch `metrics.jsonl`, `checkpoint.pt`), and evaluation

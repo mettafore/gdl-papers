@@ -159,7 +159,7 @@ points, using the saved checkpoint and current evaluator. This improves on the
 uniform baseline but does not match the paper. The [evaluation record](results/local-evaluation-20261013.json)
 includes checkpoint/data hashes, split, solver, tolerances, and evaluator revision.
 The CLI reports four decimal places. [Artifact provenance](results/README.md)
-distinguishes this result from the older Modal calibration evaluation.
+describes the saved result and qualitative visualization.
 
 ![Observed Fire locations and generated samples](results/fire-comparison.png)
 

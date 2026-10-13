@@ -802,3 +802,11 @@ evaluation: held-out points → backward augmented ODE → density correction �
 ```
 
 This closes the core code-learning tour, not a new training experiment or benchmark reproduction. We did not run new training or a fresh saved-checkpoint NLL evaluation during this tour. `plot_samples.py` remains an optional visualization-driver walkthrough. The paper's Fire reference is `-1.86 ± 0.11` over five runs; completing this tour does not establish that benchmark match.
+
+## Saved-checkpoint evaluation — 13 October 2026
+
+- Run `20260818-103835`, seed 42: test NLL **−0.7004** across all **1,282** held-out points.
+- CPU evaluation used exact Jacobian traces, adaptive `dopri5`, batch size 64, and `rtol=atol=1e-7`; exit code 0.
+- The [evaluation record](results/local-evaluation-20261013.json) identifies the checkpoint, data, split, and evaluator revision. The CLI prints four decimal places.
+- This improves on uniform-sphere NLL +2.531, while remaining above the paper's −1.86 ± 0.11 five-run result.
+- Evaluation loaded an existing checkpoint; no new training was performed.

@@ -2,7 +2,7 @@
 
 PyTorch implementations of geometric deep learning papers for molecular
 prediction, generative modeling on the sphere, and interatomic potentials.
-EGNN reaches 48.50 meV on one QM9 target; RFM beats a uniform-sphere baseline;
+EGNN reaches 48.50 meV on one QM9 target; RFM achieves test NLL −0.7004;
 MACE has a measured single-seed benchmark gap. Each paper keeps its own model,
 data pipeline, training, evaluation, and learning notes.
 
@@ -14,7 +14,7 @@ and comparison limits are listed after the tables.
 | Paper | Task | Metric | Paper | This repo |
 |---|---|---|---:|---:|
 | [EGNN](papers/01-EGNN/) | QM9 HOMO–LUMO gap | MAE (meV) | 48 | **48.50** |
-| [Riemannian Flow Matching](papers/14-RFM/) | Fire locations on S² | Test NLL (uniform-sphere baseline: +2.531) | — | **−0.700** |
+| [Riemannian Flow Matching](papers/14-RFM/) | Fire locations on S² | Test NLL (uniform-sphere baseline: +2.531) | −1.86 ± 0.11 | **[−0.7004](papers/14-RFM/results/local-evaluation-20261013.json)** |
 | [MACE](papers/15-MACE/) | 3BPA, 300 K | Energy RMSE (meV) | 3.0 | **3.99** |
 | | | Force RMSE (meV/Å) | 8.8 | **11.56** |
 
@@ -31,8 +31,10 @@ and comparison limits are listed after the tables.
 
 - EGNN: one QM9 target and checkpoint, using a lower-learning-rate warm start;
   this is not a full multi-target reproduction.
-- RFM: Fire test NLL improves on the uniform-sphere baseline of +2.531 but has
-  not matched the paper's −1.86 ± 0.11. Training budget and recipe differ.
+- RFM: local evaluation of run `20260818-103835`, seed 42, confirms test NLL
+  −0.7004 on 1,282 held-out points with adaptive `dopri5` and `1e-7` tolerances.
+  It improves on uniform +2.531 but does not match the paper's five-run mean
+  −1.86 ± 0.11. Training budget and recipe differ.
 - MACE: epoch-360 best-validation EMA checkpoint from seed 123, after 367 epochs.
   Results remain above the paper's three-seed means. Additional seeds and an
   energy-calibration check on the dihedral set remain experimental next steps.
