@@ -156,6 +156,17 @@ seed 123's epoch-360 best-validation EMA checkpoint, configuration, checkpoint
 hash, and full-precision metrics. The root README summarizes those measured
 results; the table below lists the published comparison targets.
 
+| Test set | This run: energy RMSE (meV) | Paper | This run: force RMSE (meV/angstrom) | Paper |
+|---|---:|---:|---:|---:|
+| 300 K | 3.99 | 3.0 | 11.56 | 8.8 |
+| 600 K | 13.28 | 9.7 | 28.96 | 21.8 |
+| 1200 K | 44.51 | 29.8 | 96.01 | 62.0 |
+| Dihedral slices | 17.57 | 7.8 | 21.15 | 16.5 |
+
+This run is `20261009-125019`, seed 123, using epoch 360's best-validation EMA
+checkpoint after training completed 367 epochs. The paper columns are
+three-seed means; these measurements are not a completed three-seed reproduction.
+
 Report energy RMSE in meV and force-component RMSE in meV/angstrom. Run three
 seeds and compare each three-seed mean with the published mean:
 

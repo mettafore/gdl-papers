@@ -146,6 +146,27 @@ Evaluation accepts `--run`, `--batch-size` (default 64), `--device` (default
 CPU), `--rtol` and `--atol` (both default `1e-7`), `--data-path`, and
 `--runs-base`.
 
+## Results
+
+| Fire test NLL (lower is better) | Value |
+|---|---:|
+| Uniform-sphere baseline | +2.531 |
+| Reported reproduction | −0.700 |
+| Paper, five-run mean and variation | −1.86 ± 0.11 |
+
+The reported reproduction improves on the uniform baseline but does not match
+the paper. It is an existing result, not a fresh evaluation of the current
+geometry changes. A standalone evaluation record is not yet tracked here.
+
+![Observed Fire locations and generated samples](results/fire-comparison.png)
+
+The saved plot comes from run `20260818-103835`, seed 42. It compares all 12,809
+observed locations with 2,000 generated samples as a qualitative visualization;
+the observed panel includes training points. The run configuration records
+5,000 epochs, width 2,048, 10 hidden layers, batch size 8,192, learning rate
+0.0005, and weight decay 0.01. The historical configuration does not record a
+Git revision. The plot alone does not establish the NLL above.
+
 ## Completion
 
 The three-day Fire experiment is complete when one reproducible run generates

@@ -31,6 +31,7 @@ papers/15-MACE/AGENTS.md
 # Keeps clones small: code + notes live in git, PDFs/arXiv sources live on disk.
 papers/**/*.pdf
 papers/**/*.png
+!papers/14-RFM/results/fire-comparison.png
 papers/*/arXiv-*/
 
 # ML run artifacts (per-run folders, checkpoints)
