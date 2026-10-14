@@ -52,3 +52,7 @@ runs/
 
 # Archives (keep extracted, not tarballs)
 *.tar.gz
+
+# Private working documents
+papers/01-EGNN/blog.md
+papers/15-MACE/author-code-audit.md

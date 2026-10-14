@@ -284,8 +284,7 @@ reload and deterministic resume. This is reference-code verification, not the
 three-seed benchmark. Implementation version metadata does not reject earlier
 checkpoints; configuration and weight-loading compatibility checks still apply.
 The review retained sender linear, author radial ordering, and normalized SiLU.
-Training and evaluation set float64 at startup. No paid training was launched. See the
-[audit report](../papers/15-MACE/author-code-audit.md) for scope and evidence.
+Training and evaluation set float64 at startup. No paid training was launched.
 
 **Interim holdout evaluation (2026-10-18):** run `20261009-125019`, seed 123,
 best EMA epoch 30 of the 500-epoch target. All 12,993 holdout configurations

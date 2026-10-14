@@ -980,7 +980,7 @@ CouplingRoute(input_ells=(1, 1, 1), output_ell=1, intermediate_ells=(2,))
 ## References
 
 - **Local code:** [data.py](src/data.py), [model.py](src/model.py), [train.py](src/train.py), [evaluate.py](src/evaluate.py).
-- **Practice and experiments:** [EDA_practice.ipynb](EDA_practice.ipynb), [experiment notes](notes.md), [author-code audit](author-code-audit.md).
+- **Practice and experiments:** [EDA_practice.ipynb](EDA_practice.ipynb), [experiment notes](notes.md).
 - **Paper:** [MACE architecture, Section 4](https://arxiv.org/html/2206.07697v2#S4), [training settings, Appendix A.5.1](https://arxiv.org/html/2206.07697v2#A1.SS5.SSS1).
 - **Pinned author source:** [coupling helper](https://github.com/ACEsuit/mace/blob/b3e3b2c6c9ac89dbc375905740e15e1e5b1ad721/mace/tools/cg.py).
 - **ASE:** [overview](https://ase-lib.org/), [Atoms object](https://docs.ase-lib.org/ase/atoms.html), [reading files](https://docs.ase-lib.org/ase/io/io.html), [extended XYZ](https://docs.ase-lib.org/ase/io/formatoptions.html#extxyz).

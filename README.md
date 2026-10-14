@@ -50,9 +50,9 @@ and comparison limits are listed after the tables.
 
 | Paper | Code | Explanation |
 |---|---|---|
-| EGNN | [Model](papers/01-EGNN/src/model.py) | [Walkthrough](papers/01-EGNN/learning-notes.md), [write-up](papers/01-EGNN/blog.md) |
+| EGNN | [Model](papers/01-EGNN/src/model.py) | [Walkthrough](papers/01-EGNN/learning-notes.md) |
 | RFM | [Geometry](papers/14-RFM/src/geometry.py), [model](papers/14-RFM/src/model.py) | [Walkthrough](papers/14-RFM/learning-notes.md) |
-| MACE | [Model](papers/15-MACE/src/model.py) | [Walkthrough](papers/15-MACE/learning-notes.md), [author-code audit](papers/15-MACE/author-code-audit.md) |
+| MACE | [Model](papers/15-MACE/src/model.py) | [Walkthrough](papers/15-MACE/learning-notes.md) |
 
 Each paper README documents its data, commands, and configuration. Papers stay
 independent; `src/gdl/` contains only shared run, checkpoint, logging, and metric
