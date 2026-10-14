@@ -44,7 +44,7 @@ and comparison limits are listed after the tables.
 - MACE: one seed, trained for 367 of 500 planned epochs due to compute limits.
   Results use the best-validation EMA checkpoint at epoch 360. Errors are higher
   than the paper's three-run averages; next steps are learning-curve analysis and
-  additional seeds. More training or tuning may help, but improvement is unproven.
+  additional seeds.
 
 ## Explore the implementations
 
