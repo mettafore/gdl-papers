@@ -7,8 +7,9 @@ change its energy, and relabeling its atoms does not make it a different molecul
 A model should preserve these relationships—for example, predicted energy stays
 unchanged under rotation, while predicted forces rotate with the molecule.
 
-I studied 16 papers and foundational texts in this field and selected three for
-deeper study and implementation: **EGNN, Riemannian Flow Matching, and MACE**.
+I studied 16 papers and foundational texts alongside Timothy Nguyen's
+differential geometry lectures, and selected three papers for deeper study and
+implementation: **EGNN, Riemannian Flow Matching, and MACE**.
 Together, they explore three uses of geometry: predicting properties, generating
 data on curved spaces, and modeling atomic interactions.
 
@@ -76,18 +77,19 @@ Each paper README documents its data, commands, and configuration. Papers stay
 independent; `src/gdl/` contains only shared run, checkpoint, logging, and metric
 helpers. [Progress](docs/progress.md) records experiments and remaining work.
 
-## Papers studied
+## Papers and lectures studied
 
 My study covered mathematical foundations, molecular graph networks, equivariant
 architectures, and generative modelling. I worked through the mechanisms and
-mathematics of the papers below, then selected **EGNN, Riemannian Flow Matching,
+mathematics of the resources below, then selected **EGNN, Riemannian Flow Matching,
 and MACE** for implementation and evaluation. The results and their experimental
 scope are documented above.
 
-| Paper | Main ideas studied | Work completed |
+| Paper or lecture series | Main ideas studied | Work completed |
 |---|---|---|
 | [Mathematical Foundations of Geometric Deep Learning — Borde & Bronstein](https://arxiv.org/abs/2508.02723) | Vector calculus, topology, differential geometry, functional analysis, spectral theory and graph theory | Studied twice; notes and Anki |
 | [Geometric Deep Learning: Grids, Groups, Graphs, Geodesics, and Gauges — Bronstein et al.](https://arxiv.org/abs/2104.13478) | Symmetry, invariance, equivariance and a geometric blueprint for neural architectures | Studied twice; notes and Anki |
+| [Differential Geometry Lectures 1–5 — Timothy Nguyen (YouTube)](https://www.youtube.com/playlist?list=PL0uWtVBhzF5Arw8NfB7-1jG-mfVClb8sH) | Gauge theory, parallel transport, tangent/cotangent vectors, exterior algebra, differential forms and Stokes' theorem | Watched lectures 1–5; study notes |
 | [Hitchhiker's Guide to Geometric GNNs](https://arxiv.org/abs/2312.07511) | Geometric representations and the equivariant GNN landscape | Studied |
 | [Neural Message Passing for Quantum Chemistry (MPNN)](https://arxiv.org/abs/1704.01212) | Message passing for molecular property prediction | Studied |
 | [SchNet](https://arxiv.org/abs/1706.08566) | Continuous filters based on interatomic distances | Studied |
