@@ -6,6 +6,12 @@ EGNN reaches 48.50 meV on one QM9 target; RFM achieves test NLL −0.7004;
 MACE has a measured single-seed benchmark gap. Each paper keeps its own model,
 data pipeline, training, evaluation, and learning notes.
 
+![Observed Fire locations and RFM-generated samples](papers/14-RFM/results/fire-comparison.png)
+
+RFM run `20260818-103835`: all 12,809 observed Fire locations alongside 2,000
+generated samples. This saved-run visualization illustrates the learned spatial
+distribution; it is not a held-out evaluation or a claim of paper-level accuracy.
+
 ## Results
 
 Measured results below use held-out data. Lower is better; experimental scope
@@ -50,12 +56,6 @@ and comparison limits are listed after the tables.
 Each paper README documents its data, commands, and configuration. Papers stay
 independent; `src/gdl/` contains only shared run, checkpoint, logging, and metric
 helpers. [Progress](docs/progress.md) records experiments and remaining work.
-
-![Observed Fire locations and RFM-generated samples](papers/14-RFM/results/fire-comparison.png)
-
-RFM run `20260818-103835`: all 12,809 observed Fire locations alongside 2,000
-generated samples. This saved-run visualization illustrates the learned spatial
-distribution; it is not a held-out evaluation or a claim of paper-level accuracy.
 
 ## Quickstart
 
