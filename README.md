@@ -7,10 +7,10 @@ change its energy, and relabeling its atoms does not make it a different molecul
 A model should preserve these relationships—for example, predicted energy stays
 unchanged under rotation, while predicted forces rotate with the molecule.
 
-I studied 15 papers in this field and selected three for deeper study and
-implementation: **EGNN, Riemannian Flow Matching, and MACE**. Together, they
-explore three uses of geometry: predicting properties, generating data on curved
-spaces, and modeling atomic interactions.
+I studied 16 papers and foundational texts in this field and selected three for
+deeper study and implementation: **EGNN, Riemannian Flow Matching, and MACE**.
+Together, they explore three uses of geometry: predicting properties, generating
+data on curved spaces, and modeling atomic interactions.
 
 - **EGNN** predicts molecular properties using messages between atoms, with
   distances supplying information about molecular geometry.
@@ -75,6 +75,33 @@ and comparison limits are listed after the tables.
 Each paper README documents its data, commands, and configuration. Papers stay
 independent; `src/gdl/` contains only shared run, checkpoint, logging, and metric
 helpers. [Progress](docs/progress.md) records experiments and remaining work.
+
+## Papers studied
+
+My study covered mathematical foundations, molecular graph networks, equivariant
+architectures, and generative modelling. I worked through the mechanisms and
+mathematics of the papers below, then selected **EGNN, Riemannian Flow Matching,
+and MACE** for implementation and evaluation. The results and their experimental
+scope are documented above.
+
+| Paper | Main ideas studied | Work completed |
+|---|---|---|
+| [Mathematical Foundations of Geometric Deep Learning — Borde & Bronstein](https://arxiv.org/abs/2508.02723) | Vector calculus, topology, differential geometry, functional analysis, spectral theory and graph theory | Studied twice; notes and Anki |
+| [Geometric Deep Learning: Grids, Groups, Graphs, Geodesics, and Gauges — Bronstein et al.](https://arxiv.org/abs/2104.13478) | Symmetry, invariance, equivariance and a geometric blueprint for neural architectures | Studied twice; notes and Anki |
+| [Hitchhiker's Guide to Geometric GNNs](https://arxiv.org/abs/2312.07511) | Geometric representations and the equivariant GNN landscape | Studied |
+| [Neural Message Passing for Quantum Chemistry (MPNN)](https://arxiv.org/abs/1704.01212) | Message passing for molecular property prediction | Studied |
+| [SchNet](https://arxiv.org/abs/1706.08566) | Continuous filters based on interatomic distances | Studied |
+| [Tensor Field Networks (TFN)](https://arxiv.org/abs/1802.08219) | Spherical harmonics and equivariant tensor features | Studied |
+| [SE(3)-Transformer](https://arxiv.org/abs/2006.10503) | Equivariant attention | Studied |
+| [Equiformer](https://arxiv.org/abs/2206.11990) | Transformers built from equivariant operations | Studied |
+| [NequIP](https://arxiv.org/abs/2101.03164) | Equivariant message passing for interatomic potentials | Studied |
+| [**E(n)-Equivariant Graph Neural Networks (EGNN)**](https://arxiv.org/abs/2102.09844) | Equivariance through distances and coordinate updates | **Implemented and evaluated on QM9**; [walkthrough](papers/01-EGNN/learning-notes.md) |
+| [Denoising Diffusion Probabilistic Models (DDPM)](https://arxiv.org/abs/2006.11239) | Denoising objectives and diffusion sampling | Studied |
+| [Score-Based Generative Modeling through SDEs](https://arxiv.org/abs/2011.13456) | Score matching, reverse-time SDEs, and probability-flow ODEs | Studied |
+| [Flow Matching](https://arxiv.org/abs/2210.02747) | Learning vector fields through conditional probability paths | Studied |
+| [ManifoldFormer](https://arxiv.org/abs/2511.16828) | Riemannian representations and geodesic attention for EEG | Studied |
+| [**Riemannian Flow Matching**](https://arxiv.org/abs/2302.03660) | Flow matching on manifolds and premetric-based paths | **Implemented and evaluated on spherical Fire data**; [walkthrough](papers/14-RFM/learning-notes.md) |
+| [**MACE**](https://arxiv.org/abs/2206.07697) | Higher-order equivariant interactions for molecular energies and forces | **Implemented and evaluated on 3BPA; three-seed benchmark incomplete**; [walkthrough](papers/15-MACE/learning-notes.md) |
 
 ## Quickstart
 
