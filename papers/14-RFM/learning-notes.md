@@ -1,8 +1,34 @@
 # RFM learning notes
 
+## Quick recall
+
+- **Data:** latitude/longitude → unit-sphere points `(n,3)`; seeded train/validation/test split.
+- **Base:** uniform samples on S²; noise and data endpoints define a shortest geodesic.
+- **Training position:** `xt = Exp_x0(t Log_x0(x1))`; construct directly without an ODE solve.
+- **Target:** Eq. 13 gives the conditional velocity; on the sphere it simplifies to `Log_xt(x1)/(1-t)`.
+- **Model:** position + time → ambient MLP velocity → tangent projection.
+- **Loss:** mean squared tangent-velocity error; validation uses the same regression objective.
+- **Generation:** integrate the learned field forward from uniform noise.
+- **Density evaluation:** integrate held-out points backward with exact Jacobian traces; numerical ODE accuracy depends on tolerances.
+- **Signs:** `NLL = log(4*pi) + mean(correction)`; uniform NLL is +2.531 and lower is better.
+- **Evidence:** saved checkpoint NLL −0.7004; the local MLP and training recipe differ from the authors' benchmark.
+
+## Revision navigation
+
+| Section | Recall |
+|---|---|
+| [Data conversion](#datapy--cartesian-points-to-latitudelongitude) | Coordinates, units, and shapes |
+| [Sphere geometry](#geometrypy--sampling-points-on-the-sphere) | Sampling, exp/log maps, and distance gradients |
+| [FM refresher](#flow-matching-refresher--connecting-the-geometry-to-training) | Conditional clouds and gradient equivalence |
+| [RFM equations](#rfm-equations--from-transported-density-to-a-conditional-velocity) | Distance schedule and Eq. 13 derivation |
+| [Model](#modelpy--time-conditioned-tangent-velocity) | Ambient field and tangent projection |
+| [Training](#trainpy--connecting-the-pieces) | Velocity targets, loss, and validation |
+| [Evaluation](#evaluatepy--sampling-and-held-out-density) | Integration, divergence, and NLL signs |
+| [Measured result](#saved-checkpoint-evaluation--13-october-2026) | Saved evaluation evidence and limitations |
+
 ## `data.py` — Cartesian points to latitude/longitude
 
-Code: [`cartesian_to_latlon_degrees`](src/data.py), lines 10–29.
+Code: [`cartesian_to_latlon_degrees`](src/data.py).
 
 We start with a tensor of shape `(n, 3)`. Each row contains the Cartesian coordinates `x`, `y`, and `z` of one point.
 
@@ -40,7 +66,7 @@ Latitude and longitude each have shape `(n,)`. We stack them along `dim=1`, givi
 
 ## `data.py` — Latitude/longitude to Cartesian points
 
-Code: [`latlon_degrees_to_cartesian`](src/data.py), lines 32–55.
+Code: [`latlon_degrees_to_cartesian`](src/data.py).
 
 Our input contains latitude and longitude, with shape `(n, 2)`. We raise an error if the tensor does not have two dimensions or its second dimension does not have size 2. Latitude must lie between −90 and +90 degrees, and longitude between −180 and +180 degrees, including the endpoints. I initially missed the minus sign on the lower latitude bound.
 
@@ -68,7 +94,7 @@ Then we get `x = r cos(theta)` and `y = r sin(theta)`. We reshape the cosine and
 
 ## `data.py` — Loading the Fire CSV
 
-Code: [`load_fire_csv`](src/data.py), lines 58–62.
+Code: [`load_fire_csv`](src/data.py).
 
 We first read the CSV into a pandas DataFrame with shape `(n, 2)`, since each row contains latitude and longitude in degrees. Then `torch.tensor(data.values)` converts the DataFrame's values into a tensor, still with shape `(n, 2)`.
 
@@ -78,7 +104,7 @@ The full path is: DataFrame `(n, 2)` → latitude/longitude tensor `(n, 2)` → 
 
 ## `data.py` — Splitting points into train, validation, and test sets
 
-Code: [`split_points`](src/data.py), lines 65–99.
+Code: [`split_points`](src/data.py).
 
 This function takes our Cartesian points tensor of shape `(n, 3)` and splits it into train, validation, and test sets. We supply a seed for reproducible shuffling and percentages for the three sets, defaulting to 80%, 10%, and 10%.
 
@@ -94,7 +120,7 @@ Finally, we return all three sets: train, validation, and test. I initially said
 
 ## `geometry.py` — Sampling points on the sphere
 
-Code: [`sample_sphere`](src/geometry.py), lines 27–43.
+Code: [`sample_sphere`](src/geometry.py).
 
 The input `n` is not a collection of points; it is the number of points we want to sample. The optional `device` selects where the tensors are created. If `n` is less than or equal to zero, we raise a `ValueError`.
 
@@ -108,7 +134,7 @@ Then we get `x = r cos(theta)` and `y = r sin(theta)`. Each coordinate has shape
 
 ## `geometry.py` — Exponential map: a reoriented circle
 
-Code: [`exp_map`](src/geometry.py), lines 46–58.
+Code: [`exp_map`](src/geometry.py).
 
 We start with a point `x` on the unit sphere and a vector `v` tangent to the sphere at `x`. Both have shape `(n, 3)`. I initially said `v` was tangent to itself; it is tangent to the sphere at the starting point.
 
@@ -140,7 +166,7 @@ The key realization: **we just reoriented the circle**. The projection I remembe
 
 ## `geometry.py` — Logarithm map: recovering direction and distance
 
-Code: [`log_map`](src/geometry.py), lines 61–79.
+Code: [`log_map`](src/geometry.py).
 
 The inputs are two points on the unit sphere, `x` and `y`, each with shape `(n, 3)`. We want the tangent vector at `x` that takes us to `y` along the shortest great-circle arc. I initially called its magnitude a radius; the sphere's radius stays 1. What we need is a direction and an arc length. This reverses the exponential map: `Exp_x(Log_x(y)) = y` for distinct, non-antipodal points.
 
@@ -188,11 +214,16 @@ $$
 
 `theta` has shape `(n, 1)` and broadcasts over the `(n, 3)` unit tangent directions. The returned vector has shape `(n, 3)`. Its direction leads toward `y`, and its magnitude is the spherical distance from `x` to `y`.
 
-This derivation assumes distinct, non-antipodal points. At identical points the log vector is zero; at antipodal points there is no unique shortest direction, so the normalized perpendicular-component formula does not specify one.
+This derivation assumes distinct, non-antipodal points. The current code handles the exceptional cases explicitly:
+
+- **Coincidence:** project `y-x` into the tangent plane and return that zero vector, preserving its tangent derivative.
+- **Normalization:** use `F.normalize` with dtype-specific `tiny`, avoiding the default cutoff for small nonzero vectors. Temporary all-ones rows keep the unused normalization branch finite; they are not returned.
+- **Precision limit:** extremely small norms can still underflow; this does not guarantee accuracy for every representable displacement.
+- **Antipodes:** exact `x == -y` pairs raise `ValueError` because the shortest direction is not unique.
 
 ## `geometry.py` — Premetric distance
 
-Code: [`premetric_d`](src/geometry.py), lines 82–92.
+Code: [`premetric_d`](src/geometry.py).
 
 The premetric returns the angle in radians between each pair of unit-sphere points `x` and `y`. On the unit sphere, this is also their shortest great-circle arc distance.
 
@@ -204,7 +235,7 @@ I initially described this as optimization that moves one point closer to the ot
 
 ## `geometry.py` — Gradient of distance
 
-Code: [`grad_d`](src/geometry.py), lines 95–105.
+Code: [`grad_d`](src/geometry.py).
 
 We first get `v = log_map(x, y)`, the tangent vector at `x` pointing toward `y`. Its length is the arc distance. Then we calculate its norm and divide by that norm to keep only the unit direction:
 
@@ -218,7 +249,7 @@ The negative sign is the important distinction: `log_map` points toward `y`, whe
 
 `v` has shape `(n, 3)` and `v_norm` has shape `(n, 1)`. Division broadcasts across the three coordinates, returning a tangent gradient of shape `(n, 3)` with unit length for generic point pairs.
 
-This formula applies away from coincident and antipodal points, where spherical distance does not have a unique smooth gradient. The current function does not guard those cases; in particular, a zero log vector causes division by zero.
+This formula applies away from coincident and antipodal points, where spherical distance does not have a unique smooth gradient. The current function replaces a zero norm's denominator with 1, returning zero as a finite convention at coincidence. Exact antipodes are rejected by `log_map`; the convention does not make distance differentiable at its singularities.
 
 ## Flow Matching refresher — connecting the geometry to training
 
@@ -354,7 +385,7 @@ Sample noise, a data point, and a time. Construct the intermediate position, fee
 
 The paper's finite endpoint-noise version uses `sigma_min > 0`: the path is `[1-(1-sigma_min)t] x_0 + t x_1` and its velocity target is `x_1-(1-sigma_min)x_0`. Our refresher took the `sigma_min → 0` limit for clarity.
 
-**Where we resume:** return to RFM's `kappa` and `dlog_kappa_dt`, then connect the schedule and sphere geometry in `conditional_vf`. The sphere uses manifold paths rather than the Euclidean straight-line interpolation above.
+**Connection to RFM:** the sphere uses manifold paths rather than Euclidean straight-line interpolation; the schedule and geometry meet in `conditional_vf`.
 
 ## RFM equations — from transported density to a conditional velocity
 
@@ -504,11 +535,9 @@ This is remaining tangent displacement divided by remaining time, for `t < 1`. T
 
 The final connection clicked: **this derived field supplies the target in the RCFM loss**. The network predicts `v_theta(t,x_t)`, and training matches it to `u_t(x_t | x_1)` with squared tangent-vector error.
 
-**Next code section:** `geometry.py` lines 108–143: `kappa`, `dlog_kappa_dt`, and `conditional_vf`. Explain each factor using the derivation above before continuing to `geodesic_path`.
-
 ## `geometry.py` — Schedule functions in code
 
-Code: [`kappa` and `dlog_kappa_dt`](src/geometry.py), lines 108–123.
+Code: [`kappa` and `dlog_kappa_dt`](src/geometry.py).
 
 Each point in the current batch has a sampled time, so `t` has shape `(n,)`. I initially connected its length to the whole training set; it actually matches the current batch. `kappa` itself checks only that the tensor is one-dimensional, finite, and within `[0, 1]`. It returns `1 - t`, with the same shape: the fraction of initial distance remaining.
 
@@ -518,7 +547,7 @@ I asked why `kappa` does not also exclude 1, since its value underlies the logar
 
 ## `geometry.py` — Conditional velocity in code
 
-Code: [`conditional_vf`](src/geometry.py), lines 126–141.
+Code: [`conditional_vf`](src/geometry.py).
 
 We pass the current sphere points `x` and endpoints `x1`, both `(n, 3)`, and times `t`, shape `(n,)`. We check the point pair, then check that times are one-dimensional, match the batch size, are finite, and fall within `[0, 1)`.
 
@@ -531,13 +560,15 @@ Then we get the logarithmic schedule derivative, the premetric distance, and its
 | `grad` | tangent gradient of distance | `(n, 3)` |
 | `grad_norm_sq` | squared gradient norm | `(n, 1)` |
 
-The scalar factors broadcast across each row's three coordinates. The returned conditional target velocity has shape `(n, 3)`. The reciprocal in the return line implements division by the squared gradient norm.
+The scalar factors broadcast across each row's three coordinates. The returned conditional target velocity has shape `(n, 3)`. Division by the guarded denominator implements division by the squared gradient norm for nonzero gradients.
+
+- **Zero-gradient branch:** use denominator 1 to keep the generic calculation finite, then select `-logk_deriv * log_map(x,x1)` as the continuous spherical limit. At coincidence its value is zero while retaining the tangent derivative.
 
 On rereading the helpers, I recalled that `premetric_d` is the angle distance and `log_map` points toward the target with that distance as its length. For `grad_d`, I said “the gradient goes toward the maximum.” More precisely, it points toward the steepest **local increase**, not necessarily toward a maximum. That is why `grad_d` negates the unit log-map direction.
 
 ## `geometry.py` — Constructing the geodesic training position
 
-Code: [`geodesic_path`](src/geometry.py), lines 144–156.
+Code: [`geodesic_path`](src/geometry.py).
 
 We validate matching point batches `(n, 3)` and finite times `(n,)` in `[0, 1]`. Both endpoints are valid here, unlike the conditional velocity formula's domain.
 
@@ -565,11 +596,9 @@ x0, x1, t
 
 `xt` is a position; `d(xt,x1)` is its distance to the target, used inside the conditional velocity calculation. Seeing this flow in the training loop should make the roles concrete.
 
-**Geometry walkthrough complete. Next:** `model.py`, starting with the construction of `TimeConditionedVectorField` before its forward pass.
-
 ## `model.py` — Time-conditioned tangent velocity
 
-Code: [`TimeConditionedVectorField`](src/model.py), lines 8–61.
+Code: [`TimeConditionedVectorField`](src/model.py).
 
 ### Construction
 
@@ -608,8 +637,6 @@ For 5 points, `x` has shape `(5, 3)` and reshaped time has shape `(5, 1)`. Conca
 ```
 
 SiLU preserves shape. The final output is the learned tangent velocity, ready to compare against the conditional target. This completed the model walkthrough.
-
-**Next:** `loss.py`, the RCFM squared-vector regression objective.
 
 ## `loss.py` — RCFM regression
 
@@ -672,8 +699,6 @@ The assertions check that both loss lists have one entry per epoch. They do not 
 
 Finally, `TrainingResult` returns the model, device, tuples of train and validation losses, epoch count, and seed. This completed the training walkthrough.
 
-**Next:** `evaluate.py` — generated samples and held-out exact NLL.
-
 ## `evaluate.py` — Sampling and held-out density
 
 ### Why evaluation is separate from training validation
@@ -732,7 +757,7 @@ $$
 
 `vmap` applies the single-point calculation over the batch, returning `(n,)`. These derivatives are with respect to spatial input, not model parameters. The normalized-input, tangent-projected field is the ambient extension used here to compute sphere divergence, following the paper's vector-field parameterization.
 
-I identified `div_fn` as redundant; a repository search found no callers. At my request it was removed. The actual evaluation path uses the Jacobian trace inside `divergence`. The removal passed all 17 evaluation tests, Ruff, and mypy; its scoped commit was blocked by the unrelated MACE Ruff hook.
+The evaluation path uses the Jacobian trace inside `divergence`; the unused `div_fn` helper was removed.
 
 ### Adaptive backward solver and returned trajectory
 
@@ -767,11 +792,9 @@ I initially asked whether `-log(4 pi)` was the best possible value. It is the un
 
 NLL may be negative because density can exceed 1; probabilities integrated over regions, not pointwise densities, must lie between 0 and 1. We report this NLL in evaluation; training used velocity regression instead.
 
-**Where we resume:** `evaluate_run` — saved configuration and checkpoint loading, reconstructing the held-out split, and weighting batch NLLs into the final score. This setup section has not yet been walked through fully.
-
 ### Saved-run evaluation setup
 
-Code: [`evaluate_run`](src/evaluate.py), lines 219–298.
+Code: [`evaluate_run`](src/evaluate.py).
 
 We validate the batch size and resolve the requested device. Then we load the configuration of the run we want to test and check that its metric is `nll`. We construct a fresh model with the saved hidden dimension and layer count, load the checkpoint weights into it, move it to the device, and set evaluation mode.
 
@@ -783,7 +806,7 @@ My explanation of the scoring loop: initialize a weighted-NLL accumulator, take 
 
 ### Evaluation CLI
 
-Code: [`main`](src/evaluate.py), lines 301–326.
+Code: [`main`](src/evaluate.py).
 
 We parse the run ID, runs base, optional data path, batch size, device, and relative/absolute solver tolerances. We pass those arguments into `evaluate_run`, then print the returned metric name and score to four decimal places. The `__main__` guard calls this entry point when the script is run by path.
 

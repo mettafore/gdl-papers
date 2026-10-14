@@ -127,7 +127,7 @@ flowchart TD
 
 ## Data pipeline
 
-- **Source:** [data.py](src/data.py); practice in [EDA_practice.ipynb](EDA_practice.ipynb).
+- **Source:** [data.py](src/data.py); practice in [EDA_practice.ipynb](notebooks/EDA_practice.ipynb).
 
 ```mermaid
 flowchart LR
@@ -279,7 +279,7 @@ forces = frame.get_forces()
 
 ### Differentiable edge geometry
 
-- **`edge_vectors_and_lengths`:** transpose `(2,E)` edges to `(E,2)` and visit each sender/receiver pair.
+- **`edge_vectors_and_lengths`:** gather receiver and sender positions using the two `(E,)` index rows, then subtract them in one tensor operation.
 - **Direction:** destination minus origin points from sender to receiver.
 
 $$
@@ -293,7 +293,7 @@ $$
 | `edge_vectors_tensor` | `(E,3)` | Displacement `(3,0,0)` |
 | `edge_distances_tensor` | `(E,1)` | Length 3 |
 
-- **Assembly:** stack vector tensors; stack scalar distances to `(E,)`, then reshape to `(E,1)`.
+- **Assembly:** indexed subtraction produces `(E,3)`; `vector_norm(..., dim=-1, keepdim=True)` produces `(E,1)`, including correctly shaped empty outputs when there are no edges.
 - **Return order:** vectors first, distances second.
 - **Force requirement:** live geometry preserves the differentiation path from energy back to positions.
 
@@ -980,7 +980,7 @@ CouplingRoute(input_ells=(1, 1, 1), output_ell=1, intermediate_ells=(2,))
 ## References
 
 - **Local code:** [data.py](src/data.py), [model.py](src/model.py), [train.py](src/train.py), [evaluate.py](src/evaluate.py).
-- **Practice and experiments:** [EDA_practice.ipynb](EDA_practice.ipynb), [experiment notes](notes.md).
+- **Practice and experiments:** [EDA_practice.ipynb](notebooks/EDA_practice.ipynb), [experiment notes](notes.md).
 - **Paper:** [MACE architecture, Section 4](https://arxiv.org/html/2206.07697v2#S4), [training settings, Appendix A.5.1](https://arxiv.org/html/2206.07697v2#A1.SS5.SSS1).
 - **Pinned author source:** [coupling helper](https://github.com/ACEsuit/mace/blob/b3e3b2c6c9ac89dbc375905740e15e1e5b1ad721/mace/tools/cg.py).
 - **ASE:** [overview](https://ase-lib.org/), [Atoms object](https://docs.ase-lib.org/ase/atoms.html), [reading files](https://docs.ase-lib.org/ase/io/io.html), [extended XYZ](https://docs.ase-lib.org/ase/io/formatoptions.html#extxyz).

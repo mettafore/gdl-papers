@@ -1,5 +1,26 @@
 # EGNN learning notes
 
+## Quick recall
+
+- **Input:** 15 charge-power features per atom; complete directed edges within each molecule.
+- **Geometry:** squared distances enter edge messages; this QM9 path keeps coordinates fixed.
+- **Layer:** endpoint features + distance → edge message → optional scalar gate → receiver sum → residual node update.
+- **Readout:** node decoder → sum atoms by molecule → graph decoder → one scalar per molecule.
+- **Shapes:** eight atoms in two molecules: `(8,15) → (8,128) → (2,128) → (2,1)`.
+- **Training:** normalize targets with training mean/MAD; Adam updates weights; cosine scheduling follows epochs.
+- **Evaluation:** restore target units, average absolute errors across molecules, then convert eV to meV.
+- **Evidence:** one saved checkpoint gives 48.50 meV on `gap`; this is not the full multi-target benchmark.
+
+## Revision navigation
+
+| Section | Recall |
+|---|---|
+| [EGNN class](#egnn-class-notes) | Architecture, pooling, and output shapes |
+| [Data preparation](#data-preparation-before-egcl) | Features, complete edges, and batching |
+| [EGCL class](#egcl-class-notes) | Messages, gates, aggregation, and residuals |
+| [Training](#training-notes) | Normalization, scheduler, and checkpoint selection |
+| [Evaluation](#evaluation-notes) | Saved run, units, and benchmark limits |
+
 ## Overall code structure
 
 - **`data.py`** prepares molecules, graph edges, input features, and prediction targets.
@@ -26,8 +47,8 @@ Constructor inputs:
 
 - **Embedding:** a linear layer mapping `in_node_nf` to `hidden_nf`.
 - **EGCL stack:** `n_layers` EGCL layers, seven by default.
-- **Node decoder:** Linear → activation → Linear, with `hidden_nf` inputs and outputs. What is its role?
-- **Graph decoder:** Linear → activation → Linear, ending with one output for the scalar target. How does its role differ from the node decoder?
+- **Node decoder:** Linear → activation → Linear; transforms each atom's hidden vector before pooling, preserving `hidden_nf`.
+- **Graph decoder:** Linear → activation → Linear; transforms each pooled molecule vector into one scalar target prediction.
 
 ### `forward` inputs
 
@@ -165,7 +186,7 @@ I initially associated this function with equation (4), then recognized that it 
 
 I thought `out` was a scalar. Correction: it is a message vector of width `hidden_nf` for each edge, with shape `(E, hidden_nf)`. If attention is enabled, `att_mlp(out)` produces one scalar gate per edge, shaped `(E, 1)`. Multiplication broadcasts that gate across the components of the corresponding message vector.
 
-My intuition is that the gate represents how seriously to take that edge's message. Sigmoid keeps it between 0 and 1. This is learned message gating, rather than transformer self-attention. I still want to trace how the gated messages affect the node update.
+My intuition is that the gate represents how seriously to take that edge's message. Sigmoid keeps it between 0 and 1. This is learned message gating, rather than transformer self-attention. The gated vectors are summed by receiver before the node MLP updates each node.
 
 Dimension check with `h` shaped `(8, 128)` and 26 edges:
 
