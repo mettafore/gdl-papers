@@ -19,19 +19,19 @@ and comparison limits are listed after the tables.
 
 | Paper | Task | Metric | Paper | This repo |
 |---|---|---|---:|---:|
-| [EGNN](papers/01-EGNN/) | QM9 HOMO–LUMO gap | MAE (meV) | 48 | **48.50** |
+| [EGNN](papers/01-EGNN/) | QM9 HOMO–LUMO gap | MAE (meV) | 48 | **[48.50](papers/01-EGNN/README.md#results)** |
 | [Riemannian Flow Matching](papers/14-RFM/) | Fire locations on S² | Test NLL (uniform-sphere baseline: +2.531) | −1.86 ± 0.11 | **[−0.7004](papers/14-RFM/results/local-evaluation-20261013.json)** |
-| [MACE](papers/15-MACE/) | 3BPA, 300 K | Energy RMSE (meV) | 3.0 | **3.99** |
-| | | Force RMSE (meV/Å) | 8.8 | **11.56** |
+| [MACE](papers/15-MACE/) | 3BPA, 300 K | Energy RMSE (meV) | 3.0 | **[3.99](papers/15-MACE/results/holdout-seed123-epoch360.json)** |
+| | | Force RMSE (meV/Å) | 8.8 | **[11.56](papers/15-MACE/results/holdout-seed123-epoch360.json)** |
 
 **MACE, all 3BPA test sets** (epoch-360 checkpoint, single seed; paper values are three-seed means):
 
 | Test set | Energy RMSE (meV) | Paper | Force RMSE (meV/Å) | Paper |
 |---|---:|---:|---:|---:|
-| 300 K | 3.99 | 3.0 | 11.56 | 8.8 |
-| 600 K | 13.28 | 9.7 | 28.96 | 21.8 |
-| 1200 K | 44.51 | 29.8 | 96.01 | 62.0 |
-| Dihedral slices | 17.57 | 7.8 | 21.15 | 16.5 |
+| 300 K | [3.99](papers/15-MACE/results/holdout-seed123-epoch360.json) | 3.0 | [11.56](papers/15-MACE/results/holdout-seed123-epoch360.json) | 8.8 |
+| 600 K | [13.28](papers/15-MACE/results/holdout-seed123-epoch360.json) | 9.7 | [28.96](papers/15-MACE/results/holdout-seed123-epoch360.json) | 21.8 |
+| 1200 K | [44.51](papers/15-MACE/results/holdout-seed123-epoch360.json) | 29.8 | [96.01](papers/15-MACE/results/holdout-seed123-epoch360.json) | 62.0 |
+| Dihedral slices | [17.57](papers/15-MACE/results/holdout-seed123-epoch360.json) | 7.8 | [21.15](papers/15-MACE/results/holdout-seed123-epoch360.json) | 16.5 |
 
 ## Scope and limitations
 

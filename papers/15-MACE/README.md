@@ -158,10 +158,10 @@ results; the table below lists the published comparison targets.
 
 | Test set | This run: energy RMSE (meV) | Paper | This run: force RMSE (meV/angstrom) | Paper |
 |---|---:|---:|---:|---:|
-| 300 K | 3.99 | 3.0 | 11.56 | 8.8 |
-| 600 K | 13.28 | 9.7 | 28.96 | 21.8 |
-| 1200 K | 44.51 | 29.8 | 96.01 | 62.0 |
-| Dihedral slices | 17.57 | 7.8 | 21.15 | 16.5 |
+| 300 K | [3.99](results/holdout-seed123-epoch360.json) | 3.0 | [11.56](results/holdout-seed123-epoch360.json) | 8.8 |
+| 600 K | [13.28](results/holdout-seed123-epoch360.json) | 9.7 | [28.96](results/holdout-seed123-epoch360.json) | 21.8 |
+| 1200 K | [44.51](results/holdout-seed123-epoch360.json) | 29.8 | [96.01](results/holdout-seed123-epoch360.json) | 62.0 |
+| Dihedral slices | [17.57](results/holdout-seed123-epoch360.json) | 7.8 | [21.15](results/holdout-seed123-epoch360.json) | 16.5 |
 
 This run is `20261009-125019`, seed 123, using epoch 360's best-validation EMA
 checkpoint after training completed 367 epochs. The paper columns are

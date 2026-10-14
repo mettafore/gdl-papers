@@ -151,7 +151,7 @@ CPU), `--rtol` and `--atol` (both default `1e-7`), `--data-path`, and
 | Fire test NLL (lower is better) | Value |
 |---|---:|
 | Uniform-sphere baseline | +2.531 |
-| Locally confirmed reproduction | −0.7004 |
+| Locally confirmed reproduction | [−0.7004](results/local-evaluation-20261013.json) |
 | Paper, five-run mean and variation | −1.86 ± 0.11 |
 
 The local evaluation on 2026-10-13 confirms NLL −0.7004 on all 1,282 held-out
