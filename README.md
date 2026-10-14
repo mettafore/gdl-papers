@@ -87,8 +87,8 @@ scope are documented above.
 
 | Paper or lecture series | Main ideas studied | Work completed |
 |---|---|---|
-| [Mathematical Foundations of Geometric Deep Learning — Borde & Bronstein](https://arxiv.org/abs/2508.02723) | Vector calculus, topology, differential geometry, functional analysis, spectral theory and graph theory | Studied twice; notes and Anki |
-| [Geometric Deep Learning: Grids, Groups, Graphs, Geodesics, and Gauges — Bronstein et al.](https://arxiv.org/abs/2104.13478) | Symmetry, invariance, equivariance and a geometric blueprint for neural architectures | Studied twice; notes and Anki |
+| [Mathematical Foundations of Geometric Deep Learning — Borde & Bronstein](https://arxiv.org/abs/2508.02723) | Vector calculus, topology, differential geometry, functional analysis, spectral theory and graph theory | Studied |
+| [Geometric Deep Learning: Grids, Groups, Graphs, Geodesics, and Gauges — Bronstein et al.](https://arxiv.org/abs/2104.13478) | Symmetry, invariance, equivariance and a geometric blueprint for neural architectures | Studied |
 | [Differential Geometry Lectures 1–5 — Timothy Nguyen (YouTube)](https://www.youtube.com/playlist?list=PL0uWtVBhzF5Arw8NfB7-1jG-mfVClb8sH) | Gauge theory, parallel transport, tangent/cotangent vectors, exterior algebra, differential forms and Stokes' theorem | Watched lectures 1–5; study notes |
 | [Hitchhiker's Guide to Geometric GNNs](https://arxiv.org/abs/2312.07511) | Geometric representations and the equivariant GNN landscape | Studied |
 | [Neural Message Passing for Quantum Chemistry (MPNN)](https://arxiv.org/abs/1704.01212) | Message passing for molecular property prediction | Studied |
