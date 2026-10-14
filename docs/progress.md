@@ -238,8 +238,10 @@ but Modal refused the T4 request because the account has no payment method; no
 CUDA training ran. Retry after billing is enabled, before the full three-seed
 benchmark. MPS is excluded because this reproduction uses float64.
 
-**Next action:** review the recorded single-seed holdout errors before choosing
-further experiments. Paid training is stopped; resume only if the learner
+**Next action:** inspect saved training/validation energy and force curves alongside
+learning rate before choosing further experiments. Additional seeds would measure
+variability; extra training or tuning is not yet established to close the gap.
+Paid training is stopped; resume only if the learner
 requests it with an available compute budget.
 
 **Learning reference (2026-10-12):** reorganized the

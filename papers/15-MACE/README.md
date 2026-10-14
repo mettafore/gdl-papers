@@ -167,6 +167,21 @@ This run is `20261009-125019`, seed 123, using epoch 360's best-validation EMA
 checkpoint after training completed 367 epochs. The paper columns are
 three-seed means; these measurements are not a completed three-seed reproduction.
 
+- **Compute budget:** we nearly exhausted the available compute budget, limiting
+  the experiment to one seed and 367 of the planned 500 epochs, using the
+  configured reproduction hyperparameters.
+- **Unresolved gap:** results remain above the published benchmark. The budget
+  explains the incomplete experiment, but does not establish the cause of the
+  higher errors. Implementation, data processing, and training-protocol
+  differences also remain possible contributors.
+- **Next analysis:** inspect training and validation energy/force errors alongside
+  learning rate to assess convergence, plateaus, or overfitting. Use validation
+  data for tuning and reserve the holdout sets for final evaluation.
+- **Additional seeds:** completing three runs would measure seed variability and
+  provide a comparable mean; averaging runs does not automatically improve each
+  model's accuracy. Further experiments are needed to establish whether extra
+  training or tuning improves the results.
+
 Report energy RMSE in meV and force-component RMSE in meV/angstrom. Run three
 seeds and compare each three-seed mean with the published mean:
 

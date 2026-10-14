@@ -42,8 +42,12 @@ and comparison limits are listed after the tables.
   It improves on uniform +2.531 but does not match the paper's five-run mean
   −1.86 ± 0.11. Training budget and recipe differ.
 - MACE: epoch-360 best-validation EMA checkpoint from seed 123, after 367 epochs.
-  Results remain above the paper's three-seed means. Additional seeds and an
-  energy-calibration check on the dihedral set remain experimental next steps.
+  We nearly exhausted the available compute budget, limiting training to one
+  seed and 367 of the planned 500 epochs, using the configured reproduction
+  hyperparameters. Results remain
+  above the paper's three-seed means. Learning-curve analysis and additional seeds
+  are needed to assess convergence and seed variability; further training or
+  tuning is not yet established to close the gap.
 
 ## Explore the implementations
 
