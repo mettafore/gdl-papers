@@ -1,10 +1,28 @@
 # gdl-papers
 
-PyTorch implementations of geometric deep learning papers for molecular
-prediction, generative modeling on the sphere, and interatomic potentials.
-EGNN reaches 48.50 meV on one QM9 target; RFM achieves test NLL −0.7004;
-MACE has a measured single-seed benchmark gap. Each paper keeps its own model,
-data pipeline, training, evaluation, and learning notes.
+Geometric deep learning builds neural networks that respect the structure and
+symmetries of their data. **Symmetries are transformations that preserve the
+underlying meaning or physics**: rotating or translating a molecule does not
+change its energy, and relabeling its atoms does not make it a different molecule.
+A model should preserve these relationships—for example, predicted energy stays
+unchanged under rotation, while predicted forces rotate with the molecule.
+
+I studied 15 papers in this field and selected three for deeper study and
+implementation: **EGNN, Riemannian Flow Matching, and MACE**. Together, they
+explore three uses of geometry: predicting properties, generating data on curved
+spaces, and modeling atomic interactions.
+
+- **EGNN** predicts molecular properties using messages between atoms, with
+  distances supplying information about molecular geometry.
+- **Riemannian Flow Matching** learns to transport a simple distribution into a
+  data distribution on a curved space, demonstrated here with geographic
+  locations on a sphere.
+- **MACE** combines geometric features through higher-order interactions to
+  predict molecular energies and atomic forces.
+
+This repository connects each paper's equations to a PyTorch implementation,
+with training and evaluation code, tests, learning walkthroughs, and comparisons
+against published results.
 
 ![Observed Fire locations and RFM-generated samples](papers/14-RFM/results/fire-comparison.png)
 
