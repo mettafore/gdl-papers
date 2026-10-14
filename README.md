@@ -41,13 +41,10 @@ and comparison limits are listed after the tables.
   −0.7004 on 1,282 held-out points with adaptive `dopri5` and `1e-7` tolerances.
   It improves on uniform +2.531 but does not match the paper's five-run mean
   −1.86 ± 0.11. Training budget and recipe differ.
-- MACE: epoch-360 best-validation EMA checkpoint from seed 123, after 367 epochs.
-  We nearly exhausted the available compute budget, limiting training to one
-  seed and 367 of the planned 500 epochs, using the configured reproduction
-  hyperparameters. Results remain
-  above the paper's three-seed means. Learning-curve analysis and additional seeds
-  are needed to assess convergence and seed variability; further training or
-  tuning is not yet established to close the gap.
+- MACE: one seed, trained for 367 of 500 planned epochs due to compute limits.
+  Results use the best-validation EMA checkpoint at epoch 360. Errors are higher
+  than the paper's three-run averages; next steps are learning-curve analysis and
+  additional seeds. More training or tuning may help, but improvement is unproven.
 
 ## Explore the implementations
 
