@@ -117,7 +117,6 @@ Built with **Claude Code**.
 - **Rules** → [AGENTS.md](AGENTS.md)
 - **Skills** → `.agents/skills/` — `run-paper` (run train/eval), `gdl-repo-map` (repo map)
 - **MCP** → context7 (live library docs)
-- **Docs** → [docs/spec.md](docs/spec.md) (scope + contracts), [docs/reference-index.md](docs/reference-index.md)
 
 ## Papers
 
