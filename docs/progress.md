@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-10-09 (MACE author-code review complete)
+**Last updated:** 2026-10-18 (MACE seed-123 interim holdout evaluation)
 
 ---
 
@@ -231,8 +231,8 @@ but Modal refused the T4 request because the account has no payment method; no
 CUDA training ran. Retry after billing is enabled, before the full three-seed
 benchmark. MPS is excluded because this reproduction uses float64.
 
-**Next action:** inspect the implementation chunk by chunk, then run the full
-three-seed benchmark and compare all eight RMSE means with Table 2.
+**Next action:** finish seed 123 at 500 epochs, evaluate its best checkpoint on
+all holdout conditions, then decide whether to run the remaining two seeds.
 
 **Author-code audit (2026-10-06):** the model now includes the first interaction's
 sender mixing, A projection, neighbour normalization, and receiver selector.
@@ -249,6 +249,13 @@ checkpoints; configuration and weight-loading compatibility checks still apply.
 The review retained sender linear, author radial ordering, and normalized SiLU.
 Training and evaluation set float64 at startup. No paid training was launched. See the
 [audit report](../papers/15-MACE/author-code-audit.md) for scope and evidence.
+
+**Interim holdout evaluation (2026-10-18):** run `20261009-125019`, seed 123,
+best EMA epoch 30 of the 500-epoch target. All 12,993 holdout configurations
+were evaluated. Energy and force RMSE are above the paper's three-seed means in
+all four conditions; this early, single-seed result does not establish benchmark
+reproduction. See the [experiment notes](../papers/15-MACE/notes.md) for the
+full comparison and artifact path. Training remained active after evaluation.
 
 ---
 
