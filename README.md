@@ -104,6 +104,7 @@ scope are documented above.
 | [ManifoldFormer](https://arxiv.org/abs/2511.16828) | Riemannian representations and geodesic attention for EEG | Studied |
 | [**Riemannian Flow Matching**](https://arxiv.org/abs/2302.03660) | Flow matching on manifolds and premetric-based paths | **Implemented and evaluated on spherical Fire data**; [walkthrough](papers/14-RFM/learning-notes.md) |
 | [**MACE**](https://arxiv.org/abs/2206.07697) | Higher-order equivariant interactions for molecular energies and forces | **Implemented and evaluated on 3BPA; three-seed benchmark incomplete**; [walkthrough](papers/15-MACE/learning-notes.md) |
+| [BLIPs: Bayesian Learned Interatomic Potentials](https://arxiv.org/abs/2508.14022) | Uncertainty quantification for machine-learned interatomic potentials | Currently reading |
 
 ## Quickstart
 
