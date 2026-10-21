@@ -8,12 +8,6 @@ To prepare, I read the [kUPS article](https://medium.com/@CuspAI/kups-a-molecula
 
 Below is how I'd approach the project.
 
-> **TL;DR**
-> - **Problem:** better carbon capture needs better MOFs, and predicting their CO₂ uptake is a GCMC problem: millions of MC moves per isotherm.
-> - **Gap:** classical force fields are fast but miss the chemistry that matters; ML potentials like MACE get much closer to DFT accuracy but are too slow for the GCMC inner loop.
-> - **Aim:** a distilled student that is accurate enough for guest–host interactions, within N× of classical speed.
-> - **Already done:** read kUPS and the BLIPs paper, ran the GCMC example and built a CO₂ isotherm in UiO-66 (appendix).
-
 **Contents**
 
 - [1. The JD](#1-the-jd)
