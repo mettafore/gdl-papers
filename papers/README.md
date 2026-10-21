@@ -15,6 +15,7 @@ git** — run `./papers/fetch-papers.sh` after cloning to download them.
 | `08-EquiFormer/` | EquiFormer (Liao & Smidt, 2022) | [2206.11990](https://arxiv.org/abs/2206.11990) | study |
 | `09-Nequip/` | NequIP (Batzner et al., 2021) | [2101.03164](https://arxiv.org/abs/2101.03164) | study |
 | `10-ManifoldFormer/` | ManifoldFormer | [2511.16828](https://arxiv.org/abs/2511.16828) | breadth |
+| `17-kUPS/` | kUPS — JAX molecular simulation engine (CuspAI, 2026). Study notes and a CO₂ isotherm run, plus a proposal page for an MLFF-distillation internship. [Blog](https://medium.com/@CuspAI/kups-a-molecular-simulation-engine-for-the-ai-era-b213963a2359) · [repo](https://github.com/cusp-ai-oss/kUPS) | — | study |
 
 - Full annotations (authors, why each paper, planned papers not yet in a
   folder) → [`references/papers.md`](../references/papers.md)
