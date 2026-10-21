@@ -8,6 +8,12 @@ To prepare, I read the [kUPS article](https://medium.com/@CuspAI/kups-a-molecula
 
 Below is how I'd approach the project.
 
+> **TL;DR**
+> - **Problem:** we want to use more accurate ML potentials in GCMC simulations to measure CO₂ uptake in MOFs. Classical force fields have very high throughput but miss chemistry that matters, and ML models like MACE are much closer to DFT but too big and slow for GCMC.
+> - **Gap:** a model between the two: fast enough for high-speed GCMC and accurate enough to give usable answers.
+> - **Aim:** a distilled student that is accurate enough for guest–host interactions and only a small factor slower than classical force fields.
+> - **Already done:** read the kUPS article, handbook and BLIPs paper; ran kUPS's GCMC example; built a CO₂ isotherm in UiO-66 (appendix).
+
 **Contents**
 
 - [1. The JD](#1-the-jd)
