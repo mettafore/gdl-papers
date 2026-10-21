@@ -42,6 +42,7 @@ runs/
 
 # Local datasets
 *.csv
+!papers/17-kUPS/isotherm/isotherm.csv
 
 # macOS
 .DS_Store

@@ -145,3 +145,5 @@ Run with kUPS's rigid GCMC app on an M1 laptop (CPU): CO₂ (TraPPE) in RUBTAK =
 | 10 | 11.065 ± 0.051 | 6.649 |
 
 Each point: 1,000 warm-up and 10,000 production cycles. The 5 bar point was rerun with 5,000 warm-up and 20,000 production cycles, and at 10 bar the first 3,000 production cycles were discarded, because those runs were still equilibrating. Errors are block-average standard errors. This is a classical force-field result, not validated against experiment.
+
+**Reproduce:** the [`isotherm/`](isotherm/) folder holds the run config (`template.yaml`), the pressure sweep (`run_isotherm.sh`), the analysis and plotting script (`plot_isotherm.py`) and the results (`isotherm.csv`). Copy them into a folder inside a [kUPS](https://github.com/cusp-ai-oss/kUPS) checkout (commit `3af6439`), next to kUPS's `examples/adsorbate`, `examples/host` and `examples/lennard_jones` folders, then run `./run_isotherm.sh` and `uv run python plot_isotherm.py`. The analysis uses a private kUPS function, so it may need updating for newer kUPS versions.
