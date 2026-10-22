@@ -92,7 +92,7 @@ The student trains on guest–host configurations (guests placed in the MOF pore
 
 ## 10. Evaluation suite
 - **Potential level:** how close the student's energies and forces are to the teacher's (and the teacher's to DFT).
-- **Simulation level:** how accurate the student's GCMC results are (uptake at each pressure), compared with teacher-driven GCMC, counting only differences larger than the Monte Carlo noise.
+- **Simulation level:** how accurate the student's GCMC results are (uptake at each pressure), compared with teacher-driven GCMC (run at only a few pressures), counting only differences larger than the Monte Carlo noise.
 - **Why both:** a small force error can still shift uptake a lot, because uptake depends on energy through e^(−E/kT).
 - **Failure modes:** where the student's error blows up, such as unfamiliar configurations or guest molecules.
 
