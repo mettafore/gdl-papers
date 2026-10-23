@@ -196,6 +196,31 @@ Completion means all eight reproduced means are within 10% of the corresponding
 published mean. This reproduction does not claim the paper's baseline
 comparisons, latency, ablations, or production/foundation-model features.
 
+## Verify
+
+The epoch-360 EMA checkpoint behind the results above is published in the
+[`checkpoints-v1` release](https://github.com/mettafore/gdl-papers/releases/tag/checkpoints-v1). Download it into the run folder that
+`evaluate.py` reads, then evaluate with the 3BPA data from [Data](#data):
+
+```bash
+B=https://github.com/mettafore/gdl-papers/releases/download/checkpoints-v1
+R=papers/15-MACE/runs/20261009-125019
+mkdir -p $R
+curl -L -o $R/checkpoint.pt $B/mace-20261009-125019-checkpoint.pt
+curl -L -o $R/config.json $B/mace-20261009-125019-config.json
+uv run python papers/15-MACE/src/evaluate.py --run 20261009-125019 \
+  --data /path/to/dataset_3BPA
+```
+
+- Expected output: the `rmse_mev` values in the
+  [recorded evaluation](results/holdout-seed123-epoch360.json), e.g. 300 K
+  energy 3.99 meV and force 11.56 meV/angstrom. That evaluation ran in float64
+  on an A100; on CPU it is slow.
+- `checkpoint.pt` SHA-256:
+  `a7424b3908fffa63aac55f5957bc9d4a78b8ff490ee83285d3675b5bd67210cd`, the
+  same hash stored in the evaluation record. The release's `SHA256SUMS` lists
+  every file.
+
 ## Implementation walkthrough
 
 1. Follow `data.py`: extxyz records, split, neighbour edges, and batching.

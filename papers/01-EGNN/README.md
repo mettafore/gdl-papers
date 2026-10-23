@@ -90,3 +90,24 @@ The reported reproduction result uses fully connected graphs, charge-power
 features, attention, and a lower-learning-rate warm start from the best prior
 checkpoint. See [`docs/progress.md`](../../docs/progress.md) for the experiment
 history and planned target sweep.
+
+## Verify
+
+The checkpoint behind the result above is published in the
+[`checkpoints-v1` release](https://github.com/mettafore/gdl-papers/releases/tag/checkpoints-v1). Download it into the run folder that
+`evaluate.py` reads, then evaluate:
+
+```bash
+B=https://github.com/mettafore/gdl-papers/releases/download/checkpoints-v1
+R=papers/01-EGNN/runs/20260716-082300
+mkdir -p $R
+curl -L -o $R/checkpoint.pt $B/egnn-20260716-082300-checkpoint.pt
+curl -L -o $R/config.json $B/egnn-20260716-082300-config.json
+uv run python papers/01-EGNN/src/evaluate.py --run 20260716-082300
+```
+
+- Expected output: `mae (gap, meV, ...): 48.50`, the recorded evaluation in
+  the table above. The first run downloads QM9 to `data/qm9`.
+- `checkpoint.pt` SHA-256:
+  `c80a79a22272dc8f5540710ec86d2d0ed282bdedb0b050cbbebdfb5f661daf72`. The
+  release's `SHA256SUMS` lists every file.

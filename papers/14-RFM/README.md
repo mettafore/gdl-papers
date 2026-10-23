@@ -170,6 +170,30 @@ the observed panel includes training points. The run configuration records
 0.0005, and weight decay 0.01. The historical configuration does not record a
 Git revision. The plot alone does not establish the NLL above.
 
+## Verify
+
+The checkpoint behind the NLL above is published in the
+[`checkpoints-v1` release](https://github.com/mettafore/gdl-papers/releases/tag/checkpoints-v1). Download it into the run folder that
+`evaluate.py` reads, then evaluate with the Fire CSV from [Data](#data):
+
+```bash
+B=https://github.com/mettafore/gdl-papers/releases/download/checkpoints-v1
+R=papers/14-RFM/runs/20260818-103835
+mkdir -p $R
+curl -L -o $R/checkpoint.pt $B/rfm-20260818-103835-checkpoint.pt
+curl -L -o $R/config.json $B/rfm-20260818-103835-config.json
+uv run python papers/14-RFM/src/evaluate.py --run 20260818-103835 \
+  --data-path papers/14-RFM/data/fire.csv
+```
+
+- Expected output: `nll: -0.7004`, from the
+  [recorded evaluation](results/local-evaluation-20261013.json) (CPU, batch
+  size 64, `dopri5` at `1e-7`). Exact NLL is slow and memory intensive.
+- `checkpoint.pt` SHA-256:
+  `d23efd14c32161df6372d060c88734df4535189a28c5373f9367fc182863430b`, the
+  same hash stored in the evaluation record. The release's `SHA256SUMS` lists
+  every file.
+
 ## Completion
 
 The three-day Fire experiment is complete when one reproducible run generates

@@ -35,6 +35,9 @@ distribution; it is not a held-out evaluation or a claim of paper-level accuracy
 
 Measured results below use held-out data. Lower is better; experimental scope
 and comparison limits are listed after the tables.
+The trained checkpoints behind these results are published in the
+[`checkpoints-v1` release](https://github.com/mettafore/gdl-papers/releases/tag/checkpoints-v1) with SHA-256 checksums; each paper
+README's "Verify" section gives the download and evaluation commands.
 
 | Paper | Task | Metric | Paper | This repo |
 |---|---|---|---:|---:|
