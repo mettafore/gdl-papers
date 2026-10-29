@@ -137,7 +137,7 @@ git config core.hooksPath .githooks
 
 It blocks commits that add a file over 1 MB or contain a secret, and commits
 where Ruff formatting and linting, per-paper type checks, or the lightweight test
-suites fail. Dataset-backed tests remain opt-in.
+suites fail. Dataset-backed tests are opt-in: `uv run pytest -m needs_data`.
 
 The secret scan needs [gitleaks](https://github.com/gitleaks/gitleaks) on your
 `PATH` (`brew install gitleaks`); without it the hook warns and skips that step.
