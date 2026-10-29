@@ -190,14 +190,6 @@ Ask `gdl-repo-map` things like "where does shared code go?" or "how do I add a p
 
 ## Automated PR review
 
-- The Claude review workflow is configured for new or updated pull requests;
-  successful live review remains unverified. Comment-triggered reviews require
-  `@claude` on a pull request; ordinary issue comments do not start a review.
-- Configure `CLAUDE_CODE_OAUTH_TOKEN` in GitHub repository secrets using the
-  token produced by `claude setup-token`.
-- The workflow grants the CLI access to PR viewing, diffs, and comments. It
-  reports common authentication, usage-limit, or model-access failures with
-  fixed diagnostic messages. Raw provider responses are not printed.
-- Failed reviews remain failed. Local diagnostic tests do not prove that the
-  configured Claude account can complete a live review. Setup details:
-  [official action documentation](https://github.com/anthropics/claude-code-action/blob/main/docs/setup.md).
+Pull requests can be reviewed by the Claude Code GitHub Action (configured via the
+`CLAUDE_CODE_OAUTH_TOKEN` repository secret; trigger with `@claude` on a PR). Setup:
+[official action documentation](https://github.com/anthropics/claude-code-action/blob/main/docs/setup.md).
