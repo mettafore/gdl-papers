@@ -17,6 +17,7 @@
 .pi/npm/
 # Learning Harness generated files
 *.png
+!results/learning-curve.png
 !*/lessons/**/*.png
 !*/sources/**/*.png
 __pycache__/

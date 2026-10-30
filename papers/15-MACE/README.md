@@ -196,6 +196,10 @@ Completion means all eight reproduced means are within 10% of the corresponding
 published mean. This reproduction does not claim the paper's baseline
 comparisons, latency, ablations, or production/foundation-model features.
 
+![MACE validation loss by epoch](results/learning-curve.png)
+
+Validation loss of seed 123 (log scale). Training stopped at epoch 367 of 500 for compute reasons while the loss was still falling, and the learning rate never decayed from 0.01 because the plateau scheduler did not fire. Regenerate with `uv run python papers/15-MACE/results/plot_learning_curve.py papers/15-MACE/runs/20261009-125019/metrics.jsonl`.
+
 ## Verify
 
 The epoch-360 EMA checkpoint behind the results above is published in the
