@@ -48,6 +48,8 @@ extend-select = ["I", "B", "UP", "SIM", "NPY"]
 extend-immutable-calls = ["torch.nn.SiLU", "model.MACEConfig", "train.TrainConfig"]
 
 [tool.pytest.ini_options]
+# Dataset-backed tests are opt-in: run them with `pytest -m needs_data`.
+addopts = "-m 'not needs_data'"
 markers = [
     "needs_data: needs a real dataset download (QM9 etc.) — deselected in CI with -m 'not needs_data'",
 ]

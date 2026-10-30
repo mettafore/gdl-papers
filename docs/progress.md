@@ -8,7 +8,7 @@ Per-paper experiment logs and reading notes stay in `papers/NN-name/notes.md`.
 Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 (or the paper README once the scaffold lands).
 
-**Last updated:** 2026-10-13 (artifact cleanup and confirmed local RFM evaluation)
+**Last updated:** 2026-10-30 (summary table synced with the root README)
 
 ---
 
@@ -17,21 +17,21 @@ Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 | # | Paper | Tier | Status | Last touched |
 |---|-------|------|--------|--------------|
 | 00 | Template (Iris MLP) | scaffold | ✅ done | — |
-| 01 | EGNN | implement | 🟡 in progress | 2026-10-13 |
-| 02 | Hitchhiker's Guide | study | 📄 PDF only | — |
-| 03 | MPNN | study | 📄 PDF only | — |
-| 05 | SchNet | study | 📄 PDF + sources | — |
-| 06 | TFN | study | 📄 PDF + sources | — |
-| 07 | SE(3)-Transformer | study | 📄 PDF + sources | — |
-| 08 | EquiFormer | study | 📄 PDF + sources | — |
-| 09 | NequIP | study | 📄 PDF + sources | — |
-| 10 | ManifoldFormer | breadth | 📄 PDF only | — |
-| 14 | Riemannian Flow Matching | implement | 🟡 in progress | 2026-10-13 |
+| 01 | EGNN | implement | ✅ done — `gap` test MAE 48.50 meV vs paper 48 | 2026-10-13 |
+| 02 | Hitchhiker's Guide | study | 📖 studied | — |
+| 03 | MPNN | study | 📖 studied | — |
+| 05 | SchNet | study | 📖 studied | — |
+| 06 | TFN | study | 📖 studied | — |
+| 07 | SE(3)-Transformer | study | 📖 studied | — |
+| 08 | EquiFormer | study | 📖 studied | — |
+| 09 | NequIP | study | 📖 studied | — |
+| 10 | ManifoldFormer | breadth | 📖 studied | — |
+| 14 | Riemannian Flow Matching | implement | ✅ done — Fire test NLL −0.7004 (paper −1.86 ± 0.11; uniform +2.531) | 2026-10-13 |
 | 15 | MACE | implement | 🟡 seed 123 stopped at 367 epochs; benchmark incomplete | 2026-10-13 |
 
 Tier definitions → [`references/papers.md`](../references/papers.md).
 
-**Legend:** ✅ done · 🟡 in progress · ⬜ not started · 📄 materials only
+**Legend:** ✅ done · 🟡 in progress · ⬜ not started · 📖 studied (no implementation) · 📄 materials only
 
 ---
 

@@ -33,6 +33,7 @@ papers/**/*.pdf
 papers/**/*.png
 !papers/14-RFM/results/fire-comparison.png
 !papers/17-kUPS/isotherm.png
+!papers/15-MACE/results/learning-curve.png
 papers/*/arXiv-*/
 
 # ML run artifacts (per-run folders, checkpoints)
