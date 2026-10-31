@@ -28,7 +28,7 @@ Implementation context and stage checklists stay in `papers/NN-name/CLAUDE.md`
 | 10 | ManifoldFormer | breadth | 📖 studied | — |
 | 14 | Riemannian Flow Matching | implement | ✅ done — Fire test NLL −0.7004 (paper −1.86 ± 0.11; uniform +2.531) | 2026-10-13 |
 | 15 | MACE | implement | 🟡 seed 123 stopped at 367 epochs; benchmark incomplete | 2026-10-13 |
-| — | EquiRNA | study | ✅ passes 1–2; [explainer](https://luvsuneja.substack.com/p/how-an-equivariant-model-picks-the) | 2026-10-28 |
+| — | EquiRNA | study | ✅ studied; [explainer](https://luvsuneja.substack.com/p/how-an-equivariant-model-picks-the) | 2026-10-28 |
 
 Tier definitions → [`references/papers.md`](../references/papers.md).
 

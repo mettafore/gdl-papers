@@ -28,7 +28,7 @@
 - **Paper:** [ICLR 2025 proceedings](https://proceedings.iclr.cc/paper_files/paper/2025/file/691fe5a436d53e23c08fbbb2da529617-Paper-Conference.pdf)
 - **Authors:** Li, Cen, Huang, Wang, Song
 - **Why:** Hierarchical equivariant scoring of candidate RNA structures, including fixed-size messages for variable-size nucleotides.
-- **Study:** Passes 1 and 2 completed; [Substack explainer](https://luvsuneja.substack.com/p/how-an-equivariant-model-picks-the). No implementation in this repository.
+- **Study:** Studied; [Substack explainer](https://luvsuneja.substack.com/p/how-an-equivariant-model-picks-the). No implementation in this repository.
 
 ### Hitchhiker's Guide to Geometric GNNs
 - **arXiv:** 2312.07511
