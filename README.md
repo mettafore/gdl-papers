@@ -7,7 +7,7 @@ change its energy, and relabeling its atoms does not make it a different molecul
 A model should preserve these relationships—for example, predicted energy stays
 unchanged under rotation, while predicted forces rotate with the molecule.
 
-I studied 16 papers and foundational texts alongside Timothy Nguyen's
+I studied papers and foundational texts alongside Timothy Nguyen's
 differential geometry lectures, and selected three papers for deeper study and
 implementation: **EGNN, Riemannian Flow Matching, and MACE**.
 Together, they explore three uses of geometry: predicting properties, generating
@@ -108,6 +108,7 @@ scope are documented above.
 | [**Riemannian Flow Matching**](https://arxiv.org/abs/2302.03660) | Flow matching on manifolds and premetric-based paths | **Implemented and evaluated on spherical Fire data**; [walkthrough](papers/14-RFM/learning-notes.md) |
 | [**MACE**](https://arxiv.org/abs/2206.07697) | Higher-order equivariant interactions for molecular energies and forces | **Implemented and evaluated on 3BPA; three-seed benchmark incomplete**; [walkthrough](papers/15-MACE/learning-notes.md) |
 | [BLIPs: Bayesian Learned Interatomic Potentials](https://arxiv.org/abs/2508.14022) | Uncertainty quantification for interatomic potentials via variational adaptive dropout; local reparameterisation and its equivariance limits | Studied |
+| [EquiRNA: Size-Generalizable RNA Structure Evaluation by Exploring Hierarchical Geometries](https://proceedings.iclr.cc/paper_files/paper/2025/file/691fe5a436d53e23c08fbbb2da529617-Paper-Conference.pdf) | Hierarchical equivariant RNA structure scoring; fixed-size messages from variable-size nucleotide structures | Studied (passes 1–2); [Substack explainer](https://luvsuneja.substack.com/p/how-an-equivariant-model-picks-the) |
 
 ## Quickstart
 
