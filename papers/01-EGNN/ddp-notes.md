@@ -11,7 +11,7 @@ training primer in my wiki.
 
 `torchrun --nproc_per_node=N` runs N copies of the script at once. Each copy
 trains on its own slice of the data, and DDP averages their gradients, so the
-weights stay identical. Every DDP line is guarded by `if "RANK" in os.environ:`:
+weights stay identical. Every DDP line is guarded by `if "RANK" in os.environ:` (the `coord_mlp` freeze is not, but it's a no-op in plain mode, since those weights never get gradients):
 `torchrun` sets `RANK`, plain `python` doesn't, so plain `python` still works.
 
 **Run:**
@@ -94,7 +94,7 @@ if "RANK" in os.environ:
     train_loader.sampler.set_epoch(epoch)
 ```
 
-- How: same shuffle on every rank (seed + epoch), pad to equal length, keep `indices[rank::world_size]`.
+- How: same shuffle on every rank (sampler seed 0 + epoch), pad to equal length, keep `indices[rank::world_size]`.
 - Padding keeps batch counts equal. Otherwise one rank waits forever.
 - Deleting `shuffle=True` instead silently trained plain `python` in fixed order.
 - Train loader only: sampler indices reach 100k, val has 18k.
@@ -139,6 +139,8 @@ if stop:
 - `scheduler.step()` inside `if rank == 0` → only rank 0's LR decays → weights drift, no error.
 - `broadcast` is a collective: every rank calls it, same point, every epoch.
 - It sends tensors, and overwrites `flag`, not `stop`. Hence `int(...)` in, `bool(flag.item())` out.
+- Other ranks return `(None, None, inf)` from `train()`: only rank 0 knows the run and `best_val`.
+- If rank 0 crashes, `torchrun` kills the other ranks, so a crash does not leave rank 1 hanging in `broadcast`.
 - Simpler alternative: validate on every rank. Same weights and val set give the same `val_loss` on CPU, so they stop together. On GPU, tiny float differences could split the decision; broadcast is safer.
 
 ## Verified (Mac CPU)
