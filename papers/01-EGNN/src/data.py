@@ -9,9 +9,11 @@ Paper: Satorras et al., "E(n) Equivariant Graph Neural Networks", ICML 2021.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 
 import torch
+from torch.utils.data import DistributedSampler
 
 # torch_geometric is optional-at-import so the file is inspectable without the
 # dep installed. The actual functions require it.
@@ -165,9 +167,13 @@ def load_split(
     mean = train_y.mean().item()
     mad = (train_y - mean).abs().mean().item()
     normalizer = NormStats(mean=mean, mad=mad)
+    sampler: DistributedSampler | None = None
+    if "RANK" in os.environ:
+        sampler = DistributedSampler(train_data, shuffle=True)
     train_loader = PyGDataLoader(
         dataset[train_idx],
-        shuffle=True,
+        sampler=sampler,
+        shuffle=sampler is None,
         batch_size=batch_size,
         num_workers=num_workers,
     )
