@@ -9,6 +9,7 @@ Paper: Satorras et al., "E(n) Equivariant Graph Neural Networks", ICML 2021.
 
 import argparse
 import os
+import time
 from pathlib import Path
 
 import data
@@ -61,8 +62,10 @@ def train(
     improvement; stops early after `early_stop_patience` epochs without one.
     """
     rank = int(os.environ.get("RANK", 0))
+    local_rank = int(os.environ.get("LOCAL_RANK", 0))
     if "RANK" in os.environ:
-        init_process_group(backend="gloo")
+        torch.cuda.set_device(local_rank) if torch.cuda.is_available() else None
+        init_process_group(backend="nccl" if torch.cuda.is_available() else "gloo")
     set_seed(seed)
     train_loader, val_loader, test_loader, norm, dims = data.load_split(
         target=target,
@@ -96,7 +99,7 @@ def train(
     else:
         run_id, run_dir = None, None
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device(f"cuda:{local_rank}" if torch.cuda.is_available() else "cpu")
     egnn = EGNN(
         in_node_nf=dims["in_node_dim"],
         hidden_nf=hidden_nf,
@@ -116,7 +119,7 @@ def train(
             param.requires_grad = False
     model = egnn
     if "RANK" in os.environ:
-        egnn = DDP(egnn)
+        egnn = DDP(egnn, device_ids=[local_rank] if torch.cuda.is_available() else None)
     optimizer = torch.optim.Adam(egnn.parameters(), lr=lr, weight_decay=weight_decay)
     # CosineAnnealingLR (not ReduceLROnPlateau): matches the reference repo's
     # recipe. ReduceLROnPlateau halves LR on every 10-epoch stall, which on a
@@ -130,6 +133,7 @@ def train(
     best_val = float("inf")
     epochs_since_improve = 0
     for epoch in range(epochs):
+        t0 = time.perf_counter()
         if "RANK" in os.environ:
             train_loader.sampler.set_epoch(epoch)
         stop = False
@@ -160,8 +164,17 @@ def train(
             val_loss = val_loss_sum / val_num_graphs
             # Log the LR *before* stepping, so it's the rate this epoch actually
             # trained at (lets us see whether val drops as cosine anneals it down).
-
-            log_metrics({"val_loss": val_loss, "lr": current_lr}, epoch, run_dir)
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
+            log_metrics(
+                {
+                    "val_loss": val_loss,
+                    "lr": current_lr,
+                    "time": time.perf_counter() - t0,
+                },
+                epoch,
+                run_dir,
+            )
             if val_loss < best_val:
                 best_val = val_loss
                 epochs_since_improve = 0
@@ -177,7 +190,7 @@ def train(
                     )
                     stop = True
         if "RANK" in os.environ:
-            flag = torch.tensor(int(stop))
+            flag = torch.tensor(int(stop)).to(device)
             torch.distributed.broadcast(flag, src=0)
             stop = bool(flag.item())
         if stop:
