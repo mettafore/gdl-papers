@@ -50,6 +50,7 @@ def train(
     early_stop_patience=50,
     attention=True,
     resume_from=None,
+    amp=False,
 ):
     """Train and persist a run. Returns (run_id, run_dir, best_val).
 
@@ -132,6 +133,8 @@ def train(
 
     best_val = float("inf")
     epochs_since_improve = 0
+    use_amp = amp and torch.cuda.is_available()
+    scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
     for epoch in range(epochs):
         t0 = time.perf_counter()
         if "RANK" in os.environ:
@@ -141,11 +144,13 @@ def train(
         for b in train_loader:
             b = b.to(device)
             optimizer.zero_grad()
-            out = egnn(b.x, b.pos, b.edge_index, batch=b.batch)
-            target = target_for(b, norm, dims["target_col"])
-            loss_value = loss(out, target)
-            loss_value.backward()
-            optimizer.step()
+            with torch.amp.autocast("cuda", enabled=use_amp):
+                out = egnn(b.x, b.pos, b.edge_index, batch=b.batch)
+                target = target_for(b, norm, dims["target_col"])
+                loss_value = loss(out, target)
+            scaler.scale(loss_value).backward()
+            scaler.step(optimizer)
+            scaler.update()
         current_lr = optimizer.param_groups[0]["lr"]
         # CosineAnnealingLR steps on a schedule, not on val_loss (no arg).
         scheduler.step()
@@ -216,6 +221,7 @@ def main():
         action=argparse.BooleanOptionalAction,
         default=True,
     )
+    p.add_argument("--amp", action=argparse.BooleanOptionalAction, default=False)
 
     args = p.parse_args()
     run_id, run_dir, best_val = train(
@@ -229,6 +235,7 @@ def main():
         runs_base=args.runs_base,
         paper_dir=PAPER_DIR,
         attention=args.attention,
+        amp=args.amp,
     )
     if run_id is not None:
         print(f"run_id: {run_id}")
