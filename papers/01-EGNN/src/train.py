@@ -251,6 +251,7 @@ def main():
     )
     p.add_argument("--amp", action=argparse.BooleanOptionalAction, default=False)
     p.add_argument("--profile", action=argparse.BooleanOptionalAction, default=False)
+    p.add_argument("--num-workers", type=int, default=0)
 
     args = p.parse_args()
     run_id, run_dir, best_val = train(
@@ -266,6 +267,7 @@ def main():
         attention=args.attention,
         amp=args.amp,
         profile=args.profile,
+        num_workers=args.num_workers,
     )
     if run_id is not None:
         print(f"run_id: {run_id}")
