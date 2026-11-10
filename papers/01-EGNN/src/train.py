@@ -8,12 +8,15 @@ Paper: Satorras et al., "E(n) Equivariant Graph Neural Networks", ICML 2021.
 """
 
 import argparse
+import os
 from pathlib import Path
 
 import data
 import torch
 from model import EGNN
 from torch import nn
+from torch.distributed import destroy_process_group, init_process_group
+from torch.nn.parallel import DistributedDataParallel as DDP
 
 from gdl import load_checkpoint, log_metrics, new_run_dir, save_checkpoint, set_seed
 
@@ -57,6 +60,9 @@ def train(
     noise). L1 loss on the normalized target. Checkpoints on every val_loss
     improvement; stops early after `early_stop_patience` epochs without one.
     """
+    rank = int(os.environ.get("RANK", 0))
+    if "RANK" in os.environ:
+        init_process_group(backend="gloo")
     set_seed(seed)
     train_loader, val_loader, test_loader, norm, dims = data.load_split(
         target=target,
@@ -85,7 +91,10 @@ def train(
         "resume_from": str(resume_from) if resume_from is not None else None,
     }
 
-    run_id, run_dir = new_run_dir(paper_dir, config, runs_base)
+    if rank == 0:
+        run_id, run_dir = new_run_dir(paper_dir, config, runs_base)
+    else:
+        run_id, run_dir = None, None
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     egnn = EGNN(
@@ -101,6 +110,13 @@ def train(
     # bump for a few epochs. config records resume_from for provenance.
     if resume_from is not None:
         load_checkpoint(egnn, resume_from)
+    for name, param in egnn.named_parameters():
+        # if param is coord_mlp, freeze gradients (no training on coordinates)
+        if "coord_mlp" in name:
+            param.requires_grad = False
+    model = egnn
+    if "RANK" in os.environ:
+        egnn = DDP(egnn)
     optimizer = torch.optim.Adam(egnn.parameters(), lr=lr, weight_decay=weight_decay)
     # CosineAnnealingLR (not ReduceLROnPlateau): matches the reference repo's
     # recipe. ReduceLROnPlateau halves LR on every 10-epoch stall, which on a
@@ -114,6 +130,9 @@ def train(
     best_val = float("inf")
     epochs_since_improve = 0
     for epoch in range(epochs):
+        if "RANK" in os.environ:
+            train_loader.sampler.set_epoch(epoch)
+        stop = False
         egnn.train()
         for b in train_loader:
             b = b.to(device)
@@ -123,36 +142,48 @@ def train(
             loss_value = loss(out, target)
             loss_value.backward()
             optimizer.step()
-
-        egnn.eval()
-        val_loss_sum = 0.0
-        val_num_graphs = 0
-        with torch.no_grad():
-            for b in val_loader:
-                b = b.to(device)
-                out = egnn(b.x, b.pos, b.edge_index, batch=b.batch)
-                pred = norm.denormalize(out)
-                target = raw_target_for(b, dims["target_col"])
-                val_loss_sum += loss(pred, target).item() * b.num_graphs
-                val_num_graphs += b.num_graphs
-        val_loss = val_loss_sum / val_num_graphs
-        # Log the LR *before* stepping, so it's the rate this epoch actually
-        # trained at (lets us see whether val drops as cosine anneals it down).
         current_lr = optimizer.param_groups[0]["lr"]
         # CosineAnnealingLR steps on a schedule, not on val_loss (no arg).
         scheduler.step()
-        log_metrics({"val_loss": val_loss, "lr": current_lr}, epoch, run_dir)
-        if val_loss < best_val:
-            best_val = val_loss
-            epochs_since_improve = 0
-            save_checkpoint(egnn, run_dir)
-        else:
-            epochs_since_improve += 1
-            if epochs_since_improve >= early_stop_patience:
-                print(
-                    f"early stop: no val_loss improvement in {early_stop_patience} epochs"
-                )
-                break
+        if rank == 0:
+            model.eval()
+            val_loss_sum = 0.0
+            val_num_graphs = 0
+            with torch.no_grad():
+                for b in val_loader:
+                    b = b.to(device)
+                    out = model(b.x, b.pos, b.edge_index, batch=b.batch)
+                    pred = norm.denormalize(out)
+                    target = raw_target_for(b, dims["target_col"])
+                    val_loss_sum += loss(pred, target).item() * b.num_graphs
+                    val_num_graphs += b.num_graphs
+            val_loss = val_loss_sum / val_num_graphs
+            # Log the LR *before* stepping, so it's the rate this epoch actually
+            # trained at (lets us see whether val drops as cosine anneals it down).
+
+            log_metrics({"val_loss": val_loss, "lr": current_lr}, epoch, run_dir)
+            if val_loss < best_val:
+                best_val = val_loss
+                epochs_since_improve = 0
+                if "RANK" in os.environ:
+                    save_checkpoint(egnn.module, run_dir)
+                else:
+                    save_checkpoint(egnn, run_dir)
+            else:
+                epochs_since_improve += 1
+                if epochs_since_improve >= early_stop_patience:
+                    print(
+                        f"early stop: no val_loss improvement in {early_stop_patience} epochs"
+                    )
+                    stop = True
+        if "RANK" in os.environ:
+            flag = torch.tensor(int(stop))
+            torch.distributed.broadcast(flag, src=0)
+            stop = bool(flag.item())
+        if stop:
+            break
+    if "RANK" in os.environ:
+        destroy_process_group()
     return run_id, run_dir, best_val
 
 
@@ -186,8 +217,8 @@ def main():
         paper_dir=PAPER_DIR,
         attention=args.attention,
     )
-
-    print(f"run_id: {run_id}")
+    if run_id is not None:
+        print(f"run_id: {run_id}")
 
 
 if __name__ == "__main__":
