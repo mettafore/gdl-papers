@@ -8,6 +8,7 @@ Paper: Satorras et al., "E(n) Equivariant Graph Neural Networks", ICML 2021.
 """
 
 import argparse
+import contextlib
 import os
 import time
 from pathlib import Path
@@ -51,6 +52,7 @@ def train(
     attention=True,
     resume_from=None,
     amp=False,
+    profile=False,
 ):
     """Train and persist a run. Returns (run_id, run_dir, best_val).
 
@@ -136,21 +138,47 @@ def train(
     use_amp = amp and torch.cuda.is_available()
     scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
     for epoch in range(epochs):
+        profiling = profile and rank == 0 and epoch == 0
+        if profiling:
+            activities = [torch.profiler.ProfilerActivity.CPU]
+            if torch.cuda.is_available():
+                activities.append(torch.profiler.ProfilerActivity.CUDA)
+            schedule = torch.profiler.schedule(wait=1, warmup=1, active=3, repeat=1)
+            on_trace_ready = torch.profiler.tensorboard_trace_handler(
+                str(run_dir / "tb")
+            )
+            prof = torch.profiler.profile(
+                activities=activities, schedule=schedule, on_trace_ready=on_trace_ready
+            )
+        else:
+            prof = contextlib.nullcontext()
         t0 = time.perf_counter()
         if "RANK" in os.environ:
             train_loader.sampler.set_epoch(epoch)
         stop = False
         egnn.train()
-        for b in train_loader:
-            b = b.to(device)
-            optimizer.zero_grad()
-            with torch.amp.autocast("cuda", enabled=use_amp):
-                out = egnn(b.x, b.pos, b.edge_index, batch=b.batch)
-                target = target_for(b, norm, dims["target_col"])
-                loss_value = loss(out, target)
-            scaler.scale(loss_value).backward()
-            scaler.step(optimizer)
-            scaler.update()
+        with prof:
+            for b in train_loader:
+                with torch.profiler.record_function("data"):
+                    b = b.to(device)
+                with torch.profiler.record_function("forward"):
+                    optimizer.zero_grad()
+                    with torch.amp.autocast("cuda", enabled=use_amp):
+                        out = egnn(b.x, b.pos, b.edge_index, batch=b.batch)
+                        target = target_for(b, norm, dims["target_col"])
+                        loss_value = loss(out, target)
+                with torch.profiler.record_function("backward"):
+                    scaler.scale(loss_value).backward()
+                with torch.profiler.record_function("optimizer"):
+                    scaler.step(optimizer)
+                    scaler.update()
+                if profiling:
+                    prof.step()
+        if profiling:
+            sort_key = (
+                "cuda_time_total" if torch.cuda.is_available() else "cpu_time_total"
+            )
+            print(prof.key_averages().table(sort_by=sort_key, row_limit=15))
         current_lr = optimizer.param_groups[0]["lr"]
         # CosineAnnealingLR steps on a schedule, not on val_loss (no arg).
         scheduler.step()
@@ -222,6 +250,7 @@ def main():
         default=True,
     )
     p.add_argument("--amp", action=argparse.BooleanOptionalAction, default=False)
+    p.add_argument("--profile", action=argparse.BooleanOptionalAction, default=False)
 
     args = p.parse_args()
     run_id, run_dir, best_val = train(
@@ -236,6 +265,7 @@ def main():
         paper_dir=PAPER_DIR,
         attention=args.attention,
         amp=args.amp,
+        profile=args.profile,
     )
     if run_id is not None:
         print(f"run_id: {run_id}")
