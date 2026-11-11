@@ -145,6 +145,7 @@ def load_split(
     seed: int = 42,
     batch_size: int = 96,
     num_workers: int = 0,
+    precompute: bool = False,
 ):
     """Return (train_loader, val_loader, test_loader, norm, dims).
 
@@ -156,34 +157,48 @@ def load_split(
         raise KeyError(f"unknown target {target!r}; choose from {sorted(QM9_TARGETS)}")
     col = QM9_TARGETS[target]
 
-    dataset = QM9(root=root, transform=_to_charge_power)
+    if precompute:
+        # Rung 2: run the transform once per molecule and keep the results in
+        # RAM, instead of cutting out + transforming every molecule every epoch.
+        dataset = [_to_charge_power(d) for d in QM9(root=root)]
+    else:
+        dataset = QM9(root=root, transform=_to_charge_power)
     gen = torch.Generator().manual_seed(seed)
     perm = torch.randperm(len(dataset), generator=gen)
     train_idx = perm[:N_TRAIN]
     val_idx = perm[N_TRAIN : N_TRAIN + N_VAL]
     test_idx = perm[N_TRAIN + N_VAL :]
-    train_data = dataset[train_idx]
+    if precompute:
+        # A Python list can't be indexed with a tensor of indices.
+        train_data = [dataset[i] for i in train_idx.tolist()]
+        val_data = [dataset[i] for i in val_idx.tolist()]
+        test_data = [dataset[i] for i in test_idx.tolist()]
+    else:
+        train_data = dataset[train_idx]
+        val_data = dataset[val_idx]
+        test_data = dataset[test_idx]
     train_y = torch.cat([i.y[:, col] for i in train_data], dim=0)
     mean = train_y.mean().item()
     mad = (train_y - mean).abs().mean().item()
     normalizer = NormStats(mean=mean, mad=mad)
     sampler: DistributedSampler | None = None
     if "RANK" in os.environ:
-        sampler = DistributedSampler(train_data, shuffle=True)
+        # A plain list works at runtime (the sampler only uses len()).
+        sampler = DistributedSampler(train_data, shuffle=True)  # type: ignore[arg-type]
     train_loader = PyGDataLoader(
-        dataset[train_idx],
+        train_data,
         sampler=sampler,
         shuffle=sampler is None,
         batch_size=batch_size,
         num_workers=num_workers,
     )
     val_loader = PyGDataLoader(
-        dataset[val_idx],
+        val_data,
         batch_size=batch_size,
         num_workers=num_workers,
     )
     test_loader = PyGDataLoader(
-        dataset[test_idx],
+        test_data,
         batch_size=batch_size,
         num_workers=num_workers,
     )
