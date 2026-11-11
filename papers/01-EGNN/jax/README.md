@@ -71,7 +71,13 @@ measure execution.
 - **Parity:** weights copied from a torch `EGNN(attention=True)` give the same
   predictions on a 4-molecule batch (atol 1e-4).
 - One train step on 2 fake CPU devices matches 1 device: loss rel 1e-5,
-  params atol 1e-5.
+  params atol 1e-5. The compiled 2-device train step contains only `all-reduce`
+  collectives (gradient and loss sums) and no `all-gather`, so the batch axis
+  stays split through the gather, scan and `segment_sum`.
+- Real QM9 (one-off script, not a test): `load_qm9` reproduces
+  `data.load_split` exactly. Mean and MAD are identical, and z, pos and y match
+  for the first val molecules. Copying the torch weights and running a real
+  8-molecule val batch gives max |diff| 1.8e-7.
 - 3 epochs on a 2k-molecule subset: train L1 1.106 → 0.847 → 0.809, val MAE
   0.940 → 0.872 → 0.838 eV. Each epoch took about 25 s on CPU (21 steps of 96).
 
@@ -82,26 +88,37 @@ Not verified: real GPU speed, real 2-GPU scaling, and full-dataset convergence.
 Push this branch as `jax-egnn` first. Internet must be on, because QM9 is
 downloaded by PyG.
 
+The cell runs batch 96 and batch 256 on both GPUs, plus batch 96 on one GPU so
+the scaling can be compared.
+
 ```python
-import subprocess, sys, os
-BRANCH = "jax-egnn"
-REPO = "/kaggle/working/gdl-papers"
-sh = lambda c: subprocess.run(c, shell=True, check=True)
+import os, subprocess, sys
+BRANCH, REPO = "jax-egnn", "/kaggle/working/gdl-papers"
+
+def run(cmd, env=None):  # stream child output into the cell, line by line
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                         env={**os.environ, "PYTHONUNBUFFERED": "1", **(env or {})})
+    for line in p.stdout:
+        print(line, end="", flush=True)
+    if p.wait():
+        raise RuntimeError(f"failed: {cmd}")
+
+py = sys.executable
 if not os.path.isdir(REPO):
-    sh(f"git clone --depth 1 -b {BRANCH} https://github.com/mettafore/gdl-papers.git {REPO}")
-# Keep Kaggle's CUDA jax if it already sees GPUs; only install what is missing.
-gpu = subprocess.run([sys.executable, "-c", "import jax; print(any(d.platform == 'gpu' for d in jax.devices()))"],
-                     capture_output=True, text=True).stdout.strip() == "True"
-if not gpu:
-    sh(f'{sys.executable} -m pip install -q -U "jax[cuda12]"')
-for mod, pkg in [("optax", "optax"), ("torch_geometric", "torch_geometric")]:
-    if subprocess.run([sys.executable, "-c", f"import {mod}"]).returncode:
-        sh(f"{sys.executable} -m pip install -q {pkg}")
-sh(f'{sys.executable} -c "import jax; print(jax.__version__, jax.devices())"')
-env = {**os.environ, "PYTHONPATH": f"{REPO}/src:{REPO}/papers/01-EGNN/src"}
-for bs in (96, 256):
-    print(f"===== batch {bs} =====", flush=True)
-    subprocess.run([sys.executable, f"{REPO}/papers/01-EGNN/jax/train_jax.py", "--epochs", "3",
-                    "--batch-size", str(bs), "--data-root", "/kaggle/working/data/qm9"],
-                   env=env, check=True)
+    run(["git", "clone", "--depth", "1", "-b", BRANCH, "https://github.com/mettafore/gdl-papers.git", REPO])
+# Keep Kaggle's CUDA jax if it already sees GPUs; install only what is missing.
+probe = "import jax; print(any(d.platform == 'gpu' for d in jax.devices()))"
+if subprocess.run([py, "-c", probe], capture_output=True, text=True).stdout.strip() != "True":
+    run([py, "-m", "pip", "install", "-q", "-U", "jax[cuda12]"])
+for mod in ("optax", "torch_geometric"):
+    if subprocess.run([py, "-c", f"import {mod}"]).returncode:
+        run([py, "-m", "pip", "install", "-q", mod])
+run([py, "-c", "import jax, optax; print(jax.__version__, optax.__version__, jax.devices())"])
+
+env = {"PYTHONPATH": f"{REPO}/src:{REPO}/papers/01-EGNN/src"}
+script = f"{REPO}/papers/01-EGNN/jax/train_jax.py"
+for bs, gpus in [(96, "0,1"), (256, "0,1"), (96, "0")]:
+    print(f"\n===== batch {bs}, GPUs {gpus} =====", flush=True)
+    run([py, script, "--epochs", "3", "--batch-size", str(bs),
+         "--data-root", "/kaggle/working/data/qm9"], {**env, "CUDA_VISIBLE_DEVICES": gpus})
 ```
