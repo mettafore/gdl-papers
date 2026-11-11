@@ -179,7 +179,13 @@ def train(
                 with torch.profiler.record_function("forward"):
                     optimizer.zero_grad()
                     with torch.amp.autocast("cuda", enabled=use_amp):
-                        out = egnn(b.x, b.pos, b.edge_index, batch=b.batch)
+                        out = egnn(
+                            b.x,
+                            b.pos,
+                            b.edge_index,
+                            batch=b.batch,
+                            num_graphs=b.num_graphs,
+                        )
                         target = target_for(b, norm, dims["target_col"])
                         loss_value = loss(out, target)
                 with torch.profiler.record_function("backward"):
@@ -204,7 +210,9 @@ def train(
             with torch.no_grad():
                 for b in val_loader:
                     b = b.to(device)
-                    out = model(b.x, b.pos, b.edge_index, batch=b.batch)
+                    out = model(
+                        b.x, b.pos, b.edge_index, batch=b.batch, num_graphs=b.num_graphs
+                    )
                     pred = norm.denormalize(out)
                     target = raw_target_for(b, dims["target_col"])
                     val_loss_sum += loss(pred, target).item() * b.num_graphs
