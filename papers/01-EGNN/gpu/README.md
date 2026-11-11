@@ -34,6 +34,11 @@ Val loss = normalized L1 after the last epoch.
 | 20261110-130728 | 3 | 2 | 96 | no | 2 | 1e-3 | no | 3 | 54.4 | 0.2514 |
 | 20261110-131124 | 3 | 2 | 96 | yes | 2 | 1e-3 | no | 3 | 58.9 | 0.2527 |
 | 20261110-131533 | 3 | 2 | 96 | yes | 2 | 1e-3 | yes | 1 | (65.7, ep 1) | — |
+| 20261111-110827 | 4 | 1 | 256 | no | 0 | 1.6e-3 | no | 3 | 73.6 | 0.2637 |
+| 20261111-111351 | 4 | 2 | 256 | no | 0 | 2.3e-3 | no | 3 | 48.0 | 0.3510 |
+| 20261111-111745 | 4 | 2 | 256 | no | 0 | 2.3e-3 | yes | 1 | (86.5, ep 1) | — |
+
+From job 4 on, `config.json` has a `hardware` section (world_size, gpu, amp, profile).
 
 Job 3 also ran `src/equivariance_fp16.py` (random-init model): fp32 error 6.0e-7,
 fp16 error 7.3e-4, fp16 rounding error 8.1e-4. Rotation adds no error above fp16 rounding.
@@ -57,9 +62,31 @@ Each rung adds one change on top of the previous rung. Write the prediction befo
 | Rung | Change | Prediction | s/epoch | GPU busy | Kernels/step | Val loss (3 ep) | Run ID |
 |---|---|---|---|---|---|---|---|
 | 0 | Baseline: 96/GPU, fp32, 0 workers | — | 50.2 | ~30%* | ~986* | 0.2507 | 20261110-104137 |
-| 1 | + batch 256/GPU | | | | | | |
+| 1 | + batch 256/GPU, LR 2.3e-3 | — | 48.0 | 32–41% | ~620 | 0.3510 | 20261111-111351 |
 | 2 | + precompute data | | | | | | |
 | 3 | + `torch.compile` | | | | | | |
 | 4 | + padding + CUDA Graphs | | | | | | |
 
 \* Measured on the profiled run with fp16 and 2 workers (20261110-131533), not on the exact rung 0 setup.
+
+Rung 1 profile (20261111-111745, 3 steps): step ≈ 360 ms, of which **≈ 280 ms is waiting for the
+DataLoader**. Forward + backward CPU ≈ 75 ms, GPU busy ≈ 120–150 ms. The bigger batch cut the
+launch cost per molecule, but the per-molecule data work (`transform` + collate, 0 workers) now
+dominates. The bigger batch only gave 50.2 → 48.0 s.
+
+## JAX track (branch `jax-egnn`, job 5, log `results/kaggle-logs/job5-jax.log`)
+
+Plain JAX + optax, whole train step under `jax.jit`, data on the GPU, every molecule padded to
+29 atoms / 812 edges (≈ 39% of edge slots real). fp32. Train time per epoch (validation excluded):
+
+| GPUs | Batch/GPU-total | Train s/epoch | Val MAE after 3 ep |
+|---|---|---|---|
+| 1 | 96 | 145.9 | 0.2211 |
+| 2 | 96 | 73.4 | 0.2196 |
+| 2 | 256 | 73.5 | 0.2648 |
+
+- Scaling 1 → 2 GPUs: 145.9 → 73.4 s = **1.99×**. Almost perfect.
+- Batch 96 → 256: no change. The step is **GPU-bound**: time follows the number of
+  (padded) molecules, not the number of steps.
+- Slower than PyTorch per GPU because of the padding waste (~2.6× edge work) and fp32.
+- Val MAE at 1 GPU, batch 96 matches PyTorch (0.2211 vs 0.2225).
