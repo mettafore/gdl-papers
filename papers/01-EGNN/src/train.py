@@ -78,6 +78,14 @@ def train(
         num_workers=num_workers,
     )
     config = {
+        "hardware": {
+            "world_size": int(os.environ.get("WORLD_SIZE", 1)),
+            "gpu": torch.cuda.get_device_name(0)
+            if torch.cuda.is_available()
+            else "cpu",
+            "amp": amp,
+            "profile": profile,
+        },
         "data": {"target": target, "root": str(data_root), "dims": dims},
         "model": {
             "hidden_nf": hidden_nf,
