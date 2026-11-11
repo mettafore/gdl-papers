@@ -101,3 +101,4 @@
 - **Link:** https://preci.ai/trajectomics (web explainer, Oct 2026; not a paper, no arXiv/PDF/code)
 - **Authors:** Parmita Mishra (Precigenetics)
 - **Why:** Virtual-cell primer arguing that a cell's response *history* (what changes, where, when, in what order), not an endpoint snapshot, is what perturbation models should learn from. Proposes live-cell perfusion + washout with optical/hyperspectral sensing of cells and medium ("Cell Cinema") as training data. Cites CellBox and PRESCIENT as the scoped successes so far.
+- **My take:** Pivot toward AI for biotech; Precigenetics looks data-generation-first but heading that way. Key idea: a parts list (genome, transcriptome, proteome, metabolome) is not a cell state. A real cell simulation needs the omics fused with location, environment and dynamics. Two measurement modes: watch live cells without destroying them (Cell Cinema) vs. destructive sampling at fixed timepoints.
