@@ -1,0 +1,32 @@
+{
+  "data": {
+    "target": "gap",
+    "root": "data/qm9",
+    "dims": {
+      "in_node_dim": 15,
+      "out_dim": 1,
+      "target_col": 4
+    }
+  },
+  "model": {
+    "hidden_nf": 128,
+    "n_layers": 7,
+    "attention": true
+  },
+  "hyperparams": {
+    "lr": 0.001,
+    "epochs": 1,
+    "batch_size": 96,
+    "num_workers": 0,
+    "weight_decay": 1e-16,
+    "early_stop_patience": 50
+  },
+  "seed": 42,
+  "metric": "mae",
+  "resume_from": null,
+  "provenance": {
+    "git_commit": "20ee31e2fb6ee32a20d0696132802697c5740193",
+    "git_dirty": false,
+    "uv_lock_sha256": "a0e6a9ba1cbc7cb3"
+  }
+}
