@@ -53,6 +53,7 @@ def train(
     resume_from=None,
     amp=False,
     profile=False,
+    precompute=False,
 ):
     """Train and persist a run. Returns (run_id, run_dir, best_val).
 
@@ -76,6 +77,7 @@ def train(
         batch_size=batch_size,
         root=data_root,
         num_workers=num_workers,
+        precompute=precompute,
     )
     config = {
         "hardware": {
@@ -86,7 +88,12 @@ def train(
             "amp": amp,
             "profile": profile,
         },
-        "data": {"target": target, "root": str(data_root), "dims": dims},
+        "data": {
+            "target": target,
+            "root": str(data_root),
+            "dims": dims,
+            "precompute": precompute,
+        },
         "model": {
             "hidden_nf": hidden_nf,
             "n_layers": n_layers,
@@ -260,6 +267,7 @@ def main():
     p.add_argument("--amp", action=argparse.BooleanOptionalAction, default=False)
     p.add_argument("--profile", action=argparse.BooleanOptionalAction, default=False)
     p.add_argument("--num-workers", type=int, default=0)
+    p.add_argument("--precompute", action=argparse.BooleanOptionalAction, default=False)
 
     args = p.parse_args()
     run_id, run_dir, best_val = train(
@@ -276,6 +284,7 @@ def main():
         amp=args.amp,
         profile=args.profile,
         num_workers=args.num_workers,
+        precompute=args.precompute,
     )
     if run_id is not None:
         print(f"run_id: {run_id}")
