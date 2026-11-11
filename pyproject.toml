@@ -19,6 +19,8 @@ dependencies = [
     "e3nn>=0.6.0",
     "nbformat>=5.11.1",
     "ase>=3.29.0",
+    "jax>=0.5.3",
+    "optax>=0.2.8",
 ]
 
 [dependency-groups]
