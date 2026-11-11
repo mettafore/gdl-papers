@@ -96,3 +96,8 @@
 - **Authors:** Fu et al. (2025)
 - **Why:** Riemannian VAE + geodesic attention + neural ODEs on EEG. Consciousness breadth slot.
 - **Repo path:** `papers/10-ManifoldFormer/`
+
+### Trajectomics — Virtual Cells, Explained
+- **Link:** https://preci.ai/trajectomics (web explainer, Oct 2026; not a paper, no arXiv/PDF/code)
+- **Authors:** Parmita Mishra (Precigenetics)
+- **Why:** Virtual-cell primer arguing that a cell's response *history* (what changes, where, when, in what order), not an endpoint snapshot, is what perturbation models should learn from. Proposes live-cell perfusion + washout with optical/hyperspectral sensing of cells and medium ("Cell Cinema") as training data. Cites CellBox and PRESCIENT as the scoped successes so far.
