@@ -54,6 +54,7 @@ def train(
     amp=False,
     profile=False,
     precompute=False,
+    compile=False,
 ):
     """Train and persist a run. Returns (run_id, run_dir, best_val).
 
@@ -81,6 +82,7 @@ def train(
     )
     config = {
         "hardware": {
+            "compile": compile,
             "world_size": int(os.environ.get("WORLD_SIZE", 1)),
             "gpu": torch.cuda.get_device_name(0)
             if torch.cuda.is_available()
@@ -138,6 +140,8 @@ def train(
     model = egnn
     if "RANK" in os.environ:
         egnn = DDP(egnn, device_ids=[local_rank] if torch.cuda.is_available() else None)
+    if compile:
+        egnn = torch.compile(egnn, dynamic=True)
     optimizer = torch.optim.Adam(egnn.parameters(), lr=lr, weight_decay=weight_decay)
     # CosineAnnealingLR (not ReduceLROnPlateau): matches the reference repo's
     # recipe. ReduceLROnPlateau halves LR on every 10-epoch stall, which on a
@@ -235,9 +239,9 @@ def train(
                 best_val = val_loss
                 epochs_since_improve = 0
                 if "RANK" in os.environ:
-                    save_checkpoint(egnn.module, run_dir)
+                    save_checkpoint(model, run_dir)
                 else:
-                    save_checkpoint(egnn, run_dir)
+                    save_checkpoint(model, run_dir)
             else:
                 epochs_since_improve += 1
                 if epochs_since_improve >= early_stop_patience:
@@ -277,6 +281,8 @@ def main():
     p.add_argument("--num-workers", type=int, default=0)
     p.add_argument("--precompute", action=argparse.BooleanOptionalAction, default=False)
 
+    p.add_argument("--compile", action=argparse.BooleanOptionalAction, default=False)
+
     args = p.parse_args()
     run_id, run_dir, best_val = train(
         target=args.target,
@@ -293,6 +299,7 @@ def main():
         profile=args.profile,
         num_workers=args.num_workers,
         precompute=args.precompute,
+        compile=args.compile,
     )
     if run_id is not None:
         print(f"run_id: {run_id}")
