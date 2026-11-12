@@ -11,9 +11,10 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from typing import Any
 
 import torch
-from torch.utils.data import DistributedSampler
+from torch.utils.data import DistributedSampler, Subset
 
 # torch_geometric is optional-at-import so the file is inspectable without the
 # dep installed. The actual functions require it.
@@ -160,7 +161,7 @@ def load_split(
     if precompute:
         # Rung 2: run the transform once per molecule and keep the results in
         # RAM, instead of cutting out + transforming every molecule every epoch.
-        dataset = [_to_charge_power(d) for d in QM9(root=root)]
+        dataset: Any = [_to_charge_power(d) for d in QM9(root=root)]
     else:
         dataset = QM9(root=root, transform=_to_charge_power)
     gen = torch.Generator().manual_seed(seed)
@@ -168,23 +169,18 @@ def load_split(
     train_idx = perm[:N_TRAIN]
     val_idx = perm[N_TRAIN : N_TRAIN + N_VAL]
     test_idx = perm[N_TRAIN + N_VAL :]
-    if precompute:
-        # A Python list can't be indexed with a tensor of indices.
-        train_data = [dataset[i] for i in train_idx.tolist()]
-        val_data = [dataset[i] for i in val_idx.tolist()]
-        test_data = [dataset[i] for i in test_idx.tolist()]
-    else:
-        train_data = dataset[train_idx]
-        val_data = dataset[val_idx]
-        test_data = dataset[test_idx]
+    # Subset works for both the QM9 dataset and the precomputed list.
+    # (Any: torch's stubs reject a plain list, but it works at runtime.)
+    train_data: Any = Subset(dataset, train_idx.tolist())
+    val_data: Any = Subset(dataset, val_idx.tolist())
+    test_data: Any = Subset(dataset, test_idx.tolist())
     train_y = torch.cat([i.y[:, col] for i in train_data], dim=0)
     mean = train_y.mean().item()
     mad = (train_y - mean).abs().mean().item()
     normalizer = NormStats(mean=mean, mad=mad)
     sampler: DistributedSampler | None = None
     if "RANK" in os.environ:
-        # A plain list works at runtime (the sampler only uses len()).
-        sampler = DistributedSampler(train_data, shuffle=True)  # type: ignore[arg-type]
+        sampler = DistributedSampler(train_data, shuffle=True)
     train_loader = PyGDataLoader(
         train_data,
         sampler=sampler,
