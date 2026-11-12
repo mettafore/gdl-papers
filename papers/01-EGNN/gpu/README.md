@@ -38,7 +38,14 @@ Val loss = normalized L1 after the last epoch.
 | 20261111-111351 | 4 | 2 | 256 | no | 0 | 2.3e-3 | no | 3 | 48.0 | 0.3510 |
 | 20261111-111745 | 4 | 2 | 256 | no | 0 | 2.3e-3 | yes | 1 | (86.5, ep 1) | — |
 
+| 20261112-071358 | 6 | 2 | 256 | no | 0 | 2.3e-3 | no | 3 | 22.2 | 0.3145 |
+| 20261112-071711 | 6 | 2 | 256 | yes | 0 | 2.3e-3 | no | 3 | 13.5 | 0.3139 |
+| 20261112-071957 | 6 | 1 | 256 | no | 0 | 1.6e-3 | no | 3 | 42.7 | 0.2858 |
+| 20261112-072346 | 6 | 2 | 256 | no | 0 | 2.3e-3 | yes | 1 | (31.6, ep 1) | — |
+| 20261112-072552 | 6 | 2 | 256 | no | 0 | 2.3e-3 | yes | 1 | (38.9, ep 1) | — |
+
 From job 4 on, `config.json` has a `hardware` section (world_size, gpu, amp, profile).
+Job 6 runs all use `--precompute`; all except 20261112-072346 use `--compile`.
 
 Job 3 also ran `src/equivariance_fp16.py` (random-init model): fp32 error 6.0e-7,
 fp16 error 7.3e-4, fp16 rounding error 8.1e-4. Rotation adds no error above fp16 rounding.
@@ -63,9 +70,32 @@ Each rung adds one change on top of the previous rung. Write the prediction befo
 |---|---|---|---|---|---|---|---|
 | 0 | Baseline: 96/GPU, fp32, 0 workers | — | 50.2 | ~30%* | ~986* | 0.2507 | 20261110-104137 |
 | 1 | + batch 256/GPU, LR 2.3e-3 | — | 48.0 | 32–41% | ~620 | 0.3510 | 20261111-111351 |
-| 2 | + precompute data | | | | | | |
-| 3 | + `torch.compile` | | | | | | |
-| 4 | + padding + CUDA Graphs | | | | | | |
+| 2 | + precompute data (+ 3A: no `.item()` sync) | — | ~31 (ep 1, profiled)† | 97% | ~670 | — | 20261112-072346 |
+| 3 | + `torch.compile` | — | **22.2** | 95–96% | ~430 | 0.3145 | 20261112-071358 |
+| 3 + fp16 | + `--amp` | — | **13.5** | — | — | 0.3139 | 20261112-071711 |
+| 4 | + packing + CUDA Graphs | not built: GPU already ≥ 95% busy | | | | | |
+
+† The plain rung 2 run (3 epochs) crashed before training: on the fresh Kaggle machine both
+DDP ranks downloaded and processed QM9 at the same time (job 6 log). Fix for next time: download
+the dataset once (one plain `python` call, or rank 0 first + barrier) before `torchrun`.
+The 31 s is the 1-epoch profiled run, which includes profiler overhead.
+
+Rung 3 on **1 GPU** (20261112-071957, batch 256, LR 1.6e-3): 42.7 s/epoch → 2-GPU scaling
+42.7 → 22.2 = **1.92×** (was 1.56× at rung 0).
+
+Profiles after rung 2 and 3 (2 GPUs, rank 0, 3 steps):
+
+| | Step | Data wait | GPU busy | Kernels | Forward CPU | Backward CPU |
+|---|---|---|---|---|---|---|
+| Rung 1 | ~360 ms | ~280 ms | 32–41% | ~620 | ~48 ms | ~30 ms |
+| Rung 2 | ~122 ms | ~15 ms | **97%** | ~650 | ~11 ms | ~23 ms |
+| Rung 3 | ~90 ms | ~16 ms | **95–96%** | ~430 | ~11 ms | ~20 ms |
+
+- Rung 2 removed the data bottleneck: the GPU went from ~35% to 97% busy.
+- Rung 3 (compile) fused kernels (~650 → ~430) and cut the step from ~122 to ~90 ms.
+- Now GPU-bound, so fp16 finally helps: 22.2 → 13.5 s (1.64×). At rungs 0–1 it gave 0%.
+- **Total: 50.2 → 13.5 s/epoch on 2×T4 (3.7×); 78.4 s (1 GPU, rung 0) → 13.5 s = 5.8×.**
+- Rung 4 dropped: it removes CPU launch overhead, and the GPU is already ≥ 95% busy.
 
 \* Measured on the profiled run with fp16 and 2 workers (20261110-131533), not on the exact rung 0 setup.
 
