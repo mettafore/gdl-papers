@@ -62,7 +62,34 @@ fp16 error 7.3e-4, fp16 rounding error 8.1e-4. Rotation adds no error above fp16
 5. Cause: the step is launch-bound (Python sends many small kernels) and the per-molecule
    `transform` in `data.py` runs on the CPU every epoch.
 
-## Speed ladder (2 GPUs)
+## Full ladder, one job (job 7, 12 Nov) — the clean comparison
+
+All rungs in one Kaggle job (same machine, same code `cfa9cd0`, so rung 3A — no `.item()`
+sync — is in every rung). QM9 downloaded once with one process first (fixes the DDP download
+race). s/epoch = epoch 3. Profiles: 1-epoch runs, mean of recorded steps 2–3, rank 0.
+This Kaggle machine was faster than jobs 1–6 (rung 0: 43.1 vs 50.2 s), so compare within
+this table, not across jobs.
+
+| Rung | Flags (2 GPUs) | s/epoch | Step | Data wait | GPU busy | Kernels/step | Val (3 ep) | Run ID |
+|---|---|---|---|---|---|---|---|---|
+| 0 | batch 96, LR 1e-3 | 43.1 | 101 ms | 61 ms | 50% | ~670 | 0.2675 | 20261112-094206 |
+| 1 | batch 256, LR 2.3e-3 | 34.7 | 189 ms | 150 ms | 59% | ~700 | 0.3094 | 20261112-094524 |
+| 2 | + `--precompute` | 28.9 | 121 ms | 17 ms | **97%** | ~670 | 0.3268 | 20261112-094841 |
+| 3 | + `--compile` | 24.9 | 92 ms | 18 ms | 96% | ~400 | 0.3616 | 20261112-095135 |
+| 3 + fp16 | + `--amp` | **14.2** | 57 ms | 16 ms | **64%** | ~590 | 0.3212 | 20261112-095456 |
+
+1 GPU: rung 0 = 63.4 s (20261112-095725), rung 3 + fp16 = 23.9 s (20261112-100205).
+- **Total: 63.4 s (1 GPU, rung 0) → 14.2 s (2 GPUs, rung 3 + fp16) = 4.5×.** 2 GPUs only: 43.1 → 14.2 = 3.0×.
+- 2-GPU scaling: 1.47× at rung 0, 1.68× at rung 3 + fp16.
+- fp16 halves the GPU time per step (88 → 37 ms), so the GPU is busy only 64% again: the
+  fixed CPU part (~16 ms data/collate per step + launches) is now a bigger share.
+  **The bottleneck moved back to the CPU side.** That is the case where rung 4 (GPU-resident
+  packed batches + CUDA Graphs) would pay off.
+- Profile run IDs: 20261112-100445 (R0), -100646 (R1), -100912 (R2), -101120 (R3), -101337 (R3+fp16).
+- Val loss after 3 epochs differs by recipe (batch/LR) and is noisy at 3 epochs; it is a
+  sanity check, not a convergence result.
+
+## Speed ladder (2 GPUs), first pass (jobs 1–6)
 
 Each rung adds one change on top of the previous rung. Write the prediction before the run.
 

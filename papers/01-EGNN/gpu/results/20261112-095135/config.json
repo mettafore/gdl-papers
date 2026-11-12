@@ -1,0 +1,40 @@
+{
+  "hardware": {
+    "compile": true,
+    "world_size": 2,
+    "gpu": "Tesla T4",
+    "amp": false,
+    "profile": false
+  },
+  "data": {
+    "target": "gap",
+    "root": "data/qm9",
+    "dims": {
+      "in_node_dim": 15,
+      "out_dim": 1,
+      "target_col": 4
+    },
+    "precompute": true
+  },
+  "model": {
+    "hidden_nf": 128,
+    "n_layers": 7,
+    "attention": true
+  },
+  "hyperparams": {
+    "lr": 0.0023,
+    "epochs": 3,
+    "batch_size": 256,
+    "num_workers": 0,
+    "weight_decay": 1e-16,
+    "early_stop_patience": 50
+  },
+  "seed": 42,
+  "metric": "mae",
+  "resume_from": null,
+  "provenance": {
+    "git_commit": "cfa9cd0c72c992990c6fac81896506b48ad83c68",
+    "git_dirty": false,
+    "uv_lock_sha256": "a0e6a9ba1cbc7cb3"
+  }
+}
