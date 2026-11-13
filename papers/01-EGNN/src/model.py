@@ -181,7 +181,7 @@ class EGNN(nn.Module):
             nn.Linear(hidden_nf, hidden_nf), act_fn, nn.Linear(hidden_nf, 1)
         )
 
-    def forward(self, h, x, edge_index, edge_attr=None, batch=None):
+    def forward(self, h, x, edge_index, edge_attr=None, batch=None, num_graphs=None):
         """Predict one scalar graph property per molecule (invariant to E(3) on x).
 
         Args:
@@ -192,15 +192,22 @@ class EGNN(nn.Module):
             batch: (num_nodes,) int tensor — which molecule each node belongs
                 to (PyG's `data.batch`), or None for a single molecule (all
                 nodes -> graph 0).
+            num_graphs: number of molecules in the batch (PyG's
+                `data.num_graphs`, known on the CPU). Pass it in the training
+                loop: computing it here needs `batch.max().item()`, which makes
+                the CPU wait for the GPU every step.
 
         Returns:
             (num_graphs, 1) — one predicted scalar per molecule in the batch.
         """
         if batch is None:
             batch = torch.zeros(x.size(0), dtype=torch.long, device=x.device)
+            num_graphs = 1
+        elif num_graphs is None:
+            num_graphs = int(batch.max().item()) + 1  # CPU-GPU sync; fallback only
         h = self.emb(h)
         for egcl in self.layers:
             h = egcl(h, x, edge_index, edge_attr)
         out = self.node_dec(h)
-        out = unsorted_segment_sum(out, batch, int(batch.max().item()) + 1)
+        out = unsorted_segment_sum(out, batch, num_graphs)
         return self.graph_dec(out)

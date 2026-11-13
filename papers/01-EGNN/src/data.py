@@ -11,9 +11,10 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from typing import Any
 
 import torch
-from torch.utils.data import DistributedSampler
+from torch.utils.data import DistributedSampler, Subset
 
 # torch_geometric is optional-at-import so the file is inspectable without the
 # dep installed. The actual functions require it.
@@ -145,6 +146,7 @@ def load_split(
     seed: int = 42,
     batch_size: int = 96,
     num_workers: int = 0,
+    precompute: bool = False,
 ):
     """Return (train_loader, val_loader, test_loader, norm, dims).
 
@@ -156,13 +158,22 @@ def load_split(
         raise KeyError(f"unknown target {target!r}; choose from {sorted(QM9_TARGETS)}")
     col = QM9_TARGETS[target]
 
-    dataset = QM9(root=root, transform=_to_charge_power)
+    if precompute:
+        # Rung 2: run the transform once per molecule and keep the results in
+        # RAM, instead of cutting out + transforming every molecule every epoch.
+        dataset: Any = [_to_charge_power(d) for d in QM9(root=root)]
+    else:
+        dataset = QM9(root=root, transform=_to_charge_power)
     gen = torch.Generator().manual_seed(seed)
     perm = torch.randperm(len(dataset), generator=gen)
     train_idx = perm[:N_TRAIN]
     val_idx = perm[N_TRAIN : N_TRAIN + N_VAL]
     test_idx = perm[N_TRAIN + N_VAL :]
-    train_data = dataset[train_idx]
+    # Subset works for both the QM9 dataset and the precomputed list.
+    # (Any: torch's stubs reject a plain list, but it works at runtime.)
+    train_data: Any = Subset(dataset, train_idx.tolist())
+    val_data: Any = Subset(dataset, val_idx.tolist())
+    test_data: Any = Subset(dataset, test_idx.tolist())
     train_y = torch.cat([i.y[:, col] for i in train_data], dim=0)
     mean = train_y.mean().item()
     mad = (train_y - mean).abs().mean().item()
@@ -171,19 +182,19 @@ def load_split(
     if "RANK" in os.environ:
         sampler = DistributedSampler(train_data, shuffle=True)
     train_loader = PyGDataLoader(
-        dataset[train_idx],
+        train_data,
         sampler=sampler,
         shuffle=sampler is None,
         batch_size=batch_size,
         num_workers=num_workers,
     )
     val_loader = PyGDataLoader(
-        dataset[val_idx],
+        val_data,
         batch_size=batch_size,
         num_workers=num_workers,
     )
     test_loader = PyGDataLoader(
-        dataset[test_idx],
+        test_data,
         batch_size=batch_size,
         num_workers=num_workers,
     )

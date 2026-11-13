@@ -8,7 +8,9 @@ Paper: Satorras et al., "E(n) Equivariant Graph Neural Networks", ICML 2021.
 """
 
 import argparse
+import contextlib
 import os
+import time
 from pathlib import Path
 
 import data
@@ -49,6 +51,10 @@ def train(
     early_stop_patience=50,
     attention=True,
     resume_from=None,
+    amp=False,
+    profile=False,
+    precompute=False,
+    compile=False,
 ):
     """Train and persist a run. Returns (run_id, run_dir, best_val).
 
@@ -61,8 +67,10 @@ def train(
     improvement; stops early after `early_stop_patience` epochs without one.
     """
     rank = int(os.environ.get("RANK", 0))
+    local_rank = int(os.environ.get("LOCAL_RANK", 0))
     if "RANK" in os.environ:
-        init_process_group(backend="gloo")
+        torch.cuda.set_device(local_rank) if torch.cuda.is_available() else None
+        init_process_group(backend="nccl" if torch.cuda.is_available() else "gloo")
     set_seed(seed)
     train_loader, val_loader, test_loader, norm, dims = data.load_split(
         target=target,
@@ -70,9 +78,24 @@ def train(
         batch_size=batch_size,
         root=data_root,
         num_workers=num_workers,
+        precompute=precompute,
     )
     config = {
-        "data": {"target": target, "root": str(data_root), "dims": dims},
+        "hardware": {
+            "compile": compile,
+            "world_size": int(os.environ.get("WORLD_SIZE", 1)),
+            "gpu": torch.cuda.get_device_name(0)
+            if torch.cuda.is_available()
+            else "cpu",
+            "amp": amp,
+            "profile": profile,
+        },
+        "data": {
+            "target": target,
+            "root": str(data_root),
+            "dims": dims,
+            "precompute": precompute,
+        },
         "model": {
             "hidden_nf": hidden_nf,
             "n_layers": n_layers,
@@ -96,7 +119,7 @@ def train(
     else:
         run_id, run_dir = None, None
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device(f"cuda:{local_rank}" if torch.cuda.is_available() else "cpu")
     egnn = EGNN(
         in_node_nf=dims["in_node_dim"],
         hidden_nf=hidden_nf,
@@ -116,7 +139,9 @@ def train(
             param.requires_grad = False
     model = egnn
     if "RANK" in os.environ:
-        egnn = DDP(egnn)
+        egnn = DDP(egnn, device_ids=[local_rank] if torch.cuda.is_available() else None)
+    if compile:
+        egnn = torch.compile(egnn, dynamic=True)
     optimizer = torch.optim.Adam(egnn.parameters(), lr=lr, weight_decay=weight_decay)
     # CosineAnnealingLR (not ReduceLROnPlateau): matches the reference repo's
     # recipe. ReduceLROnPlateau halves LR on every 10-epoch stall, which on a
@@ -129,19 +154,56 @@ def train(
 
     best_val = float("inf")
     epochs_since_improve = 0
+    use_amp = amp and torch.cuda.is_available()
+    scaler = torch.amp.GradScaler("cuda", enabled=use_amp)
     for epoch in range(epochs):
+        profiling = profile and rank == 0 and epoch == 0
+        if profiling:
+            activities = [torch.profiler.ProfilerActivity.CPU]
+            if torch.cuda.is_available():
+                activities.append(torch.profiler.ProfilerActivity.CUDA)
+            schedule = torch.profiler.schedule(wait=1, warmup=1, active=3, repeat=1)
+            on_trace_ready = torch.profiler.tensorboard_trace_handler(
+                str(run_dir / "tb")
+            )
+            prof = torch.profiler.profile(
+                activities=activities, schedule=schedule, on_trace_ready=on_trace_ready
+            )
+        else:
+            prof = contextlib.nullcontext()
+        t0 = time.perf_counter()
         if "RANK" in os.environ:
             train_loader.sampler.set_epoch(epoch)
         stop = False
         egnn.train()
-        for b in train_loader:
-            b = b.to(device)
-            optimizer.zero_grad()
-            out = egnn(b.x, b.pos, b.edge_index, batch=b.batch)
-            target = target_for(b, norm, dims["target_col"])
-            loss_value = loss(out, target)
-            loss_value.backward()
-            optimizer.step()
+        with prof:
+            for b in train_loader:
+                with torch.profiler.record_function("data"):
+                    b = b.to(device)
+                with torch.profiler.record_function("forward"):
+                    optimizer.zero_grad()
+                    with torch.amp.autocast("cuda", enabled=use_amp):
+                        out = egnn(
+                            b.x,
+                            b.pos,
+                            b.edge_index,
+                            batch=b.batch,
+                            num_graphs=b.num_graphs,
+                        )
+                        target = target_for(b, norm, dims["target_col"])
+                        loss_value = loss(out, target)
+                with torch.profiler.record_function("backward"):
+                    scaler.scale(loss_value).backward()
+                with torch.profiler.record_function("optimizer"):
+                    scaler.step(optimizer)
+                    scaler.update()
+                if profiling:
+                    prof.step()
+        if profiling:
+            sort_key = (
+                "cuda_time_total" if torch.cuda.is_available() else "cpu_time_total"
+            )
+            print(prof.key_averages().table(sort_by=sort_key, row_limit=15))
         current_lr = optimizer.param_groups[0]["lr"]
         # CosineAnnealingLR steps on a schedule, not on val_loss (no arg).
         scheduler.step()
@@ -152,7 +214,9 @@ def train(
             with torch.no_grad():
                 for b in val_loader:
                     b = b.to(device)
-                    out = model(b.x, b.pos, b.edge_index, batch=b.batch)
+                    out = model(
+                        b.x, b.pos, b.edge_index, batch=b.batch, num_graphs=b.num_graphs
+                    )
                     pred = norm.denormalize(out)
                     target = raw_target_for(b, dims["target_col"])
                     val_loss_sum += loss(pred, target).item() * b.num_graphs
@@ -160,15 +224,24 @@ def train(
             val_loss = val_loss_sum / val_num_graphs
             # Log the LR *before* stepping, so it's the rate this epoch actually
             # trained at (lets us see whether val drops as cosine anneals it down).
-
-            log_metrics({"val_loss": val_loss, "lr": current_lr}, epoch, run_dir)
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
+            log_metrics(
+                {
+                    "val_loss": val_loss,
+                    "lr": current_lr,
+                    "time": time.perf_counter() - t0,
+                },
+                epoch,
+                run_dir,
+            )
             if val_loss < best_val:
                 best_val = val_loss
                 epochs_since_improve = 0
                 if "RANK" in os.environ:
-                    save_checkpoint(egnn.module, run_dir)
+                    save_checkpoint(model, run_dir)
                 else:
-                    save_checkpoint(egnn, run_dir)
+                    save_checkpoint(model, run_dir)
             else:
                 epochs_since_improve += 1
                 if epochs_since_improve >= early_stop_patience:
@@ -177,7 +250,7 @@ def train(
                     )
                     stop = True
         if "RANK" in os.environ:
-            flag = torch.tensor(int(stop))
+            flag = torch.tensor(int(stop)).to(device)
             torch.distributed.broadcast(flag, src=0)
             stop = bool(flag.item())
         if stop:
@@ -203,6 +276,12 @@ def main():
         action=argparse.BooleanOptionalAction,
         default=True,
     )
+    p.add_argument("--amp", action=argparse.BooleanOptionalAction, default=False)
+    p.add_argument("--profile", action=argparse.BooleanOptionalAction, default=False)
+    p.add_argument("--num-workers", type=int, default=0)
+    p.add_argument("--precompute", action=argparse.BooleanOptionalAction, default=False)
+
+    p.add_argument("--compile", action=argparse.BooleanOptionalAction, default=False)
 
     args = p.parse_args()
     run_id, run_dir, best_val = train(
@@ -216,6 +295,11 @@ def main():
         runs_base=args.runs_base,
         paper_dir=PAPER_DIR,
         attention=args.attention,
+        amp=args.amp,
+        profile=args.profile,
+        num_workers=args.num_workers,
+        precompute=args.precompute,
+        compile=args.compile,
     )
     if run_id is not None:
         print(f"run_id: {run_id}")

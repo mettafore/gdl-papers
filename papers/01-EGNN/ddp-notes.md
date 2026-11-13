@@ -170,6 +170,9 @@ Why `torchrun` was slower and worse after 1 epoch:
 
 ## For step 3 (GPUs)
 
+**Baseline to beat (1× T4 on Modal, 4 CPUs, batch 96, full EGNN, `gap`):** about **57 s per epoch** including validation, and about **5 h 40 min** to the 48.50 meV test result (run `20260715-191930`, 175 epochs, 2 h 46 min; then the resume run `20260716-082300`, best at epoch 181, about 2 h 54 min). Taken from Modal volume file timestamps, because neither epoch time nor training loss was logged. Log both from now on.
+
+
 - Backend: `nccl` if `torch.cuda.is_available()` else `gloo`.
 - `nccl` only sends GPU tensors: create the stop flag with `device=device`, or `broadcast` fails.
 - Device: `cuda:{LOCAL_RANK}` + `torch.cuda.set_device` per rank.
