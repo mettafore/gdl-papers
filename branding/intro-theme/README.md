@@ -3,6 +3,13 @@
 A 16.5 s title sequence (1920×1080, 60 fps) with an original synthesised score.
 Not part of the research artifact — branding only.
 
+Two looks share one storyboard:
+
+- **classic** (`theme.html`) — gold and pale blue on near-black, restrained.
+- **vivid** (`theme-vivid.html`) — iridescent cyan→violet→magenta→gold palette,
+  aurora background, motion streaks, lens streak and chromatic aberration, light
+  rays on the downbeat; the score gains an arpeggio, kick and hats.
+
 | Time | Picture | Reference |
 |---|---|---|
 | 0.0 | a single point of light, then a burst into a point cloud | raw data, `x ∈ ℝ³` |
@@ -14,7 +21,7 @@ Not part of the research artifact — branding only.
 
 ## Files
 
-- `theme.html` — the whole animation; every frame is a pure function of time.
+- `theme.html`, `theme-vivid.html` — the whole animation; every frame is a pure function of time.
   Open `theme.html?play=1` in a browser for a live preview.
   Query options: `name=…`, `tag=…`, `title=0` (no name/tagline).
 - `render.mjs` — renders frames with headless Chromium (Playwright).
@@ -25,9 +32,11 @@ Not part of the research artifact — branding only.
 ## Build
 
 ```bash
-./build.sh            # needs node + playwright, python3 + numpy/scipy, ffmpeg
+./build.sh            # classic; needs node + playwright, python3 + numpy/scipy, ffmpeg
+./build.sh vivid
 ```
 
 Outputs (not versioned): `out/intro-theme.mp4` (titled), `out/intro-theme-clean.mp4` (no name,
 for overlaying your own title), `out/intro-theme-sting.mp4` (6 s short cut),
-`out/intro-theme.wav` (score only).
+`out/intro-theme.wav` (score only); the vivid build writes the same set as
+`out/intro-theme-vivid*`.

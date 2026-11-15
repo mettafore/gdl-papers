@@ -1,4 +1,4 @@
-"""Synthesises the intro-theme score (no samples). usage: python3 music.py out.wav
+"""Synthesises the intro-theme score (no samples). usage: python3 music.py out.wav [--vivid]
 
 80 BPM, D lydian. Cues: 0.75 burst, 3.0 molecule, 6.0 sphere, 9.0 harmonics,
 12.0 mandala (impact), 13.5 title.
@@ -138,6 +138,36 @@ th = filt(rng.normal(0, 1, len(tt)), 'low', 160, 4) * np.exp(-tt * 9)
 place(th, 12.0, 0, .9, rev=.3)
 air = filt(rng.normal(0, 1, (len(tt), 2)), 'high', 5000) * (np.exp(-tt * 1.6) * np.minimum(1, tt / .02))[:, None]
 place(air, 12.0, 0, .022, rev=1.0)
+
+# --- vivid variant: sixteenth-note arpeggio, soft kick, offbeat hats ---
+if '--vivid' in sys.argv:
+    def pluck(f, dur=.5, bright=1.0):
+        tt = np.arange(int(dur * SR)) / SR; y = np.zeros_like(tt)
+        for k in range(1, 9):
+            if f * k > 8000: break
+            y += np.sin(2 * np.pi * f * k * tt) / k * np.exp(-tt * (5 + 5 * k / bright))
+        return y * np.minimum(1, tt / .003)
+    arps = [(3.0, 6.0, ['D4', 'A4', 'E5', 'F#5', 'A5', 'F#5', 'E5', 'A4']),
+            (6.0, 9.0, ['D4', 'G4', 'B4', 'F#5', 'A5', 'F#5', 'B4', 'G4']),
+            (9.0, 11.625, ['E4', 'A4', 'B4', 'D5', 'G5', 'B5', 'G5', 'D5']),
+            (12.0, 14.8, ['D4', 'A4', 'D5', 'F#5', 'A5', 'D6', 'A5', 'F#5'])]
+    step = 0.1875
+    for a, b, notes in arps:
+        for k in range(int(round((b - a) / step))):
+            at = a + k * step
+            g = np.interp(at, [3.0, 6.0, 11.5, 12.0, 13.5, 14.8], [.25, .6, 1.0, 1.0, .7, .15])
+            br = np.interp(at, [3.0, 11.5, 12.0, 14.8], [.6, 1.6, 1.8, .8])
+            y = pluck(hz(notes[k % 8]), .5, br)
+            pan = .55 * (-1) ** k
+            place(y, at, pan, g * .085 * (1.25 if k % 4 == 0 else 1), rev=.6)
+            place(y, at + step * 3, -pan, g * .03, rev=.9)
+    tt = np.arange(int(.4 * SR)) / SR
+    kick = np.sin(2 * np.pi * np.cumsum(46 + 90 * np.exp(-tt * 38)) / SR) * np.exp(-tt * 11) * np.minimum(1, tt / .002)
+    for at in list(np.arange(6.0, 11.3, .75)) + [12.75, 13.5]:
+        place(kick, at, 0, .34 * np.interp(at, [6, 11.25], [.6, 1]), rev=.04)
+    th = np.arange(int(.06 * SR)) / SR
+    for at in list(np.arange(9.375, 11.6, .75)) + list(np.arange(12.375, 14.3, .75)):
+        place(filt(rng.normal(0, 1, len(th)), 'high', 7000) * np.exp(-th * 90), at, .2, .045, rev=.5)
 
 # --- reverb (synthetic hall) ---
 L = int(4.2 * SR); ti = np.arange(L) / SR
