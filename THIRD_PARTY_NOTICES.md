@@ -23,3 +23,9 @@ source, papers, datasets, or installed dependencies.
   source links are listed in the individual paper READMEs and
   [references/papers.md](references/papers.md).
 - Installed libraries retain the licenses distributed with their packages.
+
+## Intro theme font
+
+- `branding/intro-theme/fonts/` contains Cormorant Garamond (Christian Thalmann,
+  Catharsis Fonts), distributed under the SIL Open Font License 1.1; the licence
+  text is retained in `branding/intro-theme/fonts/OFL-CormorantGaramond.txt`.

@@ -59,3 +59,6 @@ runs/
 # Private working documents
 papers/01-EGNN/blog.md
 papers/15-MACE/author-code-audit.md
+
+# Intro theme renders (rebuild with branding/intro-theme/build.sh)
+branding/intro-theme/out/
