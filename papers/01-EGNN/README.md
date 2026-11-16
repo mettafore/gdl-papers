@@ -91,6 +91,10 @@ features, attention, and a lower-learning-rate warm start from the best prior
 checkpoint. See [`docs/progress.md`](../../docs/progress.md) for the experiment
 history and planned target sweep.
 
+**Multi-GPU training speed:** with PyTorch DDP on 2× T4, profiling-driven fixes cut epoch
+time from 43.1 s to 14.2 s (3.0×; 4.5× against one GPU). Setup, results and limits:
+[`gpu/README.md`](gpu/README.md).
+
 ## Verify
 
 The checkpoint behind the result above is published in the
