@@ -1,8 +1,47 @@
 # EGNN on multiple GPUs — experiment record
 
-Lab notebook for the GPU training primer (steps 3–5 and the speed ladder).
-EGNN, QM9 target `gap`, Kaggle "GPU T4 x2" (2× Tesla T4, 4 CPUs).
-Code: `../src/train.py` flags (`--batch-size`, `--amp`, `--profile`, `--num-workers`).
+## Summary
+
+**Question:** how fast can this EGNN ([E(n) Equivariant GNN](https://arxiv.org/abs/2102.09844),
+the model behind this repo's [QM9 `gap` reproduction](../README.md#results), 48.50 meV vs the
+paper's 48) train on two GPUs, and what limits it?
+
+**Setup:** PyTorch DDP (one process per GPU, gradients averaged with NCCL) on Kaggle's
+"GPU T4 x2" (2× Tesla T4 16 GB, 4 CPUs). QM9, target `gap`, 7 layers, hidden size 128.
+
+**Method:** profile one training step with `torch.profiler`, fix the largest cost, measure
+again. Each fix is one "rung" and keeps the earlier ones. All rungs ran in one Kaggle job
+(job 7, 12 Nov 2026), so the times compare fairly.
+
+| Rung | Change | s/epoch (2 GPUs) | GPU busy | What the profile showed |
+|---|---|---:|---:|---|
+| 0 | Baseline: batch 96/GPU, fp32 | 43.1 | 50% | GPU waits on data loading most of each step |
+| 1 | Batch 256/GPU, LR scaled up | 34.7 | 59% | Fewer kernel launches per molecule; data still the bottleneck |
+| 2 | `--precompute`: per-molecule transform once, keep in RAM | 28.9 | 97% | Data bottleneck gone; now compute-bound |
+| 3 | `--compile`: `torch.compile` | 24.9 | 96% | Fused kernels (~670 → ~400 per step) |
+| 3 + fp16 | `--amp`: fp16 autocast + GradScaler | **14.2** | 64% | GPU time per step halved; CPU side is the bottleneck again |
+
+**Result:** 43.1 → 14.2 s/epoch = **3.0× on the same two GPUs**; 63.4 s (one GPU, baseline)
+→ 14.2 s = **4.5×** overall. Two-GPU scaling went from 1.47× (rung 0) to 1.68× (rung 3 + fp16).
+
+**Main lesson:** fp16 gave **no** speedup at rungs 0–1, because the GPU was waiting for
+data. It only helped (24.9 → 14.2 s) after the data and launch costs were removed. Profile
+first, then optimise the part that is actually slow.
+
+**Limits:**
+- Speed only. Each run lasted 3 epochs, so this measures time per epoch, not time to reach
+  the paper's accuracy. The bigger batch and higher LR change convergence; the 3-epoch
+  validation loss is a sanity check, not a result.
+- Two GPUs on one machine; no multi-node runs.
+- fp16 is safe for equivariance here: rotation error 7.3e-4 vs fp16 rounding error 8.1e-4
+  (`../src/equivariance_fp16.py`).
+- Next step, not built: GPU-resident packed batches + CUDA Graphs to remove the remaining
+  CPU cost.
+
+Code: `../src/train.py` flags (`--batch-size`, `--amp`, `--profile`, `--num-workers`,
+`--precompute`, `--compile`). The rest of this page is the full lab notebook, in date order:
+[run index](#run-index), [first findings](#findings-so-far), [clean ladder](#full-ladder-one-job-job-7-12-nov--the-clean-comparison),
+[first-pass ladder](#speed-ladder-2-gpus-first-pass-jobs-16), [JAX track](#jax-track-branch-jax-egnn-job-5-log-resultskaggle-logsjob5-jaxlog).
 
 ## Where the evidence is
 
@@ -10,8 +49,9 @@ Code: `../src/train.py` flags (`--batch-size`, `--amp`, `--profile`, `--num-work
 - `gpu/results/<run_id>/` (**in git**): `config.json` + `metrics.jsonl` copies.
 - `gpu/results/kaggle-logs/jobN.log` (**in git**): the full console log of each Kaggle job, with profiler tables.
 
-`config.json` does not yet record the number of GPUs, `--amp` or `--profile`.
-For the runs below, those columns come from the order of the commands in the Kaggle cell.
+For jobs 1–3, `config.json` did not yet record the number of GPUs, `--amp` or `--profile`;
+those columns come from the order of the commands in the Kaggle cell. From job 4 on, they are
+in the `hardware` section of `config.json`.
 
 ## Run index
 
@@ -55,7 +95,8 @@ fp16 error 7.3e-4, fp16 rounding error 8.1e-4. Rotation adds no error above fp16
 1. 2 GPUs at 96/GPU: 78.4 → 50.2 s/epoch (1.56×). At 48/GPU: 1.31×.
 2. Throughput is not convergence: 2 GPUs at 96/GPU make half the optimizer steps per epoch,
    so val loss after 3 epochs is worse (0.251 vs 0.222). 48/GPU matches 1 GPU (0.227).
-3. fp16 gives no speedup in any setup.
+3. fp16 gives no speedup in any setup tested so far (jobs 1–3: the GPU is waiting for data).
+   *Later:* after the data and compile fixes, fp16 does help (24.9 → 14.2 s/epoch, see the clean ladder).
 4. Profiler (run 20261110-131533, one step): the GPU is busy only 24–39% of each step.
    The CPU sends ~986 small jobs (kernels) per step and takes ~100 ms; the GPU calculates for ~29 ms.
    Some steps also wait 20–50 ms for data. The NCCL all-reduce takes ~0.5 ms per step.
