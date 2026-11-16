@@ -25,7 +25,9 @@ Two looks share one storyboard:
   Open `theme.html?play=1` in a browser for a live preview.
   Query options: `name=…`, `tag=…`, `title=0` (no name/tagline).
 - `render.mjs` — renders frames with headless Chromium (Playwright).
-- `music.py` — synthesises the score (numpy + scipy, no samples). 80 BPM, D lydian.
+- `music.py` — synthesises the 16.5 s score (numpy + scipy, no samples). 80 BPM, D lydian.
+- `score.py` — the composed theme for the 24.75 s "breathe" cut: eleven bars in D
+  major with a recurring motif (A D E F#); the bar-by-bar plan is in its docstring.
 - `build.sh` — frames + score → the videos in `out/`.
 - `fonts/` — Cormorant Garamond (SIL OFL 1.1, licence alongside).
 
@@ -34,6 +36,7 @@ Two looks share one storyboard:
 ```bash
 ./build.sh            # classic; needs node + playwright, python3 + numpy/scipy, ffmpeg
 ./build.sh vivid
+./build.sh vivid slow  # 1.5x longer picture + score.py -> out/intro-theme-vivid-breathe*
 ```
 
 Outputs (not versioned): `out/intro-theme.mp4` (titled), `out/intro-theme-clean.mp4` (no name,
