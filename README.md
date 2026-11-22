@@ -25,6 +25,10 @@ This repository connects each paper's equations to a PyTorch implementation,
 with training and evaluation code, tests, learning walkthroughs, and comparisons
 against published results.
 
+It also includes a [multi-GPU training study](papers/01-EGNN/gpu/README.md):
+EGNN trained with PyTorch DDP on two T4 GPUs, profiled and fixed one bottleneck
+at a time, from 43.1 to 14.2 s per epoch (3.0× on the same two GPUs).
+
 ![Observed Fire locations and RFM-generated samples](papers/14-RFM/results/fire-comparison.png)
 
 RFM run `20260818-103835`: all 12,809 observed Fire locations alongside 2,000
